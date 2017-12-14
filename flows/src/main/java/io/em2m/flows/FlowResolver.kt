@@ -1,4 +1,4 @@
-package io.em2m.conveyor.flows
+package io.em2m.flows
 
 
 interface FlowResolver<T> {

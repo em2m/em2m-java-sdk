@@ -1,4 +1,4 @@
-package io.em2m.conveyor.actions.model
+package io.em2m.actions.model
 
 import java.io.InputStream
 import java.util.*
