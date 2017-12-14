@@ -312,7 +312,7 @@
     <distributionManagement>
         <repository>
             <id>bintray-em2m-maven</id>
-            <url>https://api.bintray.com/maven/em2m/em2m-maven/conveyor/;publish=1</url>
+            <url>https://api.bintray.com/maven/em2m/em2m-maven/em2m-java-sdk/;publish=1</url>
         </repository>
     </distributionManagement>
 
