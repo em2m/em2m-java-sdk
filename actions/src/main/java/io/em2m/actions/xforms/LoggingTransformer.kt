@@ -1,7 +1,7 @@
-package io.em2m.conveyor.actions.xforms
+package io.em2m.actions.xforms
 
-import io.em2m.conveyor.actions.model.ActionContext
-import io.em2m.conveyor.flows.Transformer
+import io.em2m.actions.model.ActionContext
+import io.em2m.flows.Transformer
 import org.slf4j.Logger
 import rx.Observable
 

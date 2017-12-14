@@ -1,9 +1,9 @@
-package io.em2m.conveyor.actions.runtimes
+package io.em2m.actions.runtimes
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import io.em2m.conveyor.actions.model.ActionContext
-import io.em2m.conveyor.flows.FlowNotFound
-import io.em2m.conveyor.flows.Processor
+import io.em2m.actions.model.ActionContext
+import io.em2m.flows.FlowNotFound
+import io.em2m.flows.Processor
 import java.util.*
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse

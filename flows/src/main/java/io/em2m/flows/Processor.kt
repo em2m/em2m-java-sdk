@@ -1,7 +1,6 @@
-package io.em2m.conveyor.flows
+package io.em2m.flows
 
 import rx.Observable
-import rx.Subscription
 
 interface Processor<T> {
 

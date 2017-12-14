@@ -1,10 +1,10 @@
-package io.em2m.conveyor.actions.xforms
+package io.em2m.actions.xforms
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import io.em2m.conveyor.actions.model.ActionContext
-import io.em2m.conveyor.flows.Priorities
-import io.em2m.conveyor.flows.TransformerSupport
+import io.em2m.actions.model.ActionContext
+import io.em2m.flows.Priorities
+import io.em2m.flows.TransformerSupport
 import org.xerial.snappy.SnappyInputStream
 import rx.Observable
 import java.util.zip.DeflaterInputStream

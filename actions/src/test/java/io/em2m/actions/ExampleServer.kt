@@ -1,16 +1,16 @@
-package io.em2m.conveyor.actions
+package io.em2m.actions
 
 import com.google.inject.Binder
 import com.google.inject.Module
 import com.google.inject.name.Names
-import io.em2m.conveyor.actions.model.ActionContext
-import io.em2m.conveyor.actions.runtimes.ServletRuntime
-import io.em2m.conveyor.actions.xforms.JacksonRequestTransformer
-import io.em2m.conveyor.actions.xforms.LoggingTransformer
-import io.em2m.conveyor.flows.BasicProcessor
-import io.em2m.conveyor.flows.Flow
-import io.em2m.conveyor.flows.MainFlow
-import io.em2m.conveyor.flows.Priorities.Companion.MAIN
+import io.em2m.actions.model.ActionContext
+import io.em2m.actions.runtimes.ServletRuntime
+import io.em2m.actions.xforms.JacksonRequestTransformer
+import io.em2m.actions.xforms.LoggingTransformer
+import io.em2m.flows.BasicProcessor
+import io.em2m.flows.Flow
+import io.em2m.flows.MainFlow
+import io.em2m.flows.Priorities.Companion.MAIN
 import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.server.handler.HandlerList
 import org.eclipse.jetty.servlet.ServletContextHandler
