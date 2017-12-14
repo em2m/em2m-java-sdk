@@ -1,0 +1,34 @@
+{
+  "type": "and",
+  "queries": [
+    {
+      "type": "or",
+      "queries": [
+        {
+          "type": "custom",
+          "property": "value"
+        },
+        {
+          "type": "range",
+          "lower": 0,
+          "upper": 5,
+          "includeLower": false,
+          "includeUpper": false
+        }
+      ]
+    },
+    {
+      "type": "not",
+      "query": {
+        "type": "term",
+        "field": "make",
+        "value": "Ford"
+      }
+    },
+    {
+      "type": "prefix",
+      "field": "make",
+      "value": "l"
+    }
+  ]
+}

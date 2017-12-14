@@ -1,0 +1,33 @@
+{
+  "query": {
+    "type": "and",
+    "queries": [
+      {
+        "type": "term",
+        "field": "make",
+        "value": "Ford"
+      },
+      {
+        "type": "not",
+        "query": {
+          "type": "term",
+          "field": "model",
+          "value": "F-150"
+        }
+      }
+    ]
+  },
+  "aggs": {
+    "make": {
+      "terms": {
+        "field": "make",
+        "size": 5,
+        "minCount": 1,
+        "sort": {
+        }
+      }
+    }
+  },
+  "limit": 10,
+  "offset": 0
+}

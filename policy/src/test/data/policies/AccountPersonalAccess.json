@@ -1,0 +1,14 @@
+{
+  "label": "Account Personal Access",
+  "statements": [
+    {
+      "effect": "Allow",
+      "actions": [
+        "ident:GetMyAccount",
+        "ident:UpdateMyAccount",
+        "ident:ChangeMyPassword"
+      ],
+      "resource": "em2m:ident:account:*"
+    }
+  ]
+}

@@ -1,0 +1,36 @@
+{
+  "label": "Account Full Access",
+  "statements": [
+    {
+      "effect": "Allow",
+      "actions": [
+        "ident:ListAccounts",
+        "ident:GetAccount",
+        "ident:ViewAsUser",
+        "ident:CreateAccount",
+        "ident:UpdateAccountProfile",
+        "ident:ChangeAccountPassword",
+        "ident:UpdateAccountUsername",
+        "ident:UpdateAccountEmail",
+        "ident:DescribeAccountRoles",
+        "ident:AddRoleToAccount",
+        "ident:PutAccountRoles",
+        "ident:RemoveRoleFromAccount",
+        "ident:DeleteAccount"
+      ],
+      "resource": "em2m:ident:account:*",
+      "condition": {
+        "ForAnyValue:StringEquals": {
+          "ident:orgPath": "${claims:org}"
+        },
+        "ForAllValues:StringEqualsIgnoreCase": {
+          "ident:role": [
+            "sales",
+            "admin",
+            "fimanager"
+          ]
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "conditions": [
+    {
+      "StringEquals": {
+        "report:ReportType": [
+          "vehicle"
+        ]
+      }
+    }
+  ]
+}
