@@ -15,7 +15,7 @@ interface Part {
     fun call(context: ExprContext): Any?
 }
 
-class PipePart(val key: Key, val handler: KeyHandler, val transforms: List<PipeTransform> = emptyList()) : Part {
+data class PipePart(val key: Key, val handler: KeyHandler, val transforms: List<PipeTransform> = emptyList()) : Part {
 
     override val fields = handler.fields(key)
 
@@ -27,7 +27,7 @@ class PipePart(val key: Key, val handler: KeyHandler, val transforms: List<PipeT
     }
 }
 
-class ConstPart(val value: String) : Part {
+data class ConstPart(val value: String) : Part {
 
     override val fields: List<String> = emptyList()
     override fun call(context: ExprContext): Any? {
@@ -35,12 +35,12 @@ class ConstPart(val value: String) : Part {
     }
 }
 
-class Expr(val parts: List<Part>) {
+data class Expr(private val parts: List<Part>) {
 
     val fields = parts.flatMap { it.fields }
 
     fun call(context: ExprContext): Any? {
-        val values = parts.map { it.call(context) }.filterNotNull()
+        val values = parts.mapNotNull { it.call(context) }
         return if (values.size == 1) {
             values.first()
         } else {
