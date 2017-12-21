@@ -46,6 +46,19 @@ class MongoSearchDaoQueryTest : FeaturesTestBase() {
     }
 
     @Test
+    fun testDateRange() {
+        val sub = TestSubscriber<Any>()
+        val request = SearchRequest(0, 5, RangeQuery("properties.time", gte = "1408447319000", lte = "now"))
+        searchDao.search(request).doOnNext { result ->
+            // Shouldn't this be 21?
+            Assert.assertEquals(20, result.totalItems)
+            Assert.assertEquals(5, result.items?.size)
+        }.subscribe(sub)
+        sub.awaitTerminalEvent()
+        sub.assertNoErrors()
+    }
+
+    @Test
     fun testTerm() {
         val sub = TestSubscriber<Any>()
         val request = SearchRequest(0, 0, TermQuery("properties.mag", value = "2.5"))

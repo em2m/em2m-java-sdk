@@ -15,6 +15,7 @@ import io.em2m.search.core.parser.SimpleSchemaMapper
 import org.junit.Assert
 import org.junit.Before
 import java.io.FileInputStream
+import java.util.*
 import kotlin.properties.Delegates
 
 open class FeaturesTestBase : Assert() {
@@ -29,7 +30,7 @@ open class FeaturesTestBase : Assert() {
         schemaMapper = SimpleSchemaMapper("test")
         schemaMapper.withMapping("properties.mag", Double::class.java)
         schemaMapper.withMapping("_id", String::class.java)
-
+        schemaMapper.withMapping("properties.time", Date::class.java)
 
         // Mongo Database
         val mongoUri = config.getString("mongo.uri")
@@ -57,6 +58,10 @@ open class FeaturesTestBase : Assert() {
         parser.handler(handler)
         parser.parse(FileInputStream("src/test/resources/earthquakes_2.5_day.geojson"))
         val result = handler.collection
+        result.features.forEach {
+            // it.properties["time"] = (it.properties["time"] as Long) * 1000
+            // it.properties["updated"] = (it.properties["updated"] as Long) * 1000
+        }
         Assert.assertEquals(46, result.features.size)
         return result
     }

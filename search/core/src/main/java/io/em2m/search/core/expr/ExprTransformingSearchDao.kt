@@ -24,7 +24,7 @@ class ExprTransformingSearchDao<T>(
                 it.name
             } else null
         }
-        val exprFields = rowExprs.filterNotNull().flatMap(Expr::fields)
+        val exprFields = rowExprs.filterNotNull().flatMap { FieldKeyHandler.fields(it) }
         val delegateFields = exprFields.plus(rowNames).filterNotNull().map { Field(name = it) }
         return delegate.search(request.copy(fields = delegateFields)).map { results ->
             val rows = transformRows(request, results.rows, delegateFields, rowExprs)
