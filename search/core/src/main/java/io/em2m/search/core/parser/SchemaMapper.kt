@@ -8,4 +8,6 @@ interface SchemaMapper {
 
     fun valueOf(field: String, str: String): Any?
 
+    fun typeOf(field: String): Class<out Any>?
+
 }
