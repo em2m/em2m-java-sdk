@@ -25,12 +25,6 @@ class ExprParser(val keyResolver: KeyResolver, val pipeTransformResolver: PipeTr
         return results
     }
 
-    fun parseRawField(text: String): PipePart {
-        val key = Key("field", text)
-        val handler = requireNotNull(keyResolver.find(key))
-        return PipePart(key, handler)
-    }
-
     fun parsePipe(text: String): PipePart {
         val splits = text.split("|")
         val key = Key.parse(splits.first().trim())
