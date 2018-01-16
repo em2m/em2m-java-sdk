@@ -15,10 +15,7 @@ data class Key(val namespace: String, val name: String) {
     }
 }
 
-
 interface KeyHandler {
-
-    fun fields(key: Key): List<String>
 
     fun call(key: Key, context: ExprContext): Any?
 
@@ -32,9 +29,6 @@ interface KeyResolver {
 
 abstract class KeyHandlerSupport : KeyHandler {
 
-    override fun fields(key: Key): List<String> {
-        return emptyList()
-    }
 }
 
 class ConstKeyHandler(val value: Any?) : KeyHandlerSupport() {

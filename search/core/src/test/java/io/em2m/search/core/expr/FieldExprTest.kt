@@ -40,7 +40,8 @@ class FieldExprTest : Assert() {
     fun testFieldNames() {
         val exprStr = "Label: #{field:fieldName | capitalize}".replace("#", "$")
         val expr = parser.parse(exprStr)
-        assertEquals(listOf("fieldName"), expr.fields)
+        val fields = FieldKeyHandler.fields(expr)
+        assertEquals(listOf("fieldName"), fields)
         assertNotNull(expr)
         val result = expr.call(RowContext(
                 mapOf(
@@ -55,7 +56,6 @@ class FieldExprTest : Assert() {
     fun testBucketLabel() {
         val exprStr = "#{bucket:key | capitalize}".replace("#", "$")
         val expr = parser.parse(exprStr)
-        assertEquals(emptyList<String>(), expr.fields)
         assertNotNull(expr)
         val bucket = Bucket(key = "ford", count = 5)
         val result = expr.call(BucketContext(request, emptyMap(), bucket).map)

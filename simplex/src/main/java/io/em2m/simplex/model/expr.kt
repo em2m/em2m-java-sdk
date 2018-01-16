@@ -11,13 +11,10 @@ interface PipeTransformResolver {
 }
 
 interface Part {
-    val fields: List<String>
     fun call(context: ExprContext): Any?
 }
 
-class PipePart(val key: Key, val handler: KeyHandler, val transforms: List<PipeTransform> = emptyList()) : Part {
-
-    override val fields = handler.fields(key)
+data class PipePart(val key: Key, val handler: KeyHandler, val transforms: List<PipeTransform> = emptyList()) : Part {
 
     override fun call(context: ExprContext): Any? {
         val contextKeys: KeyResolver? = context["keys"] as? KeyResolver
@@ -27,20 +24,17 @@ class PipePart(val key: Key, val handler: KeyHandler, val transforms: List<PipeT
     }
 }
 
-class ConstPart(val value: String) : Part {
+data class ConstPart(val value: String) : Part {
 
-    override val fields: List<String> = emptyList()
     override fun call(context: ExprContext): Any? {
         return value
     }
 }
 
-class Expr(val parts: List<Part>) {
-
-    val fields = parts.flatMap { it.fields }
+data class Expr(val parts: List<Part>) {
 
     fun call(context: ExprContext): Any? {
-        val values = parts.map { it.call(context) }.filterNotNull()
+        val values = parts.mapNotNull { it.call(context) }
         return if (values.size == 1) {
             values.first()
         } else {

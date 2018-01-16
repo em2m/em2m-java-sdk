@@ -9,15 +9,17 @@ import io.em2m.simplex.pipes.CapitalizePipe
 import io.em2m.simplex.pipes.NumberPipe
 import io.em2m.simplex.pipes.UpperCasePipe
 import org.junit.Assert
+import org.junit.Ignore
 import org.junit.Test
 
 
-class ExprTest : Assert() {
+@Ignore
+class PerfTest : Assert() {
 
     val keyResolver = BasicKeyResolver(mapOf(
             Key("ns", "key1") to ConstKeyHandler("value1"),
             Key("ns", "key2") to ConstKeyHandler("value2"),
-            Key("math", "PI") to ConstKeyHandler(Math.PI)))
+            Key("ns", "key3") to ConstKeyHandler(Math.PI)))
 
     val pipeResolver = BasicPipeTransformResolver(mapOf(
             "upperCase" to UpperCasePipe(),
@@ -27,32 +29,21 @@ class ExprTest : Assert() {
     val parser = ExprParser(keyResolver, pipeResolver)
 
     @Test
-    fun testParse() {
-        val exprStr = "#{ns:key1 | upperCase}/#{ns:key2 | capitalize}".replace("#", "$")
-        val expr = parser.parse(exprStr)
-        assertNotNull(expr)
-        val result = expr.call(emptyMap())
-        assertNotNull(result)
-        assertEquals("VALUE1/Value2", result)
-    }
-
-    @Test
     fun testContextKey() {
         val exprStr = "#{ns:key1 | upperCase}/#{ns:key2 | capitalize}".replace("#", "$")
+        val start = System.currentTimeMillis()
         val expr = requireNotNull(parser.parse(exprStr))
         val keys = BasicKeyResolver(mapOf(
                 Key("ns", "key1") to ConstKeyHandler("alt1"),
                 Key("ns", "key2") to ConstKeyHandler("alt2")))
-        val result = expr.call(mapOf("keys" to keys))
-        assertEquals("ALT1/Alt2", result)
-    }
-
-    @Test
-    fun testArgs() {
-        val exprStr = "#{math:PI | number:2}".replace("#", "$")
-        val expr = requireNotNull(parser.parse(exprStr))
-        val result = expr.call(emptyMap())
-        assertEquals("3.14", result)
+        (0..1_000_000).forEach {
+            expr.call(mapOf("keys" to keys))
+        }
+        val end = System.currentTimeMillis()
+        val total = end - start
+        val timePer = total / 1_000_000.0 * 1000.0
+        println("total time: $total")
+        println("Time per: $timePer microseconds")
     }
 
 }
