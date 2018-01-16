@@ -6,7 +6,7 @@ import com.fasterxml.jackson.annotation.JsonInclude
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 data class SearchRequest(var offset: Long = 0, var limit: Long = 10, var query: Query? = null,
-                         var headers: Map<String, Any> = emptyMap(),
+                         var params: Map<String, Any> = emptyMap(),
                          var fieldSet: String? = null,
                          var fields: List<Field> = emptyList(),
                          var sorts: List<DocSort> = emptyList(),

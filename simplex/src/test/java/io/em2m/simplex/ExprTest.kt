@@ -17,7 +17,7 @@ class ExprTest : Assert() {
     val keyResolver = BasicKeyResolver(mapOf(
             Key("ns", "key1") to ConstKeyHandler("value1"),
             Key("ns", "key2") to ConstKeyHandler("value2"),
-            Key("ns", "key3") to ConstKeyHandler(Math.PI)))
+            Key("math", "PI") to ConstKeyHandler(Math.PI)))
 
     val pipeResolver = BasicPipeTransformResolver(mapOf(
             "upperCase" to UpperCasePipe(),
@@ -49,7 +49,7 @@ class ExprTest : Assert() {
 
     @Test
     fun testArgs() {
-        val exprStr = "#{ns:key3 | number:2}".replace("#", "$")
+        val exprStr = "#{math:PI | number:2}".replace("#", "$")
         val expr = requireNotNull(parser.parse(exprStr))
         val result = expr.call(emptyMap())
         assertEquals("3.14", result)
