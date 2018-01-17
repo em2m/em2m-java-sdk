@@ -5,6 +5,8 @@ import com.fasterxml.jackson.core.JsonParser
 import com.fasterxml.jackson.core.TreeNode
 import com.fasterxml.jackson.databind.DeserializationContext
 import com.fasterxml.jackson.databind.JsonDeserializer
+import com.fasterxml.jackson.databind.node.ArrayNode
+import com.fasterxml.jackson.databind.node.ObjectNode
 import com.fasterxml.jackson.databind.node.TextNode
 import io.em2m.simplex.model.Condition
 import java.util.*
@@ -36,22 +38,32 @@ class ConditionsDeserializer : JsonDeserializer<List<Condition>>() {
         throw RuntimeException("Error parsing Condition")
     }
 
-    override fun deserialize(parser: JsonParser, context: DeserializationContext): List<Condition> {
-
-        val conditions = ArrayList<Condition>()
-
-        val tree = parser.readValueAsTree<TreeNode>()
-        require(tree.isObject)
+    fun parseConditionObject(tree: ObjectNode): List<Condition> {
+        val result = ArrayList<Condition>()
 
         tree.fieldNames().forEach { conditionType ->
-            try {
-                conditions.add(parseCondition(conditionType, tree.get(conditionType)))
-            } catch (e: RuntimeException) {
-                throw JsonParseException(parser, e.message)
-            }
+            result.add(parseCondition(conditionType, tree.get(conditionType)))
         }
 
-        return conditions
+        return result
+    }
+
+    override fun deserialize(parser: JsonParser, context: DeserializationContext): List<Condition> {
+
+        return try {
+            val conditions = ArrayList<Condition>()
+            val tree = parser.readValueAsTree<TreeNode>()
+            if (tree is ArrayNode) {
+                tree.forEach {
+                    conditions.addAll(parseConditionObject(it as ObjectNode))
+                }
+            } else if (tree is ObjectNode) {
+                conditions.addAll(parseConditionObject(tree))
+            }
+            conditions
+        } catch (e: RuntimeException) {
+            throw JsonParseException(parser, e.message)
+        }
     }
 
 }
