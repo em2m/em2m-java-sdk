@@ -2,7 +2,8 @@ package io.em2m.actions.runtimes
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.em2m.actions.model.ActionContext
-import io.em2m.actions.model.ActionError
+import io.em2m.actions.model.Problem
+import io.em2m.actions.model.ProblemException
 import io.em2m.flows.FlowNotFound
 import io.em2m.flows.Processor
 import java.io.InputStream
@@ -31,22 +32,18 @@ class ServletRuntime(private val actionPrefix: String, private val processor: Pr
                         }
                     },
                     { error ->
-                        handleError(response, ActionError.convert(error, context))
+                        handleError(response, ProblemException(error).problem)
                     }
             )
         } catch (ex: FlowNotFound) {
-            handleError(response, ActionError.convert(ex, context))
+            handleError(response, ProblemException(ex).problem)
         }
     }
 
-    private fun handleError(response: HttpServletResponse, error: ActionError) {
-        val entity = mapOf(
-                "status" to error.status,
-                "code" to error.code,
-                "messages" to error.messages)
+    private fun handleError(response: HttpServletResponse, problem: Problem) {
         response.contentType = "application/json"
-        response.status = error.status
-        mapper.writeValue(response.outputStream, entity)
+        response.status = problem.status
+        mapper.writeValue(response.outputStream, problem)
     }
 
     private fun createEnvironment(servletRequest: HttpServletRequest): Map<String, Any?> {

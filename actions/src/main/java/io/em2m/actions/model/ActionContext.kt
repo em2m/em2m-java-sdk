@@ -17,8 +17,7 @@ data class ActionContext(val actionName: String,
                          var requestId: String = UUID.randomUUID().toString(),
                          var request: Any? = null,
                          var multipart: MultipartData? = null,
-                         val response: Response = Response(),
-                         val error: ActionError? = null) {
+                         val response: Response = Response()) {
 
     val keyHandlers = HashMap<Key, KeyHandler>()
 

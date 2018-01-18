@@ -3,8 +3,8 @@ package io.em2m.actions.xforms
 
 import com.auth0.jwt.JWTVerifier
 import io.em2m.actions.model.ActionContext
-import io.em2m.actions.model.ActionError
 import io.em2m.actions.model.ActionTransformerSupport
+import io.em2m.actions.model.Problem
 import io.em2m.flows.Priorities
 import org.slf4j.LoggerFactory
 import rx.Observable
@@ -20,10 +20,10 @@ class JwtTransformer(val secretKey: String, val requireAuth: Boolean = false) : 
                 if (claims != null) {
                     context.claims = claims
                 } else {
-                    throw ActionError(ActionError.Status.NOT_AUTHORIZED, 0, listOf(ActionError.Message("Not Authorized")))
+                    Problem(status = Problem.Status.NOT_AUTHORIZED, title = "Not Authorized").throwException()
                 }
             } else if (requireAuth) {
-                throw ActionError(ActionError.Status.NOT_AUTHORIZED, 0, listOf(ActionError.Message("Not Authorized")))
+                Problem(status = Problem.Status.NOT_AUTHORIZED, title = "Not Authorized").throwException()
             }
         }
     }

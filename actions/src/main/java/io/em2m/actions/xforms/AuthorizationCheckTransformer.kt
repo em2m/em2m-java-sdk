@@ -2,8 +2,8 @@ package io.em2m.actions.xforms
 
 
 import io.em2m.actions.model.ActionContext
-import io.em2m.actions.model.ActionError
 import io.em2m.actions.model.ActionTransformer
+import io.em2m.actions.model.Problem
 import io.em2m.flows.Priorities
 import io.em2m.policy.model.PolicyEngine
 import org.slf4j.LoggerFactory
@@ -23,7 +23,7 @@ class AuthorizationCheckTransformer(val policyEngine: PolicyEngine, override val
             log.debug("$actionName allowed: $allowed")
 
             if (!allowed) {
-                throw ActionError(ActionError.Status.FORBIDDEN, messages = listOf(ActionError.Message("Forbidden")))
+                Problem(status = Problem.Status.FORBIDDEN, title = "Forbidden").throwException()
             }
         }
     }
