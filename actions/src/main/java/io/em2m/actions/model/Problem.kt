@@ -13,8 +13,7 @@ class Problem(val type: String? = "about:blank",
               val status: Int = 500,
               val detail: String? = null,
               val instance: String? = null,
-              ext: MutableMap<String, Any?> = HashMap()) {
-
+              ext: Map<String, Any?> = HashMap()) {
 
     @JsonIgnore
     val extensions: MutableMap<String, Any?> = HashMap()
@@ -41,9 +40,10 @@ class Problem(val type: String? = "about:blank",
 
         fun convert(throwable: Throwable): Problem {
             return when (throwable) {
+                is ProblemException -> throwable.problem
                 is FlowNotFound -> Problem(status = Status.NOT_FOUND, title = "Action ${throwable.name} not found.")
                 is IllegalStateException -> Problem(status = Status.CONFLICT, title = "Conflict", detail = throwable.message)
-                is IllegalArgumentException -> Problem(status = Status.CONFLICT, title = "Bad Request", detail = throwable.message)
+                is IllegalArgumentException -> Problem(status = Status.BAD_REQUEST, title = "Bad Request", detail = throwable.message)
                 else -> Problem(status = Status.INTERNAL_SERVER_ERROR, title = "Internal Server Error", detail = throwable.message)
             }
         }
