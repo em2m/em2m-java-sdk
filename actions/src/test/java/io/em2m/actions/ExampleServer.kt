@@ -77,7 +77,7 @@ class ExampleServer {
                 .flow("Echo", echoFlow)
                 .build()
 
-        val runtime = ServletRuntime("openelt", processor)
+        val runtime = ServletRuntime("demo", processor)
 
         override fun doPost(request: HttpServletRequest, response: HttpServletResponse) {
             val actionName = request.pathInfo.substring(1)
