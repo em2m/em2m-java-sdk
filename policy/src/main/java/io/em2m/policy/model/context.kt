@@ -4,7 +4,7 @@ import io.em2m.simplex.model.KeyResolver
 import java.util.*
 
 
-class Claims(initial: Map<String, Any>) {
+class Claims(initial: Map<String, Any?>) {
 
     val map = HashMap(initial)
 
