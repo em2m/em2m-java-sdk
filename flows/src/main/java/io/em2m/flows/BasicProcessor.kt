@@ -36,6 +36,7 @@ class BasicProcessor<T>(val flowResolver: FlowResolver<T>, val standardXforms: L
         private val instances = HashMap<String, Flow<T>>()
         private val modules = ArrayList<Module>()
         private var injector: Injector? = null
+        private val xforms = ArrayList<Transformer<T>>()
 
         fun injector(injector: Injector): Builder<T> {
             this.injector = injector
@@ -44,6 +45,11 @@ class BasicProcessor<T>(val flowResolver: FlowResolver<T>, val standardXforms: L
 
         fun module(module: Module): Builder<T> {
             modules.add(module)
+            return this
+        }
+
+        fun transformer(transformer: Transformer<T>): Builder<T> {
+            xforms.add(transformer)
             return this
         }
 
@@ -60,7 +66,7 @@ class BasicProcessor<T>(val flowResolver: FlowResolver<T>, val standardXforms: L
         fun build(): Processor<T> {
             val injector = injector?.createChildInjector(modules) ?: Guice.createInjector(modules)
             val resolver = LookupFlowResolver(injector, classes, instances)
-            return BasicProcessor(resolver)
+            return BasicProcessor(resolver, xforms)
         }
 
     }

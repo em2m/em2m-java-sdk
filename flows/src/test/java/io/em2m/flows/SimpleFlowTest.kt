@@ -37,6 +37,14 @@ class TestModule : Module {
 
 }
 
+class NoOpTransformer(override val priority: Int = Priorities.INIT) : Transformer<Context> {
+
+    override fun call(obs: Observable<Context>): Observable<Context> {
+        return obs
+    }
+
+}
+
 
 class SimpleFlowTest {
 
@@ -57,6 +65,7 @@ class SimpleFlowTest {
     fun testBuilder() {
         val processor = BasicProcessor.Builder<Context>()
                 .module(TestModule())
+                .transformer(NoOpTransformer())
                 .flow("test", LoggingFlow::class)
                 .build()
         val source = Observable.just<Context>(mapOf("key" to "v2"), mapOf("key" to "v3"))
