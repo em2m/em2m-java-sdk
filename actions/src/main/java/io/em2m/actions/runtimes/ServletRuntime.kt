@@ -32,15 +32,15 @@ class ServletRuntime(private val actionPrefix: String, private val processor: Pr
                         }
                     },
                     { error ->
-                        handleError(response, ProblemException(error).problem)
+                        handleError(response, context, ProblemException(error).problem)
                     }
             )
         } catch (ex: FlowNotFound) {
-            handleError(response, ProblemException(ex).problem)
+            handleError(response, context, ProblemException(ex).problem)
         }
     }
 
-    private fun handleError(response: HttpServletResponse, problem: Problem) {
+    private fun handleError(response: HttpServletResponse, context: ActionContext, problem: Problem) {
         response.contentType = "application/json"
         response.status = problem.status
         mapper.writeValue(response.outputStream, problem)

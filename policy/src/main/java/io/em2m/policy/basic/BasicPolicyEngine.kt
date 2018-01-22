@@ -23,16 +23,20 @@ class BasicPolicyEngine(val policySource: PolicySource, keyResolver: KeyResolver
     }
 
     override fun isActionAllowed(actionName: String, context: PolicyContext): Boolean {
+        return checkAction(actionName, context).allowed
+    }
+
+    override fun checkAction(actionName: String, context: PolicyContext): ActionCheck {
         val roles = context.claims.roles.plus("anonymous").distinct()
-        val statements = statementsForRolesAndAction(roles, actionName)
-                .filter { testResource(it, context) }
-                .filter { expr.testConditions(it.condition, context.map) }
-        val nDeny = statements.count { it.effect == Effect.Deny }
-        val nAllow = statements.count { it.effect == Effect.Allow }
-        return if (nDeny > 0) {
+        val statements = statementsForRolesAndAction(roles, actionName).filter { testResource(it, context) }
+        val matches = statements.filter { expr.testConditions(it.condition, context.map) }
+        val nDeny = matches.count { it.effect == Effect.Deny }
+        val nAllow = matches.count { it.effect == Effect.Allow }
+        val allowed = if (nDeny > 0) {
             LOG.warn("User attempted to execute an explicitly denied action: Account ID = ${context.claims.sub}, Action = $actionName")
             false
         } else nAllow > 0
+        return ActionCheck(allowed, statements.size, nAllow, nDeny)
     }
 
     fun testResource(statement: Statement, context: PolicyContext): Boolean {

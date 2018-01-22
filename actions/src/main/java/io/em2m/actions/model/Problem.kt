@@ -8,7 +8,7 @@ import io.em2m.flows.FlowNotFound
 
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
-class Problem(val type: String? = "about:blank",
+class Problem(val type: String? = null,
               val title: String,
               val status: Int = 500,
               val detail: String? = null,
@@ -24,8 +24,9 @@ class Problem(val type: String? = "about:blank",
     }
 
     @JsonAnySetter
-    fun setAny(key: String, value: Any?) {
-        extensions.put(key, value)
+    fun setAny(key: String, value: Any?): Problem {
+        extensions[key] = value
+        return this
     }
 
     fun throwException(): Nothing {
