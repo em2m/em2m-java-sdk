@@ -3,7 +3,6 @@ package io.em2m.actions.runtimes
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.em2m.actions.model.ActionContext
 import io.em2m.actions.model.Problem
-import io.em2m.actions.model.ProblemException
 import io.em2m.flows.FlowNotFound
 import io.em2m.flows.Processor
 import java.io.InputStream
@@ -32,15 +31,19 @@ class ServletRuntime(private val actionPrefix: String, private val processor: Pr
                         }
                     },
                     { error ->
-                        handleError(response, context, ProblemException(error).problem)
+                        handleError(response, context, error)
                     }
             )
-        } catch (ex: FlowNotFound) {
-            handleError(response, context, ProblemException(ex).problem)
+        } catch (error: FlowNotFound) {
+            handleError(response, context, error)
         }
     }
 
-    private fun handleError(response: HttpServletResponse, context: ActionContext, problem: Problem) {
+    private fun handleError(response: HttpServletResponse, context: ActionContext, error: Throwable) {
+        val problem = Problem.convert(error)
+        if (context.debug) {
+            problem.setAny("stackTrace", error.stackTrace)
+        }
         response.contentType = "application/json"
         response.status = problem.status
         mapper.writeValue(response.outputStream, problem)
