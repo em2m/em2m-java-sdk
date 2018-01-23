@@ -33,8 +33,7 @@ class JwtTransformer(val secretKey: String, val requireAuth: Boolean = false) : 
             val jwtVerifier = JWTVerifier(secretKey)
             jwtVerifier.verify(token)
         } catch (ex: Exception) {
-            LOG.error("Unable to parse/verify the provided JWT token: ", ex)
-            emptyMap()
+            Problem(status = Problem.Status.NOT_AUTHORIZED, title = "Not Authorized", detail = ex.message).throwException()
         }
     }
 
