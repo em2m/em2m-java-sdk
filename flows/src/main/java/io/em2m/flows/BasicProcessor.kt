@@ -23,10 +23,20 @@ class BasicProcessor<T>(val flowResolver: FlowResolver<T>, val standardXforms: L
 
         val transformers = ArrayList(flow.transformers)
                 .plus(standardXforms)
+                .plus(FlowTransformer(flow))
                 .sortedBy { it.priority }
 
         return Observable.Transformer { observable ->
             transformers.fold(observable) { single, xform -> single.compose(xform) }
+        }
+    }
+
+    class FlowTransformer<T>(val flow: Flow<T>) : Transformer<T> {
+
+        override val priority: Int = Priorities.MAIN
+
+        override fun call(obs: Observable<T>): Observable<T> {
+            return flow.main(obs)
         }
     }
 
