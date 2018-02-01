@@ -4,9 +4,9 @@ import com.fasterxml.jackson.core.JsonProcessingException
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.em2m.actions.model.ActionContext
+import io.em2m.actions.model.ActionTransformerSupport
 import io.em2m.actions.model.Problem
 import io.em2m.flows.Priorities
-import io.em2m.flows.TransformerSupport
 import org.xerial.snappy.SnappyInputStream
 import rx.Observable
 import java.io.IOException
@@ -14,7 +14,7 @@ import java.util.zip.DeflaterInputStream
 import java.util.zip.GZIPInputStream
 
 class JacksonRequestTransformer(val type: Class<out Any>, val objectMapper: ObjectMapper = jacksonObjectMapper())
-    : TransformerSupport<ActionContext>(Priorities.PARSE) {
+    : ActionTransformerSupport(Priorities.PARSE) {
 
     override fun call(source: Observable<ActionContext>): Observable<ActionContext> {
 

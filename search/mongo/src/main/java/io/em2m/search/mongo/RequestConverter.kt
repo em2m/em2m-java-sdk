@@ -83,6 +83,10 @@ class RequestConverter(private val schemaMapper: SchemaMapper, val objectMapper:
             val pattern = Pattern.compile(Matcher.quoteReplacement(phrase), Pattern.CASE_INSENSITIVE)
             Filters.regex(field, pattern)
         }
+        is RegexQuery -> {
+            val pattern = Pattern.compile(query.value, Pattern.CASE_INSENSITIVE)
+            Filters.regex(query.field, pattern)
+        }
         is BboxQuery -> {
             val bbox = query.value
             Filters.geoWithinBox(query.field, bbox.minX, bbox.minY, bbox.maxX, bbox.maxY)
@@ -97,7 +101,7 @@ class RequestConverter(private val schemaMapper: SchemaMapper, val objectMapper:
             Filters.exists(query.field, query.value ?: true)
         }
         else -> {
-            throw NotImplementedError()
+            throw NotImplementedError("Query type (${query?.javaClass} Not supported")
         }
     }
 

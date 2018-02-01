@@ -4,12 +4,11 @@ import com.google.inject.Binder
 import com.google.inject.Module
 import com.google.inject.name.Names
 import io.em2m.actions.model.ActionContext
+import io.em2m.actions.model.JacksonActionFlow
 import io.em2m.actions.runtimes.ServletRuntime
-import io.em2m.actions.xforms.JacksonRequestTransformer
 import io.em2m.actions.xforms.LoggingTransformer
 import io.em2m.flows.BasicProcessor
 import io.em2m.flows.Flow
-import io.em2m.flows.MainFlow
 import io.em2m.flows.Priorities.Companion.MAIN
 import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.server.handler.HandlerList
@@ -62,9 +61,9 @@ class ExampleServer {
             )
         }
 
-        val echoFlow = object : MainFlow<ActionContext>(mutableListOf(JacksonRequestTransformer(Any::class.java))) {
+        val echoFlow = object : JacksonActionFlow(Any::class) {
 
-            override fun call(source: Observable<ActionContext>): Observable<ActionContext> {
+            override fun main(source: Observable<ActionContext>): Observable<ActionContext> {
                 return source.doOnNext {
                     it.response.entity = it.request
                 }
