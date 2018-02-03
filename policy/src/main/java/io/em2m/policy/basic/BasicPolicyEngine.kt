@@ -2,8 +2,11 @@ package io.em2m.policy.basic
 
 import io.em2m.policy.model.*
 import io.em2m.simplex.basic.ExprService
+import io.em2m.simplex.model.BasicPipeTransformResolver
 import io.em2m.simplex.model.ConditionResolver
 import io.em2m.simplex.model.KeyResolver
+import io.em2m.simplex.std.Numbers
+import io.em2m.simplex.std.Strings
 import org.slf4j.LoggerFactory
 import java.util.regex.Matcher
 
@@ -11,7 +14,11 @@ class BasicPolicyEngine(val policySource: PolicySource, keyResolver: KeyResolver
 
     var LOG = LoggerFactory.getLogger(javaClass)
 
-    val expr = ExprService(keyResolver, conditionResolver)
+    val pipeResolver = BasicPipeTransformResolver()
+            .delegate(Numbers.pipes)
+            .delegate(Strings.pipes)
+
+    val expr = ExprService(keyResolver, pipeResolver, conditionResolver)
 
     override fun findAllowedActions(context: PolicyContext): List<String> {
         val roles = context.claims.roles.plus("anonymous").distinct()

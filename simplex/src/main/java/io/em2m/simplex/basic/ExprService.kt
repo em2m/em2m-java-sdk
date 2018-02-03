@@ -2,16 +2,12 @@ package io.em2m.simplex.basic
 
 import io.em2m.simplex.model.*
 import io.em2m.simplex.parser.ExprParser
-import io.em2m.simplex.pipes.CapitalizePipe
-import io.em2m.simplex.pipes.UpperCasePipe
 import org.slf4j.LoggerFactory
 
 
-class ExprService(val keyResolver: KeyResolver, val conditionResolver: ConditionResolver) {
+class ExprService(private val keyResolver: KeyResolver, private val pipeResolver: PipeTransformResolver, private val conditionResolver: ConditionResolver) {
 
     var LOG = LoggerFactory.getLogger(javaClass)
-
-    val pipeResolver = BasicPipeTransformResolver(mapOf("upperCase" to UpperCasePipe(), "capitalize" to CapitalizePipe()))
 
     val parser = ExprParser(keyResolver, pipeResolver)
 
@@ -34,10 +30,10 @@ class ExprService(val keyResolver: KeyResolver, val conditionResolver: Condition
     }
 
     private fun getKeyValue(key: String, context: ExprContext): Any? {
-        val key = Key.parse(key)
+        val parsedKey = Key.parse(key)
         val contextKeys: KeyResolver? = context["keys"] as? KeyResolver
-        val handler = contextKeys?.find(key) ?: keyResolver.find(key)
-        return handler?.call(key, context)
+        val handler = contextKeys?.find(parsedKey) ?: keyResolver.find(parsedKey)
+        return handler?.call(parsedKey, context)
     }
 
     fun getValue(value: String, context: ExprContext): Any? {

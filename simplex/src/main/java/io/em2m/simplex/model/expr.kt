@@ -6,10 +6,6 @@ interface PipeTransform {
     fun args(args: List<String>) {}
 }
 
-interface PipeTransformResolver {
-    fun find(key: String): PipeTransform?
-}
-
 interface Part {
     fun call(context: ExprContext): Any?
 }
@@ -20,7 +16,7 @@ data class PipePart(val key: Key, val handler: KeyHandler, val transforms: List<
         val contextKeys: KeyResolver? = context["keys"] as? KeyResolver
         val handler = contextKeys?.find(key) ?: handler
         val initial = handler.call(key, context)
-        return transforms.fold(initial, { initial, pipe -> pipe.transform(initial) })
+        return transforms.fold(initial, { current, pipe -> pipe.transform(current) })
     }
 }
 
@@ -41,4 +37,46 @@ data class Expr(val parts: List<Part>) {
             values.joinToString("")
         }
     }
+}
+
+interface PipeTransformResolver {
+    fun find(key: String): PipeTransform?
+}
+
+class BasicPipeTransformResolver(handlers: Map<String, PipeTransform> = emptyMap()) : PipeTransformResolver {
+
+    val handlers = HashMap<String, (String) -> PipeTransform>()
+
+    private val delegates = ArrayList<PipeTransformResolver>()
+
+    init {
+        handlers.forEach {
+            this.handlers.put(it.key, { _ -> it.value })
+        }
+    }
+
+    fun delegate(delegate: PipeTransformResolver): BasicPipeTransformResolver {
+        delegates.add(delegate)
+        return this
+    }
+
+    fun transform(key: String, transform: PipeTransform): BasicPipeTransformResolver {
+        handlers.put(key, { _ -> transform })
+        return this
+    }
+
+    fun transform(key: String, transform: (String) -> PipeTransform): BasicPipeTransformResolver {
+        handlers.put(key, transform)
+        return this
+    }
+
+    override fun find(key: String): PipeTransform? {
+        var result = handlers[key]?.invoke(key)
+        for (delegate in delegates) {
+            if (result != null) break
+            result = delegate.find(key)
+        }
+        return result
+    }
+
 }

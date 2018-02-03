@@ -3,10 +3,12 @@ package io.em2m.search.core.expr
 import com.nhaarman.mockito_kotlin.any
 import com.nhaarman.mockito_kotlin.doReturn
 import com.nhaarman.mockito_kotlin.mock
-import io.em2m.simplex.basic.BasicKeyResolver
-import io.em2m.simplex.basic.BasicPipeTransformResolver
-import io.em2m.simplex.model.Key
 import io.em2m.search.core.model.*
+import io.em2m.simplex.model.BasicKeyResolver
+import io.em2m.simplex.model.BasicPipeTransformResolver
+import io.em2m.simplex.model.Key
+import io.em2m.simplex.std.Numbers
+import io.em2m.simplex.std.Strings
 import org.junit.Assert
 import org.junit.Test
 import rx.Observable
@@ -20,7 +22,9 @@ class ExprDaoTest : Assert() {
             Key("bucket", "key") to BucketKeyKeyHandler(),
             Key("f", "*") to FieldKeyHandler()))
 
-    val pipeResolver = BasicPipeTransformResolver(mapOf("upperCase" to UpperCasePipe(), "capitalize" to CapitalizePipe()))
+    val pipeResolver = BasicPipeTransformResolver()
+            .delegate(Numbers.pipes)
+            .delegate(Strings.pipes)
 
     val request = SearchRequest()
 

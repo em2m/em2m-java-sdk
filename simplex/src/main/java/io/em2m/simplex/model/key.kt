@@ -21,12 +21,6 @@ interface KeyHandler {
 
 }
 
-interface KeyResolver {
-
-    fun find(key: Key): KeyHandler?
-
-}
-
 abstract class KeyHandlerSupport : KeyHandler {
 
 }
@@ -38,3 +32,49 @@ class ConstKeyHandler(val value: Any?) : KeyHandlerSupport() {
     }
 
 }
+
+interface KeyResolver {
+
+    fun find(key: Key): KeyHandler?
+
+}
+
+class BasicKeyResolver(handlers: Map<Key, KeyHandler> = emptyMap(), vararg delegates: KeyResolver) : KeyResolver {
+
+    private val delegates = ArrayList<KeyResolver>()
+
+    private val handlers = HashMap<Key, (Key) -> KeyHandler>()
+
+    init {
+        handlers.forEach {
+            this.handlers.put(it.key, { _ -> it.value })
+        }
+        this.delegates.addAll(delegates)
+    }
+
+    fun delegate(resolver: KeyResolver): BasicKeyResolver {
+        delegates.add(resolver)
+        return this
+    }
+
+    fun key(key: Key, handler: (Key) -> KeyHandler): BasicKeyResolver {
+        handlers.put(key, handler)
+        return this
+    }
+
+    fun key(key: Key, handler: KeyHandler): BasicKeyResolver {
+        handlers.put(key, { _ -> handler })
+        return this
+    }
+
+    override fun find(key: Key): KeyHandler? {
+        var result = (handlers[key] ?: handlers[key.copy(name = "*")])?.invoke(key)
+        for (delegate in delegates) {
+            if (result != null) break
+            result = delegate.find(key)
+        }
+        return result
+    }
+
+}
+
