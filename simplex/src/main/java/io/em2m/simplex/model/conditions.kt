@@ -11,9 +11,14 @@ interface ConditionResolver {
     fun getCondition(condition: String): ConditionHandler?
 }
 
-class BasicConditionResolver(val conditions: Map<String, ConditionHandler>) : ConditionResolver {
+class BasicConditionResolver(val conditions: Map<String, ConditionHandler>, private vararg val delegates: ConditionResolver) : ConditionResolver {
     override fun getCondition(condition: String): ConditionHandler? {
-        return conditions[condition]
+        var result = conditions[condition]
+        for (delegate in delegates) {
+            if (result != null) break
+            result = delegate.getCondition(condition)
+        }
+        return result
     }
 }
 

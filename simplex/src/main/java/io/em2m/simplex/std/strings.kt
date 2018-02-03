@@ -1,7 +1,26 @@
-package io.em2m.simplex.conditions
+package io.em2m.simplex.std
 
 import com.scaleset.utils.Coerce
-import io.em2m.simplex.model.ConditionHandler
+import io.em2m.simplex.model.*
+
+
+class UpperCasePipe : PipeTransform {
+    override fun transform(value: Any?): Any? {
+        return if (value != null) {
+            value.toString().toUpperCase()
+        } else null
+    }
+
+}
+
+class CapitalizePipe : PipeTransform {
+    override fun transform(value: Any?): Any? {
+        return if (value != null) {
+            value.toString().capitalize()
+        } else null
+    }
+
+}
 
 
 open class SingleStringHandler(val op: (String, String) -> Boolean) : ConditionHandler {
@@ -83,3 +102,11 @@ val StandardStringConditions = mapOf(
         "ForAnyValue:StringEqualsIgnoreCase" to ForAnyStringEqualsIgnoreCase(),
         "ForAnyValue:StringNotEqualsIgnoreCase" to ForAnyStringNotEqualsIgnoreCase()
 )
+
+object Strings {
+
+    val pipes = BasicPipeTransformResolver(mapOf("upperCase" to UpperCasePipe(), "capitalize" to CapitalizePipe()))
+    val keys = BasicKeyResolver()
+    val conditions = BasicConditionResolver(StandardStringConditions)
+
+}
