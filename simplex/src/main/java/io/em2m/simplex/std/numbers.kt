@@ -26,12 +26,12 @@ class NumberPipe : PipeTransform {
 
 }
 
-class PrecisionPipe : PipeTransform {
+class RoundPipe : PipeTransform {
 
-    private var precision: Int = 3
+    private var precision: Int = 0
 
     override fun args(args: List<String>) {
-        if (args.size > 0) {
+        if (args.isNotEmpty()) {
             precision = Integer.parseInt(args[0])
         }
     }
@@ -39,7 +39,7 @@ class PrecisionPipe : PipeTransform {
     override fun transform(value: Any?): Any? {
         return if (value is Number) {
             BigDecimal(value.toDouble()).setScale(precision, RoundingMode.HALF_UP)
-        } else null
+        } else value
     }
 
 }
@@ -56,7 +56,7 @@ object Numbers {
 
     val pipes = BasicPipeTransformResolver()
             .transform("number", { _ -> NumberPipe() })
-            .transform("precision", { _ -> PrecisionPipe() })
+            .transform("round", { _ -> RoundPipe() })
 
     val keys = BasicKeyResolver()
             .key(Key("Math", "PI"), { _ -> ConstKeyHandler(Math.PI) })
