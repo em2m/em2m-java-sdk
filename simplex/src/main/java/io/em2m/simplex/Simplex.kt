@@ -13,8 +13,6 @@ class Simplex {
     private val pipes = BasicPipeTransformResolver().delegate(Numbers.pipes).delegate(Strings.pipes)
     private val conditions = BasicConditionResolver().delegate(Strings.conditions)
 
-    var LOG = LoggerFactory.getLogger(javaClass)
-
     val parser = ExprParser(keys, pipes)
 
     fun keys(delegate: KeyResolver): Simplex {
@@ -35,7 +33,6 @@ class Simplex {
     fun testConditions(conditions: List<Condition>, context: ExprContext): Boolean {
         var result = true
         conditions.forEach {
-            LOG.debug("condition: ${it.op}")
             val conditionHandler = getCondition(it.op)
             val keyValue = getKeyValue(it.key, context)
             val values = it.value.map { eval(it, context) }
