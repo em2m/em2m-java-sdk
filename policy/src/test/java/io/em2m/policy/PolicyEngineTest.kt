@@ -6,12 +6,11 @@ import io.em2m.policy.basic.ListPolicySource
 import io.em2m.policy.model.Claims
 import io.em2m.policy.model.Environment
 import io.em2m.policy.model.PolicyContext
-import io.em2m.simplex.basic.BasicKeyResolver
-import io.em2m.simplex.conditions.StandardStringConditions
-import io.em2m.simplex.model.BasicConditionResolver
+import io.em2m.simplex.model.BasicKeyResolver
 import io.em2m.simplex.model.ExprContext
 import io.em2m.simplex.model.Key
 import io.em2m.simplex.model.KeyHandlerSupport
+import io.em2m.simplex.std.Strings
 import org.junit.Assert
 import org.junit.Ignore
 import org.junit.Test
@@ -27,8 +26,8 @@ class PolicyEngineTest : Assert() {
             Key("claims", "org") to EnvOrganizationKey(),
             Key("report", "ReportType") to ReportTypeKey())
     )
-    val conditionResolver = BasicConditionResolver(StandardStringConditions)
-    val policyEngine = BasicPolicyEngine(policySource, keyResolver, conditionResolver)
+    val conditionResolver = Strings.conditions
+    val policyEngine = BasicPolicyEngine(policySource, keyResolver, Strings.conditions)
 
     @Test
     fun testFindAllowedActions() {

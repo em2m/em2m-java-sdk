@@ -1,13 +1,12 @@
 package io.em2m.simplex
 
-import io.em2m.simplex.basic.BasicKeyResolver
-import io.em2m.simplex.basic.BasicPipeTransformResolver
+import io.em2m.simplex.model.BasicKeyResolver
+import io.em2m.simplex.model.BasicPipeTransformResolver
 import io.em2m.simplex.model.ConstKeyHandler
 import io.em2m.simplex.model.Key
 import io.em2m.simplex.parser.ExprParser
-import io.em2m.simplex.pipes.CapitalizePipe
-import io.em2m.simplex.pipes.NumberPipe
-import io.em2m.simplex.pipes.UpperCasePipe
+import io.em2m.simplex.std.Numbers
+import io.em2m.simplex.std.Strings
 import org.junit.Assert
 import org.junit.Test
 
@@ -16,13 +15,12 @@ class ExprTest : Assert() {
 
     val keyResolver = BasicKeyResolver(mapOf(
             Key("ns", "key1") to ConstKeyHandler("value1"),
-            Key("ns", "key2") to ConstKeyHandler("value2"),
-            Key("math", "PI") to ConstKeyHandler(Math.PI)))
+            Key("ns", "key2") to ConstKeyHandler("value2")))
+            .delegate(Numbers.keys)
 
-    val pipeResolver = BasicPipeTransformResolver(mapOf(
-            "upperCase" to UpperCasePipe(),
-            "capitalize" to CapitalizePipe(),
-            "number" to NumberPipe()))
+    val pipeResolver = BasicPipeTransformResolver()
+            .delegate(Strings.pipes)
+            .delegate(Numbers.pipes)
 
     val parser = ExprParser(keyResolver, pipeResolver)
 
@@ -49,7 +47,7 @@ class ExprTest : Assert() {
 
     @Test
     fun testArgs() {
-        val exprStr = "#{math:PI | number:2}".replace("#", "$")
+        val exprStr = "#{Math:PI | number:2}".replace("#", "$")
         val expr = requireNotNull(parser.parse(exprStr))
         val result = expr.call(emptyMap())
         assertEquals("3.14", result)

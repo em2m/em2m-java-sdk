@@ -4,10 +4,12 @@ import io.em2m.search.core.model.Bucket
 import io.em2m.search.core.model.BucketContext
 import io.em2m.search.core.model.RowContext
 import io.em2m.search.core.model.SearchRequest
-import io.em2m.simplex.basic.BasicKeyResolver
-import io.em2m.simplex.basic.BasicPipeTransformResolver
+import io.em2m.simplex.model.BasicKeyResolver
+import io.em2m.simplex.model.BasicPipeTransformResolver
 import io.em2m.simplex.model.Key
 import io.em2m.simplex.parser.ExprParser
+import io.em2m.simplex.std.Numbers
+import io.em2m.simplex.std.Strings
 import org.junit.Assert
 import org.junit.Test
 
@@ -20,7 +22,9 @@ class FieldExprTest : Assert() {
             Key("bucket", "key") to BucketKeyKeyHandler(),
             Key("field", "*") to FieldKeyHandler()))
 
-    val pipeResolver = BasicPipeTransformResolver(mapOf("upperCase" to UpperCasePipe(), "capitalize" to CapitalizePipe()))
+    val pipeResolver = BasicPipeTransformResolver()
+            .delegate(Numbers.pipes)
+            .delegate(Strings.pipes)
 
     val request = SearchRequest()
 
