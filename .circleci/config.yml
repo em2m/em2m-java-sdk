@@ -7,7 +7,6 @@ jobs:
   build:
     machine:
       enabled: true
-
       # Specify service dependencies here if necessary
       # CircleCI maintains a library of pre-built images
       # documented at https://circleci.com/docs/2.0/circleci-images/
@@ -15,10 +14,18 @@ jobs:
 
     working_directory: ~/repo
 
-    environment:
-
     steps:
       - checkout
+
+      - run:
+          name: Run elasticsearch
+          command: 'docker run -d -p 9200:9200 elasticsearch:2.4'
+      - run:
+          name: Run mongo
+          command: 'docker run -d -p 27017:27017 mongo:latest'
+      - run:
+          name: Run redis
+          command: 'docker run -d -p 6379:6379 redis:3.0'
 
       # Download and cache dependencies
       - restore_cache:
@@ -27,12 +34,10 @@ jobs:
           # fallback to using the latest cache if no exact match is found
           - v1-dependencies-
 
-      - run: mvn -B clean install -DskipTests
+      - run:
+          command: mvn -B clean deploy
 
       - save_cache:
           paths:
             - ~/.m2
           key: v1-dependencies-{{ checksum "pom.xml" }}
-
-      # run tests!
-      - run: mvn install -DskipTests
