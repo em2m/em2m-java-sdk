@@ -35,7 +35,7 @@ jobs:
           - v1-dependencies-
 
       - run:
-          command: mvn -B clean deploy
+          command: mvn -B clean deploy -q
 
       - save_cache:
           paths:
