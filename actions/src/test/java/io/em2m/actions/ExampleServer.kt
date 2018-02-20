@@ -66,7 +66,7 @@ class ExampleServer {
 
             override fun main(source: Observable<ActionContext>): Observable<ActionContext> {
                 return source.doOnNext {
-                    responseEntity(it, it.request)
+                    response(it, it.request)
                 }
             }
         }
