@@ -1,10 +1,10 @@
 package io.em2m.search.core.model
 
-import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonInclude
 
-@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
+@JsonIgnoreProperties(ignoreUnknown = true)
 data class SearchRequest(var offset: Long = 0, var limit: Long = 10, var query: Query? = null,
                          var params: Map<String, Any> = emptyMap(),
                          var fieldSet: String? = null,
