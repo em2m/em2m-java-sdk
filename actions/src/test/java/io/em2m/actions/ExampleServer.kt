@@ -4,8 +4,9 @@ import com.google.inject.Binder
 import com.google.inject.Module
 import com.google.inject.name.Names
 import io.em2m.actions.model.ActionContext
-import io.em2m.actions.model.JacksonActionFlow
+import io.em2m.actions.model.TypedActionFlow
 import io.em2m.actions.runtimes.ServletRuntime
+import io.em2m.actions.xforms.JacksonRequestTransformer
 import io.em2m.actions.xforms.LoggingTransformer
 import io.em2m.flows.BasicProcessor
 import io.em2m.flows.Flow
@@ -61,17 +62,18 @@ class ExampleServer {
             )
         }
 
-        val echoFlow = object : JacksonActionFlow(Any::class) {
+        val echoFlow = object : TypedActionFlow<Any, Any>(Any::class.java, Any::class.java) {
 
             override fun main(source: Observable<ActionContext>): Observable<ActionContext> {
                 return source.doOnNext {
-                    it.response.entity = it.request
+                    responseEntity(it, it.request)
                 }
             }
         }
 
         val processor = BasicProcessor.Builder<ActionContext>()
                 .module(TestModule())
+                .transformer(JacksonRequestTransformer())
                 .flow("Log", loggingFlow)
                 .flow("Echo", echoFlow)
                 .build()
