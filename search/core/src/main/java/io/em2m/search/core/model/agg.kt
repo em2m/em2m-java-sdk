@@ -1,9 +1,6 @@
 package io.em2m.search.core.model
 
-import com.fasterxml.jackson.annotation.JsonInclude
-import com.fasterxml.jackson.annotation.JsonPropertyOrder
-import com.fasterxml.jackson.annotation.JsonSubTypes
-import com.fasterxml.jackson.annotation.JsonTypeInfo
+import com.fasterxml.jackson.annotation.*
 import com.vividsolutions.jts.geom.Coordinate
 
 @JsonPropertyOrder("type")
@@ -24,8 +21,27 @@ import com.vividsolutions.jts.geom.Coordinate
         JsonSubTypes.Type(value = StatsAgg::class, name = "stats"),
         JsonSubTypes.Type(value = TermsAgg::class, name = "terms")
 )
-abstract class Agg(val key: String, val sort: Sort? = null, val label: String? = null, val aggs: List<Agg> = emptyList()) {
+abstract class Agg(val key: String, val sort: Sort? = null, val label: String? = null, val aggs: List<Agg> = emptyList(), ext: Map<String, Any?>?) {
 
+    @JsonIgnore
+    val extensions: MutableMap<String, Any?> = HashMap()
+
+    @JsonAnyGetter
+    fun anyGetter(): Map<String, Any?> {
+        return extensions
+    }
+
+    @JsonAnySetter
+    fun setAny(key: String, value: Any?): Agg {
+        extensions[key] = value
+        return this
+    }
+
+    init {
+        if (ext != null) {
+            extensions.putAll(ext)
+        }
+    }
 
     class Sort(val type: Type = Type.Count, val direction: Direction? = Direction.Descending) {
 
@@ -55,20 +71,95 @@ abstract class Agg(val key: String, val sort: Sort? = null, val label: String? =
 
 data class Range(val to: Any? = null, val from: Any? = null, val key: String? = null)
 
-class DateHistogramAgg(val field: String, val format: String? = null, val interval: String, val offset: String? = null, val timeZone: String? = null, key: String? = null) : Agg(key ?: field)
-class DateRangeAgg(val field: String, val format: String? = null, val timeZone: String? = null, val ranges: List<Range>, key: String? = null) : Agg(key ?: field)
-class FiltersAgg(val filters: Map<String, Query>, key: String) : Agg(key)
-class GeoBoundsAgg(val field: String, key: String? = null) : Agg(key ?: field)
-class GeoCentroidAgg(val field: String, key: String? = null) : Agg(key ?: field)
-class GeoDistanceAgg(val field: String, val origin: Coordinate, val unit: String? = "mi", val ranges: List<Range>, key: String? = null) : Agg(key ?: field)
-class GeoHashAgg(val field: String, val precision: Int? = null, val size: Int? = null, key: String? = null) : Agg(key ?: field)
-class HistogramAgg(val field: String, val interval: Double, val offset: Double? = 0.0, key: String? = null) : Agg(key ?: field)
-class MissingAgg(val field: String, key: String? = null) : Agg(key ?: field)
-class NamedAgg(val name: String, key: String? = null, sort: Sort? = null) : Agg(key ?: name, sort)
-class NativeAgg(val value: Any, key: String) : Agg(key)
-class RangeAgg(val field: String, val ranges: List<Range>, key: String? = null) : Agg(key ?: field)
-class StatsAgg(val field: String, key: String? = null) : Agg(key ?: field)
-class TermsAgg(val field: String, val size: Int = 10, key: String? = null, sort: Sort? = null, val format: String? = null, val missing: String? = null) : Agg(key ?: field, sort)
+class DateHistogramAgg(
+        val field: String,
+        val format: String? = null,
+        val interval: String,
+        val offset: String? = null,
+        val timeZone: String? = null,
+        key: String? = null,
+        ext: Map<String, Any?>? = null) : Agg(key ?: field, ext = ext)
+
+class DateRangeAgg(
+        val field: String,
+        val format: String? = null,
+        val timeZone: String? = null,
+        val ranges: List<Range>,
+        key: String? = null,
+        ext: Map<String, Any?>? = null) : Agg(key ?: field, ext = ext)
+
+class FiltersAgg(
+        val filters: Map<String, Query>,
+        key: String,
+        ext: Map<String, Any?>? = null) : Agg(key, ext = ext)
+
+class GeoBoundsAgg(
+        val field: String,
+        key: String? = null,
+        ext: Map<String, Any?>? = null) : Agg(key ?: field, ext = ext)
+
+class GeoCentroidAgg(
+        val field: String,
+        key: String? = null,
+        ext: Map<String, Any?>? = null) : Agg(key ?: field, ext = ext)
+
+class GeoDistanceAgg(
+        val field: String,
+        val origin: Coordinate,
+        val unit: String? = "mi",
+        val ranges: List<Range>,
+        key: String? = null,
+        ext: Map<String, Any?>? = null) : Agg(key ?: field, ext = ext)
+
+class GeoHashAgg(
+        val field: String,
+        val precision: Int? = null,
+        val size: Int? = null,
+        key: String? = null,
+        ext: Map<String, Any?>? = null) : Agg(key ?: field, ext = ext)
+
+class HistogramAgg(
+        val field: String,
+        val interval: Double,
+        val offset: Double? = 0.0,
+        key: String? = null,
+        ext: Map<String, Any?>? = null) : Agg(key ?: field, ext = ext)
+
+class MissingAgg(
+        val field: String,
+        key: String? = null,
+        ext: Map<String, Any?>? = null) : Agg(key ?: field, ext = ext)
+
+class NamedAgg(
+        val name: String,
+        key: String? = null,
+        sort: Sort? = null,
+        ext: Map<String, Any?>? = null) : Agg(key ?: name, sort, ext = ext)
+
+class NativeAgg(
+        val value: Any,
+        key: String,
+        ext: Map<String, Any?>? = null) : Agg(key, ext = ext)
+
+class RangeAgg(
+        val field: String,
+        val ranges: List<Range>,
+        key: String? = null,
+        ext: Map<String, Any?>? = null) : Agg(key ?: field, ext = ext)
+
+class StatsAgg(
+        val field: String,
+        key: String? = null,
+        ext: Map<String, Any?>? = null) : Agg(key ?: field, ext = ext)
+
+class TermsAgg(
+        val field: String,
+        val size: Int = 10,
+        key: String? = null,
+        sort: Sort? = null,
+        val format: String? = null,
+        val missing: String? = null,
+        ext: Map<String, Any?>? = null) : Agg(key ?: field, sort, ext = ext)
 
 class Stats(val count: Long, val sum: Double, val min: Double, val max: Double, val avg: Double)
 

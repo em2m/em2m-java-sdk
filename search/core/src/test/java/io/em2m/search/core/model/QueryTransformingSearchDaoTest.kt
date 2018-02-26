@@ -110,8 +110,8 @@ class QueryTransformingSearchDaoTest : Assert() {
 
     @Test
     fun testNamedAgg() {
-        val xformDao = QueryTransformingSearchDao(namedAggs = mapOf("status" to TermsAgg("status")), delegate = mock)
-        xformDao.search(SearchRequest(aggs = listOf(NamedAgg(name = "status", key = "key"))))
+        val xformDao = QueryTransformingSearchDao   (namedAggs = mapOf("status" to TermsAgg("status")), delegate = mock)
+        xformDao.search(SearchRequest(aggs = listOf(NamedAgg(name = "status", key = "key").setAny("size", 5))))
 
         argumentCaptor <SearchRequest>().apply {
             verify(mock, times(1)).search(capture())
@@ -123,6 +123,7 @@ class QueryTransformingSearchDaoTest : Assert() {
             assertEquals("key", status.key)
             if (status is TermsAgg) {
                 assertEquals("status", status.field)
+                assertEquals(5, status.size)
             } else {
                 error("Agg is not a term agg")
             }
