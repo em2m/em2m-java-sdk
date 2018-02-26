@@ -1,7 +1,7 @@
 package io.em2m.sdk.simplex
 
-import io.em2m.simplex.conditions.ForAllStringEquals
-import io.em2m.simplex.conditions.ForAnyStringEquals
+import io.em2m.simplex.std.ForAllStringEquals
+import io.em2m.simplex.std.ForAnyStringEquals
 import org.junit.Assert
 import org.junit.Test
 

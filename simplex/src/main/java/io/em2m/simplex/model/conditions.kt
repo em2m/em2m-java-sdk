@@ -11,9 +11,33 @@ interface ConditionResolver {
     fun getCondition(condition: String): ConditionHandler?
 }
 
-class BasicConditionResolver(val conditions: Map<String, ConditionHandler>) : ConditionResolver {
+class BasicConditionResolver(conditions: Map<String, ConditionHandler> = emptyMap()) : ConditionResolver {
+
+    private val handlers = HashMap<String, ConditionHandler>()
+
+    private val delegates = ArrayList<ConditionResolver>()
+
+    init {
+        handlers.putAll(conditions)
+    }
+
+    fun condition(key: String, handler: ConditionHandler): BasicConditionResolver {
+        handlers.put(key, handler)
+        return this
+    }
+
+    fun delegate(delegate: ConditionResolver): BasicConditionResolver {
+        delegates.add(delegate)
+        return this
+    }
+
     override fun getCondition(condition: String): ConditionHandler? {
-        return conditions[condition]
+        var result = handlers[condition]
+        for (delegate in delegates) {
+            if (result != null) break
+            result = delegate.getCondition(condition)
+        }
+        return result
     }
 }
 
@@ -24,7 +48,7 @@ class ConditionExpr(val condition: String, val handler: ConditionHandler, val fi
         val firstVal = first.call(context)
         val secondVal = second.call(context)
 
-        return handler.test(first, second)
+        return handler.test(firstVal, secondVal)
     }
 
 }

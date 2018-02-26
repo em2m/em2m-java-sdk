@@ -5,6 +5,7 @@ import com.google.inject.Guice
 import com.google.inject.Module
 import com.google.inject.name.Names
 import org.junit.Test
+import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import rx.Observable
 import javax.inject.Inject
@@ -14,15 +15,14 @@ import javax.inject.Singleton
 
 typealias Context = Map<String, Any?>
 
-
 @Singleton
-class LoggingFlow @Inject constructor(@Named("JAVA_ENV") val env: String) : MainFlow<Context>() {
+class LoggingFlow @Inject constructor(@Named("JAVA_ENV") private val env: String) : FlowSupport<Context>() {
 
-    val LOG = LoggerFactory.getLogger(SimpleFlowTest::class.java)
+    private val log: Logger = LoggerFactory.getLogger(SimpleFlowTest::class.java)
 
-    override fun call(obs: Observable<Context>): Observable<Context> {
+    override fun main(obs: Observable<Context>): Observable<Context> {
         return obs.doOnNext { context ->
-            LOG.debug("$env: $context")
+            log.debug("$env: $context")
         }
     }
 
@@ -37,6 +37,13 @@ class TestModule : Module {
 
 }
 
+class NoOpTransformer(override val priority: Int = Priorities.INIT) : Transformer<Context> {
+
+    override fun call(obs: Observable<Context>): Observable<Context> {
+        return obs
+    }
+
+}
 
 class SimpleFlowTest {
 
@@ -57,6 +64,7 @@ class SimpleFlowTest {
     fun testBuilder() {
         val processor = BasicProcessor.Builder<Context>()
                 .module(TestModule())
+                .transformer(NoOpTransformer())
                 .flow("test", LoggingFlow::class)
                 .build()
         val source = Observable.just<Context>(mapOf("key" to "v2"), mapOf("key" to "v3"))

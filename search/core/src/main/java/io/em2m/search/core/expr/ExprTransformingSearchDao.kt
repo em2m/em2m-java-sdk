@@ -3,18 +3,14 @@ package io.em2m.search.core.expr
 import io.em2m.search.core.daos.SearchDaoWrapper
 import io.em2m.search.core.model.*
 import io.em2m.search.core.xform.AggResultTransformer
+import io.em2m.simplex.Simplex
 import io.em2m.simplex.model.Expr
-import io.em2m.simplex.model.KeyResolver
-import io.em2m.simplex.model.PipeTransformResolver
-import io.em2m.simplex.parser.ExprParser
 import rx.Observable
 
-class ExprTransformingSearchDao<T>(
-        keyResolver: KeyResolver,
-        pipeTransformResolver: PipeTransformResolver,
-        delegate: SearchDao<T>) : SearchDaoWrapper<T>(delegate) {
+class ExprTransformingSearchDao<T>(val simplex: Simplex,
+                                   delegate: SearchDao<T>) : SearchDaoWrapper<T>(delegate) {
 
-    val parser = ExprParser(keyResolver, pipeTransformResolver)
+    val parser = simplex.parser
 
     override fun search(request: SearchRequest): Observable<SearchResult<T>> {
 
@@ -24,7 +20,7 @@ class ExprTransformingSearchDao<T>(
                 it.name
             } else null
         }
-        val exprFields = rowExprs.filterNotNull().flatMap(Expr::fields)
+        val exprFields = rowExprs.filterNotNull().flatMap { FieldKeyHandler.fields(it) }
         val delegateFields = exprFields.plus(rowNames).filterNotNull().map { Field(name = it) }
         return delegate.search(request.copy(fields = delegateFields)).map { results ->
             val rows = transformRows(request, results.rows, delegateFields, rowExprs)

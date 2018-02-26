@@ -24,7 +24,7 @@ class QueryMarshallerTest : Assert() {
                 fields = listOf(Field("id"), Field("title")),
                 fieldSet = "test",
                 sorts = listOf(DocSort("timestamp", Direction.Descending)),
-                headers = mapOf("echo" to true),
+                params = mapOf("echo" to true),
                 query = (AndQuery(
                         listOf(
                                 NativeQuery("""{"properties.vin": "3C4PDCAB4GT233400}"""),

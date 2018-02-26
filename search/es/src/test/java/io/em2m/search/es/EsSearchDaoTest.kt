@@ -132,7 +132,7 @@ class EsSearchDaoTest : FeatureTestBase() {
 
     @Test
     fun testScrollItems() {
-        val request = SearchRequest(limit = 5, query = MatchAllQuery(), headers = mapOf("scroll" to "1m"))
+        val request = SearchRequest(limit = 5, query = MatchAllQuery(), params = mapOf("scroll" to "1m"))
         val sub = TestSubscriber<Any>()
         val esDao = searchDao as EsSearchDao
         esDao.search(request).flatMap { result -> esDao.scrollItems(request, result) }
@@ -146,7 +146,7 @@ class EsSearchDaoTest : FeatureTestBase() {
 
     @Test
     fun testScrollRows() {
-        val request = SearchRequest(limit = 5, fields = listOf(Field(name = "id")), query = MatchAllQuery(), headers = mapOf("scroll" to "1m"))
+        val request = SearchRequest(limit = 5, fields = listOf(Field(name = "id")), query = MatchAllQuery(), params = mapOf("scroll" to "1m"))
         val sub = TestSubscriber<Any>()
         val esDao = searchDao as EsSearchDao
         esDao.search(request).flatMap { result -> esDao.scrollRows(request, result) }

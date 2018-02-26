@@ -6,45 +6,77 @@ interface PipeTransform {
     fun args(args: List<String>) {}
 }
 
-interface PipeTransformResolver {
-    fun find(key: String): PipeTransform?
-}
-
 interface Part {
-    val fields: List<String>
     fun call(context: ExprContext): Any?
 }
 
-class PipePart(val key: Key, val handler: KeyHandler, val transforms: List<PipeTransform> = emptyList()) : Part {
-
-    override val fields = handler.fields(key)
+data class PipePart(val key: Key, val handler: KeyHandler, val transforms: List<PipeTransform> = emptyList()) : Part {
 
     override fun call(context: ExprContext): Any? {
         val contextKeys: KeyResolver? = context["keys"] as? KeyResolver
         val handler = contextKeys?.find(key) ?: handler
         val initial = handler.call(key, context)
-        return transforms.fold(initial, { initial, pipe -> pipe.transform(initial) })
+        return transforms.fold(initial, { current, pipe -> pipe.transform(current) })
     }
 }
 
-class ConstPart(val value: String) : Part {
+data class ConstPart(val value: String) : Part {
 
-    override val fields: List<String> = emptyList()
     override fun call(context: ExprContext): Any? {
         return value
     }
 }
 
-class Expr(val parts: List<Part>) {
-
-    val fields = parts.flatMap { it.fields }
+data class Expr(val parts: List<Part>) {
 
     fun call(context: ExprContext): Any? {
-        val values = parts.map { it.call(context) }.filterNotNull()
+        val values = parts.mapNotNull { it.call(context) }
         return if (values.size == 1) {
             values.first()
         } else {
             values.joinToString("")
         }
     }
+}
+
+interface PipeTransformResolver {
+    fun find(key: String): PipeTransform?
+}
+
+class BasicPipeTransformResolver(handlers: Map<String, PipeTransform> = emptyMap()) : PipeTransformResolver {
+
+    val handlers = HashMap<String, (String) -> PipeTransform>()
+
+    private val delegates = ArrayList<PipeTransformResolver>()
+
+    init {
+        handlers.forEach {
+            this.handlers.put(it.key, { _ -> it.value })
+        }
+    }
+
+    fun delegate(delegate: PipeTransformResolver): BasicPipeTransformResolver {
+        delegates.add(delegate)
+        return this
+    }
+
+    fun transform(key: String, transform: PipeTransform): BasicPipeTransformResolver {
+        handlers.put(key, { _ -> transform })
+        return this
+    }
+
+    fun transform(key: String, transform: (String) -> PipeTransform): BasicPipeTransformResolver {
+        handlers.put(key, transform)
+        return this
+    }
+
+    override fun find(key: String): PipeTransform? {
+        var result = handlers[key]?.invoke(key)
+        for (delegate in delegates) {
+            if (result != null) break
+            result = delegate.find(key)
+        }
+        return result
+    }
+
 }

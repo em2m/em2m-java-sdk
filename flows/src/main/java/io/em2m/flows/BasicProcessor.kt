@@ -23,10 +23,34 @@ class BasicProcessor<T>(val flowResolver: FlowResolver<T>, val standardXforms: L
 
         val transformers = ArrayList(flow.transformers)
                 .plus(standardXforms)
+                .plus(MainTransformer(flow))
+                .plus(InitTransformer(flow))
                 .sortedBy { it.priority }
 
         return Observable.Transformer { observable ->
             transformers.fold(observable) { single, xform -> single.compose(xform) }
+        }
+    }
+
+    class InitTransformer<T>(val flow: Flow<T>) : Transformer<T> {
+
+        override val priority: Int = Priorities.INIT
+
+        override fun call(obs: Observable<T>): Observable<T> {
+            return obs.doOnNext { context ->
+                if (context is FlowAware) {
+                    context.flow = flow
+                }
+            }
+        }
+    }
+
+    class MainTransformer<T>(val flow: Flow<T>) : Transformer<T> {
+
+        override val priority: Int = Priorities.MAIN
+
+        override fun call(obs: Observable<T>): Observable<T> {
+            return flow.main(obs)
         }
     }
 
@@ -36,6 +60,7 @@ class BasicProcessor<T>(val flowResolver: FlowResolver<T>, val standardXforms: L
         private val instances = HashMap<String, Flow<T>>()
         private val modules = ArrayList<Module>()
         private var injector: Injector? = null
+        private val xforms = ArrayList<Transformer<T>>()
 
         fun injector(injector: Injector): Builder<T> {
             this.injector = injector
@@ -44,6 +69,11 @@ class BasicProcessor<T>(val flowResolver: FlowResolver<T>, val standardXforms: L
 
         fun module(module: Module): Builder<T> {
             modules.add(module)
+            return this
+        }
+
+        fun transformer(transformer: Transformer<T>): Builder<T> {
+            xforms.add(transformer)
             return this
         }
 
@@ -60,7 +90,7 @@ class BasicProcessor<T>(val flowResolver: FlowResolver<T>, val standardXforms: L
         fun build(): Processor<T> {
             val injector = injector?.createChildInjector(modules) ?: Guice.createInjector(modules)
             val resolver = LookupFlowResolver(injector, classes, instances)
-            return BasicProcessor(resolver)
+            return BasicProcessor(resolver, xforms)
         }
 
     }

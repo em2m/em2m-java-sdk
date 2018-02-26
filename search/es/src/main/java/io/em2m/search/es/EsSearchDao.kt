@@ -36,7 +36,7 @@ class EsSearchDao<T>(val esApi: EsApi, val index: String, val type: String, tCla
 
     override fun search(request: SearchRequest): Observable<SearchResult<T>> {
         val esReq = requestConverter.convert(request)
-        val scroll = request.headers["scroll"] as String?
+        val scroll = request.params["scroll"] as String?
         val result = if (scroll != null)
             resultConverter.convert(request, esApi.search(index, type, scroll, esReq))
         else
@@ -46,7 +46,7 @@ class EsSearchDao<T>(val esApi: EsApi, val index: String, val type: String, tCla
 
     fun scrollItems(request: SearchRequest, result: SearchResult<T>): Observable<T> {
         // TODO - Consider creating a different request signature or validating search request is compatible
-        val scroll = request.headers["scroll"] as String
+        val scroll = request.params["scroll"] as String
         val iterable = object : Iterable<T> {
             override fun iterator(): Iterator<T> {
                 return ItemScrollIterator(request, result, scroll)
@@ -57,7 +57,7 @@ class EsSearchDao<T>(val esApi: EsApi, val index: String, val type: String, tCla
 
     fun scrollRows(request: SearchRequest, result: SearchResult<T>): Observable<List<Any?>> {
         // TODO - Consider creating a different request signature or validating search request is compatible
-        val scroll = request.headers["scroll"] as String
+        val scroll = request.params["scroll"] as String
         val iterable = object : Iterable<List<Any?>> {
             override fun iterator(): Iterator<List<Any?>> {
                 return RowScrollIterator(request, result, scroll)

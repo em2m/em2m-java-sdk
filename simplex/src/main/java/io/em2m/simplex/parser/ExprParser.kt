@@ -25,16 +25,10 @@ class ExprParser(val keyResolver: KeyResolver, val pipeTransformResolver: PipeTr
         return results
     }
 
-    fun parseRawField(text: String): PipePart {
-        val key = Key("field", text)
-        val handler = requireNotNull(keyResolver.find(key))
-        return PipePart(key, handler)
-    }
-
     fun parsePipe(text: String): PipePart {
         val splits = text.split("|")
         val key = Key.parse(splits.first().trim())
-        val handler = requireNotNull(keyResolver.find(key))
+        val handler = requireNotNull(keyResolver.find(key), { "Key ($key) not found" })
 
         val transforms: List<PipeTransform> = if (splits.size > 1) {
             splits.subList(1, splits.size).map { xformExpr ->

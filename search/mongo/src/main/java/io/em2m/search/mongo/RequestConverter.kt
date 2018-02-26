@@ -2,6 +2,7 @@ package io.em2m.search.mongo
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ArrayNode
+import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.mongodb.client.model.Aggregates
 import com.mongodb.client.model.Facet
@@ -10,13 +11,15 @@ import com.mongodb.client.model.Sorts
 import io.em2m.search.core.model.*
 import io.em2m.search.core.parser.LuceneExprParser
 import io.em2m.search.core.parser.SchemaMapper
+import io.em2m.simplex.parser.DateMathParser
 import org.bson.Document
 import org.bson.conversions.Bson
+import org.joda.time.DateTimeZone
 import java.util.*
 import java.util.regex.Matcher
 import java.util.regex.Pattern
 
-class RequestConverter(private val schemaMapper: SchemaMapper, val objectMapper: ObjectMapper = jacksonObjectMapper()) {
+class RequestConverter(private val schemaMapper: SchemaMapper, val objectMapper: ObjectMapper = jacksonObjectMapper(), val dateParser: DateMathParser = DateMathParser(DateTimeZone.UTC)) {
 
     fun convertQuery(query: Query?): Bson = when (query) {
 
@@ -57,11 +60,21 @@ class RequestConverter(private val schemaMapper: SchemaMapper, val objectMapper:
         }
         is RangeQuery -> {
             val field = query.field
+            val fieldType = schemaMapper.typeOf(field) ?: String::class.java
+
             val expr = ArrayList<Bson>()
-            query.lt?.let { expr.add(Filters.lt(field, convertValue(field, it))) }
-            query.lte?.let { expr.add(Filters.lte(field, convertValue(field, it))) }
-            query.gt?.let { expr.add(Filters.gt(field, convertValue(field, it))) }
-            query.gte?.let { expr.add(Filters.gte(field, convertValue(field, it))) }
+            if (Date::class.java.isAssignableFrom(fieldType)) {
+                val now = Date().time
+                query.lt?.let { expr.add(Filters.lt(field, parseDate(it.toString(), now, true))) }
+                query.lte?.let { expr.add(Filters.lte(field, parseDate(it.toString(), now, true))) }
+                query.gt?.let { expr.add(Filters.gt(field, parseDate(it.toString(), now, false))) }
+                query.gte?.let { expr.add(Filters.gte(field, parseDate(it.toString(), now, false))) }
+            } else {
+                query.lt?.let { expr.add(Filters.lt(field, convertValue(field, it))) }
+                query.lte?.let { expr.add(Filters.lte(field, convertValue(field, it))) }
+                query.gt?.let { expr.add(Filters.gt(field, convertValue(field, it))) }
+                query.gte?.let { expr.add(Filters.gte(field, convertValue(field, it))) }
+            }
             and(expr)
         }
         is PhraseQuery -> {
@@ -69,6 +82,10 @@ class RequestConverter(private val schemaMapper: SchemaMapper, val objectMapper:
             val phrase = query.value.joinToString(" ")
             val pattern = Pattern.compile(Matcher.quoteReplacement(phrase), Pattern.CASE_INSENSITIVE)
             Filters.regex(field, pattern)
+        }
+        is RegexQuery -> {
+            val pattern = Pattern.compile(query.value, Pattern.CASE_INSENSITIVE)
+            Filters.regex(query.field, pattern)
         }
         is BboxQuery -> {
             val bbox = query.value
@@ -84,7 +101,7 @@ class RequestConverter(private val schemaMapper: SchemaMapper, val objectMapper:
             Filters.exists(query.field, query.value ?: true)
         }
         else -> {
-            throw NotImplementedError()
+            throw NotImplementedError("Query type (${query?.javaClass} Not supported")
         }
     }
 
@@ -186,6 +203,17 @@ class RequestConverter(private val schemaMapper: SchemaMapper, val objectMapper:
             }
         }
         return Aggregates.facet(facets)
+    }
+
+    fun parseDate(value: Any?, now: Long, roundUp: Boolean): Long? {
+        return if (value is String) {
+            try {
+                Date(dateParser.parse(value, now, roundUp)).time
+            } catch (ex: Exception) {
+                objectMapper.convertValue<Date>(value).time
+            }
+        } else if (value != null) objectMapper.convertValue<Date>(value).time
+        else null
     }
 
 }

@@ -3,10 +3,10 @@ package io.em2m.search.core.expr
 import com.nhaarman.mockito_kotlin.any
 import com.nhaarman.mockito_kotlin.doReturn
 import com.nhaarman.mockito_kotlin.mock
-import io.em2m.simplex.basic.BasicKeyResolver
-import io.em2m.simplex.basic.BasicPipeTransformResolver
-import io.em2m.simplex.model.Key
 import io.em2m.search.core.model.*
+import io.em2m.simplex.Simplex
+import io.em2m.simplex.model.BasicKeyResolver
+import io.em2m.simplex.model.Key
 import org.junit.Assert
 import org.junit.Test
 import rx.Observable
@@ -19,8 +19,6 @@ class ExprDaoTest : Assert() {
             Key("ns", "key2") to ConstKeyHandler("value2"),
             Key("bucket", "key") to BucketKeyKeyHandler(),
             Key("f", "*") to FieldKeyHandler()))
-
-    val pipeResolver = BasicPipeTransformResolver(mapOf("upperCase" to UpperCasePipe(), "capitalize" to CapitalizePipe()))
 
     val request = SearchRequest()
 
@@ -39,8 +37,8 @@ class ExprDaoTest : Assert() {
         on { search(any()) } doReturn Observable.just(SearchResult<Any>(rows = rows, aggs = aggResults, totalItems = rows.size.toLong()))
     }
 
-    val dao = ExprTransformingSearchDao(keyResolver, pipeResolver, mock)
-
+    val simplex = Simplex().keys(keyResolver)
+    val dao = ExprTransformingSearchDao(simplex, mock)
 
     @Test
     fun testTransformRows() {
