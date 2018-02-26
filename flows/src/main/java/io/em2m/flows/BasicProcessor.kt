@@ -23,7 +23,8 @@ class BasicProcessor<T>(val flowResolver: FlowResolver<T>, val standardXforms: L
 
         val transformers = ArrayList(flow.transformers)
                 .plus(standardXforms)
-                .plus(FlowTransformer(flow))
+                .plus(MainTransformer(flow))
+                .plus(InitTransformer(flow))
                 .sortedBy { it.priority }
 
         return Observable.Transformer { observable ->
@@ -31,7 +32,20 @@ class BasicProcessor<T>(val flowResolver: FlowResolver<T>, val standardXforms: L
         }
     }
 
-    class FlowTransformer<T>(val flow: Flow<T>) : Transformer<T> {
+    class InitTransformer<T>(val flow: Flow<T>) : Transformer<T> {
+
+        override val priority: Int = Priorities.INIT
+
+        override fun call(obs: Observable<T>): Observable<T> {
+            return obs.doOnNext { context ->
+                if (context is FlowAware) {
+                    context.flow = flow
+                }
+            }
+        }
+    }
+
+    class MainTransformer<T>(val flow: Flow<T>) : Transformer<T> {
 
         override val priority: Int = Priorities.MAIN
 
