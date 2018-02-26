@@ -1,9 +1,6 @@
 package io.em2m.search.core.model
 
-import com.fasterxml.jackson.annotation.JsonInclude
-import com.fasterxml.jackson.annotation.JsonPropertyOrder
-import com.fasterxml.jackson.annotation.JsonSubTypes
-import com.fasterxml.jackson.annotation.JsonTypeInfo
+import com.fasterxml.jackson.annotation.*
 import com.vividsolutions.jts.geom.Coordinate
 
 @JsonPropertyOrder("type")
@@ -26,6 +23,19 @@ import com.vividsolutions.jts.geom.Coordinate
 )
 abstract class Agg(val key: String, val sort: Sort? = null, val label: String? = null, val aggs: List<Agg> = emptyList()) {
 
+    @JsonIgnore
+    val extensions: MutableMap<String, Any?> = HashMap()
+
+    @JsonAnyGetter
+    fun anyGetter(): Map<String, Any?> {
+        return extensions
+    }
+
+    @JsonAnySetter
+    fun setAny(key: String, value: Any?): Agg {
+        extensions[key] = value
+        return this
+    }
 
     class Sort(val type: Type = Type.Count, val direction: Direction? = Direction.Descending) {
 
