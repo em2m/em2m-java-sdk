@@ -21,5 +21,5 @@ class FieldAliasAggTransformer(val aliases: Map<String, Field>) : AggTransformer
     override fun transformMissingAgg(agg: MissingAgg) = MissingAgg(applyAlias(agg.field), agg.key, agg.extensions)
     override fun transformRangeAgg(agg: RangeAgg) = RangeAgg(applyAlias(agg.field), agg.ranges, agg.key, agg.extensions)
     override fun transformStatsAgg(agg: StatsAgg) = StatsAgg(applyAlias(agg.field), agg.key, agg.extensions)
-    override fun transformTermsAgg(agg: TermsAgg) = TermsAgg(applyAlias(agg.field), agg.size, agg.key, agg.sort, agg.field, agg.missing, agg.extensions)
+    override fun transformTermsAgg(agg: TermsAgg) = TermsAgg(applyAlias(agg.field), agg.size, agg.key, agg.sort, agg.format, agg.missing, agg.extensions)
 }
