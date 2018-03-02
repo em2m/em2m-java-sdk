@@ -81,7 +81,8 @@ class ExprTransformingSearchDao<T>(val simplex: Simplex,
                 val xformer = object : AggResultTransformer() {
                     override fun transformBucket(bucket: Bucket): Bucket {
                         val context = BucketContext(request, scope, bucket)
-                        val label = expr.call(context.map).toString()
+                        // temporarily move scoe up a level until we have a better fix
+                        val label = expr.call(context.map.plus(scope)).toString()
                         return Bucket(key = bucket.key, count = bucket.count, stats = bucket.stats, label = label)
                     }
                 }
