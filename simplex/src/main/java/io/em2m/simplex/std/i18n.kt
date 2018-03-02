@@ -18,7 +18,7 @@ class SelectPipe : PipeTransform {
     override fun transform(value: Any?, context: ExprContext): Any? {
         val mapping = context[mappingName] as? Map<*, *>
                 ?: throw IllegalArgumentException("No value found for pipe parameter")
-        return mapping[value] ?: mapping["other"] ?: value
+        return mapping[value.toString()] ?: mapping["other"] ?: value
     }
 
 }
