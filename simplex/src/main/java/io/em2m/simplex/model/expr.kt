@@ -2,7 +2,7 @@ package io.em2m.simplex.model
 
 
 interface PipeTransform {
-    fun transform(value: Any?): Any?
+    fun transform(value: Any?, context: ExprContext): Any?
     fun args(args: List<String>) {}
 }
 
@@ -16,7 +16,7 @@ data class PipePart(val key: Key, val handler: KeyHandler, val transforms: List<
         val contextKeys: KeyResolver? = context["keys"] as? KeyResolver
         val handler = contextKeys?.find(key) ?: handler
         val initial = handler.call(key, context)
-        return transforms.fold(initial, { current, pipe -> pipe.transform(current) })
+        return transforms.fold(initial, { current, pipe -> pipe.transform(current, context) })
     }
 }
 
