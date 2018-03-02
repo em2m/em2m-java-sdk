@@ -34,9 +34,9 @@ class ExprParser(val keyResolver: KeyResolver, val pipeTransformResolver: PipeTr
             splits.subList(1, splits.size).map { xformExpr ->
                 val xformParts = xformExpr.split(":")
                 require(xformParts.isNotEmpty(), { "Invalid pipe expressions" })
-                val pipeName = xformParts.first()
+                val pipeName = xformParts.first().trim()
                 val args = xformParts.drop(1)
-                requireNotNull(pipeTransformResolver.find(pipeName.trim())).apply { args(args) }
+                requireNotNull(pipeTransformResolver.find(pipeName), { "Unknown pipe: ${pipeName}" }).apply { args(args) }
             }
         } else emptyList()
 

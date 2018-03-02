@@ -18,16 +18,12 @@ class ExprTest : Assert() {
             Key("ns", "key2") to ConstKeyHandler("value2")))
             .delegate(Numbers.keys)
 
-    val pipeResolver = BasicPipeTransformResolver()
-            .delegate(Strings.pipes)
-            .delegate(Numbers.pipes)
-
-    val parser = ExprParser(keyResolver, pipeResolver)
+    val simplex = Simplex().keys(keyResolver)
 
     @Test
     fun testParse() {
         val exprStr = "#{ns:key1 | upperCase}/#{ns:key2 | capitalize}".replace("#", "$")
-        val expr = parser.parse(exprStr)
+        val expr = simplex.parser.parse(exprStr)
         assertNotNull(expr)
         val result = expr.call(emptyMap())
         assertNotNull(result)
@@ -37,7 +33,7 @@ class ExprTest : Assert() {
     @Test
     fun testContextKey() {
         val exprStr = "#{ns:key1 | upperCase}/#{ns:key2 | capitalize}".replace("#", "$")
-        val expr = requireNotNull(parser.parse(exprStr))
+        val expr = requireNotNull(simplex.parser.parse(exprStr))
         val keys = BasicKeyResolver(mapOf(
                 Key("ns", "key1") to ConstKeyHandler("alt1"),
                 Key("ns", "key2") to ConstKeyHandler("alt2")))
@@ -48,9 +44,18 @@ class ExprTest : Assert() {
     @Test
     fun testArgs() {
         val exprStr = "#{Math:PI | number:2}".replace("#", "$")
-        val expr = requireNotNull(parser.parse(exprStr))
+        val expr = requireNotNull(simplex.parser.parse(exprStr))
         val result = expr.call(emptyMap())
         assertEquals("3.14", result)
+    }
+
+    @Test
+    fun testSelect() {
+        val exprStr = "#{ns:key1 | select:labels}".replace("#", "$")
+        val labels = mapOf("value1" to "Enabled", "value2" to "Disabled")
+        val context = mapOf("labels" to labels)
+        val result = simplex.eval(exprStr, context)
+        assertEquals("Enabled", result)
     }
 
 }
