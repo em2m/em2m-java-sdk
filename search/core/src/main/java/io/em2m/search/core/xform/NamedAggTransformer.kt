@@ -19,9 +19,11 @@ class NamedAggTransformer(val namedAggs: Map<String, Agg>) : AggTransformer() {
         }
 
         override fun transformDateHistogramAgg(agg: DateHistogramAgg): Agg {
-            val interval = (ext["interval"] as? String)
+            val interval = ext["interval"] as? String
+            val timeZone = ext["timeZone"] as? String
+
             return DateHistogramAgg(agg.field, agg.format, interval
-                    ?: agg.interval, agg.offset, agg.timeZone, agg.key, agg.extensions)
+                    ?: agg.interval, agg.offset, timeZone ?: agg.timeZone, agg.key, agg.extensions)
         }
 
         override fun transformHistogramAgg(agg: HistogramAgg): Agg {
