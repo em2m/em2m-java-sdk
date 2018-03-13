@@ -166,7 +166,7 @@ class RequestConverter(val objectMapper: ObjectMapper = jacksonObjectMapper()) {
     }
 
     fun convertFields(fields: List<Field>): List<String> {
-        return fields.map { requireNotNull(it.name, { "Field name cannot be null" }) }
+        return fields.map { requireNotNull(it.name, { "Field name cannot be null" }) }.sorted().distinct()
     }
 
     fun convertSorts(sorts: List<DocSort>): List<Map<String, String>> {
