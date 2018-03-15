@@ -44,8 +44,9 @@ class ExprTransformingSearchDao<T>(val simplex: Simplex,
                     val index = it.index
                     val name = it.value.name
                     val expr = exprs[index]
+                    val settings = it.value.settings
                     if (expr != null) {
-                        expr.call(exprContext.map)
+                        expr.call(exprContext.map.plus(settings))
                     } else if (name != null) {
                         values[name]
                     } else null
@@ -57,8 +58,10 @@ class ExprTransformingSearchDao<T>(val simplex: Simplex,
     fun transformAggResults(request: SearchRequest, aggResults: Map<String, AggResult>): Map<String, AggResult> {
 
         val aggExprs = HashMap<String, Expr?>()
+        val aggMap = HashMap<String, Agg>()
         val missings = HashMap<String, String>()
         request.aggs.forEach {
+            aggMap.put(it.key, it)
             val termsAgg = it as? TermsAgg
             if (termsAgg != null && termsAgg.format != null) {
                 aggExprs.put(termsAgg.key, parser.parse(termsAgg.format))
@@ -69,15 +72,17 @@ class ExprTransformingSearchDao<T>(val simplex: Simplex,
         }
 
         return aggResults.mapValues { (key, aggResult) ->
+            val agg = aggMap[key]
             val expr = aggExprs[key]
             val missing = missings[key]
-            val scope = emptyMap<String, Any>()
+            val scope = agg?.extensions ?: emptyMap<String, Any?>()
             // Do not transform is it's the missing key or if no expression
             if (key != missing && expr != null) {
                 val xformer = object : AggResultTransformer() {
                     override fun transformBucket(bucket: Bucket): Bucket {
                         val context = BucketContext(request, scope, bucket)
-                        val label = expr.call(context.map).toString()
+                        // temporarily move scoe up a level until we have a better fix
+                        val label = expr.call(context.map.plus(scope)).toString()
                         return Bucket(key = bucket.key, count = bucket.count, stats = bucket.stats, label = label)
                     }
                 }

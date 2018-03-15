@@ -5,7 +5,7 @@ import io.em2m.simplex.model.*
 
 
 class UpperCasePipe : PipeTransform {
-    override fun transform(value: Any?): Any? {
+    override fun transform(value: Any?, context: ExprContext): Any? {
         return if (value != null) {
             value.toString().toUpperCase()
         } else null
@@ -14,7 +14,7 @@ class UpperCasePipe : PipeTransform {
 }
 
 class CapitalizePipe : PipeTransform {
-    override fun transform(value: Any?): Any? {
+    override fun transform(value: Any?, context: ExprContext): Any? {
         return if (value != null) {
             value.toString().capitalize()
         } else null

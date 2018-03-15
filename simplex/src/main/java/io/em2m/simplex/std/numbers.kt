@@ -16,7 +16,7 @@ class NumberPipe : PipeTransform {
         }
     }
 
-    override fun transform(value: Any?): Any? {
+    override fun transform(value: Any?, context: ExprContext): Any? {
         return if (value != null) {
             if (value is Number) {
                 format.format(value)
@@ -36,7 +36,7 @@ class RoundPipe : PipeTransform {
         }
     }
 
-    override fun transform(value: Any?): Any? {
+    override fun transform(value: Any?, context: ExprContext): Any? {
         return if (value is Number) {
             BigDecimal(value.toDouble()).setScale(precision, RoundingMode.HALF_UP)
         } else value
