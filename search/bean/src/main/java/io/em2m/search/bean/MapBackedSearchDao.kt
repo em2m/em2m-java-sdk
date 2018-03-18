@@ -39,9 +39,10 @@ class MapBackedSearchDao<T>(idMapper: IdMapper<T>, val items: MutableMap<String,
 
     override fun search(request: SearchRequest): Observable<SearchResult<T>> {
         val matches = findMatches(request.query)
+        val aggResults = Aggs.processAggs(request.aggs, matches)
         val totalItems = matches.size
         val items = matches.page(request.offset.toInt(), request.limit.toInt())
-        return Observable.just(SearchResult(emptyMap(), items, null, totalItems.toLong()))
+        return Observable.just(SearchResult(aggResults, items, null, totalItems.toLong()))
     }
 
     override fun findById(id: String): Observable<T?> {
@@ -59,13 +60,5 @@ class MapBackedSearchDao<T>(idMapper: IdMapper<T>, val items: MutableMap<String,
         return items.values.filter { predicate.invoke(it as Any) }
     }
 
-    private fun <T> List<T>.page(offset: Int, limit: Int): List<T> {
-        val end = Math.min(this.size, offset + limit) - 1
-        return if (this.size < offset) {
-            emptyList()
-        } else {
-            this.slice(offset..end)
-        }
-    }
 
 }
