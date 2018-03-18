@@ -41,8 +41,16 @@ class MapBackedSearchDao<T>(idMapper: IdMapper<T>, val items: MutableMap<String,
         val matches = findMatches(request.query)
         val aggResults = Aggs.processAggs(request.aggs, matches)
         val totalItems = matches.size
-        val items = matches.page(request.offset.toInt(), request.limit.toInt())
-        return Observable.just(SearchResult(aggResults, items, null, totalItems.toLong()))
+
+        var items: List<T>? = null
+        var rows: List<List<Any?>>? = null
+
+        if (request.fields.isEmpty()) {
+            items = matches.page(request.offset.toInt(), request.limit.toInt())
+        } else {
+            rows = buildRows(matches.page(request.offset.toInt(), request.limit.toInt()), request.fields)
+        }
+        return Observable.just(SearchResult(aggResults, items, rows, totalItems.toLong()))
     }
 
     override fun findById(id: String): Observable<T?> {
@@ -60,5 +68,19 @@ class MapBackedSearchDao<T>(idMapper: IdMapper<T>, val items: MutableMap<String,
         return items.values.filter { predicate.invoke(it as Any) }
     }
 
+    fun buildRows(matches: List<T>, fields: List<Field>): List<List<Any?>> {
+        val getters: List<(Any) -> List<Any?>> = fields
+                .map { it.name }
+                .map { name ->
+                    if (name != null) {
+                        Functions.field(name)
+                    } else {
+                        Functions.field("null")
+                    }
+                }
+        return matches.map { item ->
+            getters.map { if (item == null) null else it.invoke(item as Any) }
+        }
+    }
 
 }

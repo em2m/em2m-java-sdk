@@ -117,7 +117,7 @@ class Functions {
             } else if (obj.javaClass.isArray) {
                 val length = Array.getLength(obj)
                 val result = ArrayList<Any>(length)
-                for (i in 0..length - 1) {
+                for (i in 0 until length) {
                     val item = Array.get(obj, i)
                     result.add(item)
                 }

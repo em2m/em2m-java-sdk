@@ -54,6 +54,23 @@ class MapBackedDaoTest {
 
     @Test
     @Throws(Exception::class)
+    fun testFields() {
+        var req = SearchRequest(
+                limit = 10,
+                fields = listOf(Field("fields.title"), Field("fields.genres")))
+        dao.search(req).toBlocking().subscribe { results ->
+            assertNotNull(results)
+            assertNotNull(results.rows)
+            assertNull(results.items)
+            assertEquals(5000, results.totalItems)
+            assertEquals(10, results.rows?.size)
+            assertEquals(2, results.rows?.get(0)?.size)
+        }
+    }
+
+
+    @Test
+    @Throws(Exception::class)
     fun testAgg() {
         var req = SearchRequest(limit = 0, query = MatchAllQuery(), aggs = listOf(
                 TermsAgg("fields.actors", key = "actors", size = 10),
