@@ -27,6 +27,16 @@ import java.util.*
 import java.util.regex.Matcher
 import java.util.regex.Pattern
 
+
+fun <T> List<T>.page(offset: Int, limit: Int): List<T> {
+    val end = Math.min(this.size, offset + limit) - 1
+    return if (this.size < offset) {
+        emptyList()
+    } else {
+        this.slice(offset..end)
+    }
+}
+
 class Functions {
 
     companion object {
@@ -107,7 +117,7 @@ class Functions {
             } else if (obj.javaClass.isArray) {
                 val length = Array.getLength(obj)
                 val result = ArrayList<Any>(length)
-                for (i in 0..length - 1) {
+                for (i in 0 until length) {
                     val item = Array.get(obj, i)
                     result.add(item)
                 }
@@ -219,6 +229,10 @@ class Functions {
             return term(field, value)
         }
 
+        internal fun toPredicate(expr: MatchAllQuery): (Any) -> Boolean {
+            return { true }
+        }
+
         fun toPredicate(query: Query): (Any) -> Boolean {
 
             return when (query) {
@@ -246,6 +260,9 @@ class Functions {
                 is TermQuery -> {
                     Companion.toPredicate(query)
                 }
+                is MatchAllQuery -> {
+                    Companion.toPredicate(query)
+                }
                 else -> {
                     throw IllegalArgumentException("Unsupported expression type")
                 }
@@ -255,12 +272,12 @@ class Functions {
         fun compareTo(first: Any?, second: Any?): Int {
             return if (first == null) {
                 return -1
-            } else (first as? String)?.compareTo(Coerce.toString(second)) ?:
-                    (first as? Int)?.compareTo(Coerce.toInteger(second)) ?:
-                    (first as? Long)?.compareTo(Coerce.toLong(second)) ?:
-                    (first as? Float)?.compareTo(Coerce.toDouble(second)?.toFloat() ?: 0F) ?:
-                    (first as? Double)?.compareTo(Coerce.toDouble(second)) ?:
-                    first.toString().compareTo(second.toString())
+            } else (first as? String)?.compareTo(Coerce.toString(second))
+                    ?: (first as? Int)?.compareTo(Coerce.toInteger(second))
+                    ?: (first as? Long)?.compareTo(Coerce.toLong(second))
+                    ?: (first as? Float)?.compareTo(Coerce.toDouble(second)?.toFloat() ?: 0F)
+                    ?: (first as? Double)?.compareTo(Coerce.toDouble(second))
+                    ?: first.toString().compareTo(second.toString())
         }
 
     }
