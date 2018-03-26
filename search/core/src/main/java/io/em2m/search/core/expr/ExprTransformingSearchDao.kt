@@ -59,11 +59,11 @@ class ExprTransformingSearchDao<T>(val simplex: Simplex,
 
         val aggExprs = HashMap<String, Expr?>()
         val aggMap = HashMap<String, Agg>()
-        val missings = HashMap<String, String>()
+        val missings = HashMap<String, Any?>()
         request.aggs.forEach {
             aggMap.put(it.key, it)
             val termsAgg = it as? TermsAgg
-            if (termsAgg != null && termsAgg.format != null) {
+            if (termsAgg?.format != null) {
                 aggExprs.put(termsAgg.key, parser.parse(termsAgg.format))
                 if (termsAgg.missing != null) {
                     missings.put(termsAgg.key, termsAgg.missing)
@@ -81,7 +81,7 @@ class ExprTransformingSearchDao<T>(val simplex: Simplex,
                 val xformer = object : AggResultTransformer() {
                     override fun transformBucket(bucket: Bucket): Bucket {
                         val context = BucketContext(request, scope, bucket)
-                        // temporarily move scoe up a level until we have a better fix
+                        // temporarily move scope up a level until we have a better fix
                         val label = expr.call(context.map.plus(scope)).toString()
                         return Bucket(key = bucket.key, count = bucket.count, stats = bucket.stats, label = label)
                     }
