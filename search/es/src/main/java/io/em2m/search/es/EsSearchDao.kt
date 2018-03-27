@@ -75,6 +75,18 @@ class EsSearchDao<T>(val esApi: EsApi, val index: String, val type: String, tCla
         } else just(null)
     }
 
+    internal fun bulkIndex(index: String, type: String, id: String, doc: Any?): String {
+        val line1 = """{ "index": {"_index": "$index", "_type": "$type", "_id": "$id"} }"""
+        val line2 = objectMapper.writeValueAsString(doc)
+        return "$line1\n$line2\n"
+    }
+
+    override fun saveBatch(entities: List<T>): Observable<List<T>> {
+        val bulkRequest = entities.map { bulkIndex(index, type, idMapper.getId(it), it) }.joinToString("")
+        esApi.bulkUpdate(bulkRequest)
+        return Observable.just(entities)
+    }
+
     internal fun encode(obj: T): JsonNode? {
         return docMapper.toDoc(obj)
     }
