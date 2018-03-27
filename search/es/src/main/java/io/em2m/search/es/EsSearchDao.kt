@@ -75,9 +75,9 @@ class EsSearchDao<T>(val esApi: EsApi, val index: String, val type: String, tCla
         } else just(null)
     }
 
-    internal fun bulkIndex(index: String, type: String, id: String, doc: Any?): String {
+    private fun bulkIndex(index: String, type: String, id: String, entity: T): String {
         val line1 = """{ "index": {"_index": "$index", "_type": "$type", "_id": "$id"} }"""
-        val line2 = objectMapper.writeValueAsString(doc)
+        val line2 = objectMapper.writeValueAsString(docMapper.toDoc(entity))
         return "$line1\n$line2\n"
     }
 
