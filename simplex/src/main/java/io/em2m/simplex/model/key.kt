@@ -58,7 +58,7 @@ class BasicKeyResolver(handlers: Map<Key, KeyHandler> = emptyMap(), vararg deleg
     }
 
     fun key(key: Key, handler: (Key) -> KeyHandler): BasicKeyResolver {
-        handlers.put(key, handler)
+        handlers[key] = handler
         return this
     }
 
@@ -69,9 +69,10 @@ class BasicKeyResolver(handlers: Map<Key, KeyHandler> = emptyMap(), vararg deleg
 
     override fun find(key: Key): KeyHandler? {
         var result = (handlers[key] ?: handlers[key.copy(name = "*")])?.invoke(key)
+        if (result != null) return result
         for (delegate in delegates) {
-            if (result != null) break
             result = delegate.find(key)
+            if (result != null) break
         }
         return result
     }
