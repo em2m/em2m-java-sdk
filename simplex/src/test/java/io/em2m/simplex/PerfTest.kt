@@ -44,4 +44,19 @@ class PerfTest : Assert() {
         println("Time per: $timePer microseconds")
     }
 
+    @Test
+    fun testParser() {
+        val exprStr = "#{ns:key1 | upperCase}/#{ns:key2 | capitalize}".replace("#", "$")
+        val start = System.currentTimeMillis()
+        (0..1_000_000).forEach {
+            val expr = requireNotNull(parser.parse(exprStr))
+        }
+        val end = System.currentTimeMillis()
+        val total = end - start
+        val timePer = total / 1_000_000.0 * 1000.0
+        println("total time: $total")
+        println("Time per: $timePer microseconds")
+
+    }
+
 }

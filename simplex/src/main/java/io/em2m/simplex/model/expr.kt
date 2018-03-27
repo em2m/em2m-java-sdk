@@ -30,11 +30,17 @@ data class ConstPart(val value: String) : Part {
 data class Expr(val parts: List<Part>) {
 
     fun call(context: ExprContext): Any? {
-        val values = parts.mapNotNull { it.call(context) }
-        return if (values.size == 1) {
-            values.first()
+        return if (parts.size == 1) {
+            parts[0].call(context)
         } else {
-            values.joinToString("")
+            val builder = StringBuilder()
+            parts.forEach { part ->
+                val value = part.call(context)
+                if (value != null) {
+                    builder.append(value)
+                }
+            }
+            builder.toString()
         }
     }
 }

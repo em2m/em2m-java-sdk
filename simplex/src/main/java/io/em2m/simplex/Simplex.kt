@@ -5,6 +5,8 @@ import io.em2m.simplex.parser.ExprParser
 import io.em2m.simplex.std.I18n
 import io.em2m.simplex.std.Numbers
 import io.em2m.simplex.std.Strings
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.ConcurrentMap
 
 
 class Simplex {
@@ -13,20 +15,25 @@ class Simplex {
     private val pipes = BasicPipeTransformResolver().delegate(Numbers.pipes).delegate(Strings.pipes).delegate(I18n.pipes)
     private val conditions = BasicConditionResolver().delegate(Strings.conditions)
 
+    val cache: ConcurrentMap<String, Expr> = ConcurrentHashMap()
+
     val parser = ExprParser(keys, pipes)
 
     fun keys(delegate: KeyResolver): Simplex {
         keys.delegate(delegate)
+        cache.clear()
         return this
     }
 
     fun pipes(delegate: PipeTransformResolver): Simplex {
         pipes.delegate(delegate)
+        cache.clear()
         return this
     }
 
     fun conditions(delegate: ConditionResolver): Simplex {
         conditions.delegate(delegate)
+        cache.clear()
         return this
     }
 
@@ -54,8 +61,13 @@ class Simplex {
         return handler?.call(parsedKey, context)
     }
 
-    fun eval(value: String, context: ExprContext): Any? {
-        return parser.parse(value).call(context)
+    fun eval(expr: String, context: ExprContext): Any? {
+        val parsed = cache.getOrPut(expr, { parser.parse(expr) })
+        // safey measure until we implement an extensible caching API
+        if (cache.size > 1000) {
+            cache.clear()
+        }
+        return parsed.call(context)
     }
 
 }
