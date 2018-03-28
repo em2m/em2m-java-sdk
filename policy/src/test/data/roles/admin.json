@@ -1,13 +1,9 @@
 {
   "label": "Admin",
   "policies": [
-    "AccountPersonalAccess",
     "AccountFullAccess"
   ],
-  "customData": {
-    "allowedRoles": [
-      "admin",
-      "sales"
-    ]
-  }
+  "inherits": [
+    "sales"
+  ]
 }
