@@ -2,13 +2,13 @@ package io.em2m.actions.xforms
 
 import com.fasterxml.jackson.core.JsonProcessingException
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.node.ObjectNode
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.em2m.actions.model.ActionContext
 import io.em2m.actions.model.ActionTransformerSupport
 import io.em2m.actions.model.Problem
 import io.em2m.actions.model.TypedActionFlow
 import io.em2m.flows.Priorities
-import jdk.nashorn.internal.ir.ObjectNode
 import org.xerial.snappy.SnappyInputStream
 import rx.Observable
 import java.io.IOException
