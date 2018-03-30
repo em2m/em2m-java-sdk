@@ -189,6 +189,16 @@ class Functions {
             }
         }
 
+        internal fun fieldValue(field: String): (Any) -> Any? {
+            return { obj ->
+                try {
+                    MVEL.eval(field, obj)
+                } catch (e: Throwable) {
+                    null
+                }
+            }
+        }
+
         internal fun toPredicate(terms: List<Query>): List<(Any) -> Boolean> {
             return terms.map({ toPredicate(it) })
         }

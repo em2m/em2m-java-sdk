@@ -69,13 +69,13 @@ class MapBackedSearchDao<T>(idMapper: IdMapper<T>, val items: MutableMap<String,
     }
 
     fun buildRows(matches: List<T>, fields: List<Field>): List<List<Any?>> {
-        val getters: List<(Any) -> List<Any?>> = fields
+        val getters: List<(Any) -> Any?> = fields
                 .map { it.name }
                 .map { name ->
                     if (name != null) {
-                        Functions.field(name)
+                        Functions.fieldValue(name)
                     } else {
-                        Functions.field("null")
+                        { null }
                     }
                 }
         return matches.map { item ->
