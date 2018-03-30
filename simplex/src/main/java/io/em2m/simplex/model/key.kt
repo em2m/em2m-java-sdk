@@ -3,6 +3,22 @@ package io.em2m.simplex.model
 
 data class Key(val namespace: String, val name: String) {
 
+    private val key = namespace + ":" + name
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) {
+            return true;
+        }
+        if (other is Key) {
+            return this.key == other.key
+        }
+        return false
+    }
+
+    override fun hashCode(): Int {
+        return key.hashCode()
+    }
+
     companion object {
         fun parse(key: String): Key {
             val parts = key.split(":")
