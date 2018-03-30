@@ -64,7 +64,9 @@ class MapBackedDaoTest {
             assertNull(results.items)
             assertEquals(5000, results.totalItems)
             assertEquals(10, results.rows?.size)
-            assertEquals(2, results.rows?.get(0)?.size)
+            val row = requireNotNull(results.rows?.get(0))
+            assertEquals(2, row.size)
+            assertTrue(row[0] is String)
         }
     }
 
