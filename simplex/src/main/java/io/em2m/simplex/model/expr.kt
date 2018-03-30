@@ -10,7 +10,12 @@ interface Part {
     fun call(context: ExprContext): Any?
 }
 
-data class KeyOnlyPipePart(val key: Key, val handler: KeyHandler) : Part {
+interface PipePart : Part {
+    val key: Key
+    val handler: KeyHandler
+}
+
+data class KeyOnlyPipePart(override val key: Key, override val handler: KeyHandler) : PipePart {
     override fun call(context: ExprContext): Any? {
         val contextKeys: KeyResolver? = context["keys"] as? KeyResolver
         val handler = contextKeys?.find(key) ?: handler
@@ -18,7 +23,7 @@ data class KeyOnlyPipePart(val key: Key, val handler: KeyHandler) : Part {
     }
 }
 
-data class SingleTransformPipePart(val key: Key, val handler: KeyHandler, val transform: PipeTransform) : Part {
+data class SingleTransformPipePart(override val key: Key, override val handler: KeyHandler, val transform: PipeTransform) : PipePart {
 
     override fun call(context: ExprContext): Any? {
         val contextKeys: KeyResolver? = context["keys"] as? KeyResolver
@@ -28,7 +33,7 @@ data class SingleTransformPipePart(val key: Key, val handler: KeyHandler, val tr
     }
 }
 
-data class MultiTransformPipePart(val key: Key, val handler: KeyHandler, val transforms: List<PipeTransform> = emptyList()) : Part {
+data class MultiTransformPipePart(override val key: Key, override val handler: KeyHandler, val transforms: List<PipeTransform> = emptyList()) : PipePart {
 
     override fun call(context: ExprContext): Any? {
         val contextKeys: KeyResolver? = context["keys"] as? KeyResolver
@@ -48,15 +53,22 @@ data class ConstPart(val value: String) : Part {
 
 interface Expr {
     fun call(context: ExprContext): Any?
+    val parts: List<Part>
 }
 
 data class SinglePartExpr(val part: Part) : Expr {
+
+    override val parts = listOf(part)
+
     override fun call(context: ExprContext): Any? {
         return part.call(context)
     }
 }
 
 data class TwoPartExpr(val first: Part, val second: Part) : Expr {
+
+    override val parts = listOf(first, second)
+
     override fun call(context: ExprContext): Any? {
         val builder = StringBuilder()
         val v1 = first.call(context)
@@ -72,6 +84,9 @@ data class TwoPartExpr(val first: Part, val second: Part) : Expr {
 }
 
 data class ThreePartExpr(val first: Part, val second: Part, val third: Part) : Expr {
+
+    override val parts = listOf(first, second, third)
+
     override fun call(context: ExprContext): Any? {
         val builder = StringBuilder()
         val v1 = first.call(context)
@@ -90,7 +105,7 @@ data class ThreePartExpr(val first: Part, val second: Part, val third: Part) : E
     }
 }
 
-data class MultiPartExpr(val parts: List<Part>) : Expr {
+data class MultiPartExpr(override val parts: List<Part>) : Expr {
 
     override fun call(context: ExprContext): Any? {
         val builder = StringBuilder()
