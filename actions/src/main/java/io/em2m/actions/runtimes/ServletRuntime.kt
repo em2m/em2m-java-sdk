@@ -1,5 +1,6 @@
 package io.em2m.actions.runtimes
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.em2m.actions.model.ActionContext
 import io.em2m.actions.model.Problem
@@ -11,9 +12,7 @@ import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
 
 
-class ServletRuntime(private val actionPrefix: String, private val processor: Processor<ActionContext>) {
-
-    private val mapper = jacksonObjectMapper()
+class ServletRuntime(private val actionPrefix: String, private val processor: Processor<ActionContext>, val mapper: ObjectMapper = jacksonObjectMapper()) {
 
     fun process(actionName: String, request: HttpServletRequest, response: HttpServletResponse) {
 
@@ -24,6 +23,7 @@ class ServletRuntime(private val actionPrefix: String, private val processor: Pr
         try {
             processor.process(actionName, context).toBlocking().subscribe(
                     {
+                        // TODO: Move response handling into a transformer to support streaming!
                         response.contentType = "application/json"
                         response.status = HttpServletResponse.SC_OK
                         if (context.response.entity != null) {
