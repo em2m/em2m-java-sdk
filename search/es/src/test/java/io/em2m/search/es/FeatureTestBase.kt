@@ -63,7 +63,7 @@ abstract class FeatureTestBase : Assert() {
         val mapping = mapper.readTree(File("src/test/resources/mapping_es2.json")) as ObjectNode
 
         val esClient = Feign.builder()
-                .encoder(JacksonEncoder(mapper))
+                .encoder(TextPlainEncoder(JacksonEncoder(mapper)))
                 .decoder(JacksonDecoder(mapper))
                 .logger(Slf4jLogger())
                 .logLevel(feign.Logger.Level.FULL)

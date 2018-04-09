@@ -15,6 +15,7 @@ class BasicPolicyEngine(
         pipes: PipeTransformResolver? = null) : PolicyEngine {
 
     private var LOG = LoggerFactory.getLogger(javaClass)
+    private val roles: Map<String, Role>
 
     private val expr = Simplex()
 
@@ -22,6 +23,7 @@ class BasicPolicyEngine(
         if (keys != null) expr.keys(keys)
         if (conditions != null) expr.conditions(conditions)
         if (pipes != null) expr.pipes(pipes)
+        roles = policySource.loadAllRoles().associateBy { it.id }
     }
 
     override fun findAllowedActions(context: PolicyContext): List<String> {
@@ -50,6 +52,13 @@ class BasicPolicyEngine(
         return ActionCheck(allowed, statements.size, nAllow, nDeny)
     }
 
+    private fun expandRole(roleId: String): List<String> {
+        val role = roles[roleId]
+        return if (role != null) {
+            listOf(roleId).plus(role.inherits.flatMap { expandRole(it) })
+        } else listOf(roleId)
+    }
+
     private fun testResource(statement: Statement, context: PolicyContext): Boolean {
 
         val resources = statement.resource
@@ -71,7 +80,11 @@ class BasicPolicyEngine(
     }
 
     private fun statementsForRoles(roles: List<String>): List<Statement> {
-        return roles.flatMap { policiesForRole(it) }.distinct().flatMap { it.statements }
+        return roles
+                .flatMap { expandRole(it) }
+                .flatMap { policiesForRole(it) }
+                .distinct()
+                .flatMap { it.statements }
     }
 
     private fun matchesAction(statement: Statement, actionName: String): Boolean {

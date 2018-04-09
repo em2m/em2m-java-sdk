@@ -1,7 +1,9 @@
 package io.em2m.actions.runtimes
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.em2m.actions.model.ActionContext
+import io.em2m.actions.model.MultipartData
 import io.em2m.actions.model.Problem
 import io.em2m.flows.FlowNotFound
 import io.em2m.flows.Processor
@@ -11,19 +13,23 @@ import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
 
 
-class ServletRuntime(private val actionPrefix: String, private val processor: Processor<ActionContext>) {
-
-    private val mapper = jacksonObjectMapper()
+class ServletRuntime(private val actionPrefix: String, private val processor: Processor<ActionContext>, val mapper: ObjectMapper = jacksonObjectMapper()) {
 
     fun process(actionName: String, request: HttpServletRequest, response: HttpServletResponse) {
 
         val env = createEnvironment(request)
-        val parts = if ("multipart/form-data" == request.contentType) request.parts.toList() else emptyList()
-        val context = ActionContext("$actionPrefix:$actionName", request.inputStream as InputStream, parts, environment = env)
-
+        val contentType = request.contentType
+        val parts = if (contentType.startsWith("multipart")) request.parts.toList() else emptyList()
+        val multipart = MultipartData.fromParts(parts)
+        val context = ActionContext("$actionPrefix:$actionName",
+                inputStream = request.inputStream as InputStream,
+                parts = parts,
+                environment = env,
+                multipart = multipart)
         try {
             processor.process(actionName, context).toBlocking().subscribe(
                     {
+                        // TODO: Move response handling into a transformer to support streaming!
                         response.contentType = "application/json"
                         response.status = HttpServletResponse.SC_OK
                         if (context.response.entity != null) {

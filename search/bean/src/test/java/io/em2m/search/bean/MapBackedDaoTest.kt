@@ -18,9 +18,8 @@
 package io.em2m.search.bean
 
 
-import io.em2m.search.core.model.IdMapper
-import io.em2m.search.core.model.SearchRequest
-import io.em2m.search.core.model.TermQuery
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import io.em2m.search.core.model.*
 import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
@@ -45,12 +44,46 @@ class MapBackedDaoTest {
     @Throws(Exception::class)
     fun testSearch() {
         var req = SearchRequest(limit = 10, query = TermQuery("fields.genres", "Sci-Fi"))
-        dao.search(req).toBlocking().subscribe {
-            results ->
+        dao.search(req).toBlocking().subscribe { results ->
             assertNotNull(results)
             assertNotNull(results.items)
             assertEquals(591, results.totalItems)
             assertEquals(10, results.items?.size)
+        }
+    }
+
+    @Test
+    @Throws(Exception::class)
+    fun testFields() {
+        var req = SearchRequest(
+                limit = 10,
+                fields = listOf(Field("fields.title"), Field("fields.genres")))
+        dao.search(req).toBlocking().subscribe { results ->
+            assertNotNull(results)
+            assertNotNull(results.rows)
+            assertNull(results.items)
+            assertEquals(5000, results.totalItems)
+            assertEquals(10, results.rows?.size)
+            val row = requireNotNull(results.rows?.get(0))
+            assertEquals(2, row.size)
+            assertTrue(row[0] is String)
+        }
+    }
+
+
+    @Test
+    @Throws(Exception::class)
+    fun testAgg() {
+        var req = SearchRequest(limit = 0, query = MatchAllQuery(), aggs = listOf(
+                TermsAgg("fields.actors", key = "actors", size = 10),
+                FiltersAgg(mapOf("sci-fi" to TermQuery("fields.genres", "Sci-Fi"), "fantasy" to TermQuery("fields.genres", "Drama")), key = "genres")))
+        dao.search(req).toBlocking().subscribe { results ->
+            assertNotNull(results)
+            assertNotNull(results.items)
+            assertEquals(5000, results.totalItems)
+            assertEquals(0, results.items?.size)
+            assertEquals(2, results.aggs.size)
+            println(jacksonObjectMapper().writeValueAsString(results))
         }
     }
 

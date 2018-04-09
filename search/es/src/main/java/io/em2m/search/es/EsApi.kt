@@ -169,13 +169,13 @@ class EsAggs() {
         return agg(name).with(type)
     }
 
-    fun term(name: String, field: String, size: Int, sortType: EsSortType, sortDirection: EsSortDirection, missing: String? = null): ObjectNode {
+    fun term(name: String, field: String, size: Int, sortType: EsSortType, sortDirection: EsSortDirection, missing: Any? = null): ObjectNode {
         val body = agg(name, "terms")
         body.put("field", field)
         body.put("size", size)
         body.set("order", toOrder(sortType, sortDirection))
         if (missing != null) {
-            body.put("missing", missing)
+            body.putPOJO("missing", missing)
         }
         return body
     }

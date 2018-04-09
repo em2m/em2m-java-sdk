@@ -78,6 +78,7 @@ class DateHistogramAgg(
         val offset: String? = null,
         val timeZone: String? = null,
         key: String? = null,
+        val missing: Any? = null,
         ext: Map<String, Any?>? = null) : Agg(key ?: field, ext = ext)
 
 class DateRangeAgg(
@@ -123,6 +124,7 @@ class HistogramAgg(
         val interval: Double,
         val offset: Double? = 0.0,
         key: String? = null,
+        val missing: Any? = null,
         ext: Map<String, Any?>? = null) : Agg(key ?: field, ext = ext)
 
 class MissingAgg(
@@ -158,7 +160,7 @@ class TermsAgg(
         key: String? = null,
         sort: Sort? = null,
         val format: String? = null,
-        val missing: String? = null,
+        val missing: Any? = null,
         ext: Map<String, Any?>? = null) : Agg(key ?: field, sort, ext = ext)
 
 class Stats(val count: Long, val sum: Double, val min: Double, val max: Double, val avg: Double)

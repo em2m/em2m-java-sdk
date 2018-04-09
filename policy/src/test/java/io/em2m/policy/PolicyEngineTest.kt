@@ -1,6 +1,5 @@
 package io.em2m.policy
 
-import com.fasterxml.jackson.databind.node.ArrayNode
 import io.em2m.policy.basic.BasicPolicyEngine
 import io.em2m.policy.basic.ListPolicySource
 import io.em2m.policy.model.Claims
@@ -26,31 +25,23 @@ class PolicyEngineTest : Assert() {
             Key("claims", "org") to EnvOrganizationKey(),
             Key("report", "ReportType") to ReportTypeKey())
     )
-    val conditionResolver = Strings.conditions
     val policyEngine = BasicPolicyEngine(policySource, keyResolver, Strings.conditions)
 
     @Test
     fun testFindAllowedActions() {
-        val claims: Claims = Claims(mapOf("sub" to "userid", "roles" to listOf("admin"), "exp" to Date(),
+        val claims = Claims(mapOf("sub" to "userid", "roles" to listOf("admin"), "exp" to Date(),
                 "features" to listOf("maintenance")))
         val environment = Environment(emptyMap())
-        val resource = "em2m:auto:device:1234"
+        val resource = "em2m:ident:account:1234"
         val allowed = policyEngine.findAllowedActions(PolicyContext(claims, environment, resource))
         println(allowed)
     }
 
     @Test
-    fun testRoleCustomData() {
-        val roles = policySource.loadAllRoles()
-        val admin = roles.filter { it.id == "admin" }.toList()[0]
-        assertEquals(2, (admin.customData.get("allowedRoles") as ArrayNode).size())
-    }
-
-    @Test
     @Ignore
     fun testAllowIfFeature() {
-        val claimsWithout: Claims = Claims(mapOf("sub" to "userid", "roles" to listOf("admin"), "exp" to Date()))
-        val claimsWithMaintenance: Claims = Claims(mapOf("sub" to "userid", "roles" to listOf("admin"), "exp" to Date(),
+        val claimsWithout = Claims(mapOf("sub" to "userid", "roles" to listOf("admin"), "exp" to Date()))
+        val claimsWithMaintenance = Claims(mapOf("sub" to "userid", "roles" to listOf("admin"), "exp" to Date(),
                 "features" to listOf("maintenance")))
         val environment = Environment(emptyMap())
         val resource = "em2m:reports:report:1234"
@@ -60,7 +51,7 @@ class PolicyEngineTest : Assert() {
 
     @Test
     fun testUnknownAction() {
-        val claims: Claims = Claims(mapOf("sub" to "userid", "roles" to listOf("sales"), "exp" to Date()))
+        val claims = Claims(mapOf("sub" to "userid", "roles" to listOf("sales"), "exp" to Date()))
         val environment = Environment(emptyMap())
         val resource = "em2m:test:test:1234"
         val context = PolicyContext(claims, environment, resource)
@@ -75,7 +66,7 @@ class PolicyEngineTest : Assert() {
 
     @Test
     fun testAllow() {
-        val claims: Claims = Claims(mapOf("sub" to "1234", "roles" to listOf("sales"), "exp" to Date()))
+        val claims = Claims(mapOf("sub" to "1234", "roles" to listOf("sales"), "exp" to Date()))
         val environment = Environment(emptyMap())
         val resource = "em2m:ident:account:1234"
         val context = PolicyContext(claims, environment, resource)
