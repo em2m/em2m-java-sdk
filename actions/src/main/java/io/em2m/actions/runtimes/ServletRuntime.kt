@@ -3,6 +3,7 @@ package io.em2m.actions.runtimes
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.em2m.actions.model.ActionContext
+import io.em2m.actions.model.MultipartData
 import io.em2m.actions.model.Problem
 import io.em2m.flows.FlowNotFound
 import io.em2m.flows.Processor
@@ -17,9 +18,14 @@ class ServletRuntime(private val actionPrefix: String, private val processor: Pr
     fun process(actionName: String, request: HttpServletRequest, response: HttpServletResponse) {
 
         val env = createEnvironment(request)
-        val parts = if ("multipart/form-data" == request.contentType) request.parts.toList() else emptyList()
-        val context = ActionContext("$actionPrefix:$actionName", request.inputStream as InputStream, parts, environment = env)
-
+        val contentType = request.contentType
+        val parts = if (contentType.startsWith("multipart")) request.parts.toList() else emptyList()
+        val multipart = MultipartData.fromParts(parts)
+        val context = ActionContext("$actionPrefix:$actionName",
+                inputStream = request.inputStream as InputStream,
+                parts = parts,
+                environment = env,
+                multipart = multipart)
         try {
             processor.process(actionName, context).toBlocking().subscribe(
                     {
