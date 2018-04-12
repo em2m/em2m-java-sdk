@@ -2,9 +2,22 @@
   "conditions": [
     {
       "StringEquals": {
-        "report:ReportType": [
-          "vehicle"
+        "ns:key1": [
+          "value1a",
+          "value1b"
+        ],
+        "ns:key2": "value2"
+      },
+      "StringNotEquals": {
+        "ns:key3": [
+          "value3a",
+          "value3b"
         ]
+      }
+    },
+    {
+      "StringEquals": {
+        "ns:key4": "value4a"
       }
     }
   ]
