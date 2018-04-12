@@ -30,22 +30,17 @@ class ConditionsDeserializer : JsonDeserializer<List<Condition>>() {
         }
     }
 
-    fun parseCondition(conditionType: String, tree: TreeNode): Condition {
-        tree.fieldNames().forEach { key ->
+    fun parseCondition(conditionType: String, tree: TreeNode): Sequence<Condition> {
+        return tree.fieldNames().asSequence().map { key ->
             val value = parseValueList(tree.get(key))
-            return Condition(conditionType, key, value)
+            Condition(conditionType, key, value)
         }
-        throw RuntimeException("Error parsing Condition")
     }
 
     fun parseConditionObject(tree: ObjectNode): List<Condition> {
-        val result = ArrayList<Condition>()
-
-        tree.fieldNames().forEach { conditionType ->
-            result.add(parseCondition(conditionType, tree.get(conditionType)))
-        }
-
-        return result
+        return tree.fieldNames().asSequence().flatMap { conditionType ->
+            parseCondition(conditionType, tree.get(conditionType))
+        }.toList()
     }
 
     override fun deserialize(parser: JsonParser, context: DeserializationContext): List<Condition> {
