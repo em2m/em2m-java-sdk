@@ -2,6 +2,7 @@ package io.em2m.sdk.simplex
 
 import io.em2m.simplex.std.ForAllStringEquals
 import io.em2m.simplex.std.ForAnyStringEquals
+import io.em2m.simplex.std.ForAnyStringLike
 import org.junit.Assert
 import org.junit.Test
 
@@ -38,4 +39,13 @@ class ConditionTest : Assert() {
         val condition = ForAllStringEquals()
         assert(!condition.test(keyVals, conditionVals))
     }
+
+    @Test
+    fun anyStringLikeAllowed() {
+        val keyVals = listOf("foo.bar", "foo.baz")
+        val conditionVals = listOf("foo.*")
+        val condition = ForAnyStringLike()
+        assert(condition.test(keyVals, conditionVals))
+    }
+
 }
