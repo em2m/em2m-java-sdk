@@ -31,8 +31,11 @@ class BasicPolicyEngine(
         val statements = statementsForRoles(roles)
                 .filter { testResource(it, context) }
                 .filter { expr.testConditions(it.condition, context.map) }
-                .filter { it.effect == Effect.Allow }
-        return statements.flatMap { it.actions }.distinct()
+
+        val allowedActions = statements.filter { it.effect == Effect.Allow }.flatMap { it.actions }.distinct()
+        val deniedActions = statements.filter { it.effect == Effect.Deny }.flatMap { it.actions }.distinct()
+
+        return allowedActions.filter { aa -> !deniedActions.any { da -> aa.matches(parseWildcard(da)) || da.matches(parseWildcard(aa)) } }
     }
 
     override fun isActionAllowed(actionName: String, context: PolicyContext): Boolean {
