@@ -13,7 +13,8 @@ class Priorities {
         val POST_AUTHORIZE = 4500
         val MAIN = 5000
         val AUDIT = 6000
-        val COMPLETE = 7000
+        val RESPONSE = 7000
+        val COMPLETE = 8000
     }
 
 }

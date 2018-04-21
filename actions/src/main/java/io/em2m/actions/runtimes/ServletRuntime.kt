@@ -25,21 +25,10 @@ class ServletRuntime(private val actionPrefix: String, private val processor: Pr
                 inputStream = request.inputStream as InputStream,
                 parts = parts,
                 environment = env,
-                multipart = multipart)
+                multipart = multipart,
+                response = ServletResponse(response))
         try {
-            processor.process(actionName, context).toBlocking().subscribe(
-                    {
-                        // TODO: Move response handling into a transformer to support streaming!
-                        response.contentType = "application/json"
-                        response.status = HttpServletResponse.SC_OK
-                        if (context.response.entity != null) {
-                            mapper.writeValue(response.outputStream, context.response.entity)
-                        }
-                    },
-                    { error ->
-                        handleError(response, context, error)
-                    }
-            )
+            processor.process(actionName, context).toBlocking().subscribe()
         } catch (error: FlowNotFound) {
             handleError(response, context, error)
         }
@@ -77,6 +66,5 @@ class ServletRuntime(private val actionPrefix: String, private val processor: Pr
                 "ContentEncoding" to contentEncoding
         )
     }
-
 
 }
