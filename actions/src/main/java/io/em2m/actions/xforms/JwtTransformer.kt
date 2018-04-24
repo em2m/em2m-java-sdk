@@ -3,13 +3,13 @@ package io.em2m.actions.xforms
 
 import com.auth0.jwt.JWTVerifier
 import io.em2m.actions.model.ActionContext
-import io.em2m.actions.model.ActionTransformerSupport
+import io.em2m.actions.model.ActionTransformer
 import io.em2m.actions.model.Problem
 import io.em2m.flows.Priorities
 import org.slf4j.LoggerFactory
 import rx.Observable
 
-class JwtTransformer(val secretKey: String, val requireAuth: Boolean = false) : ActionTransformerSupport(Priorities.AUTHENTICATE) {
+class JwtTransformer(val secretKey: String, val requireAuth: Boolean = false, override val priority: Int = Priorities.AUTHENTICATE) : ActionTransformer {
 
     override fun call(obs: Observable<ActionContext>): Observable<ActionContext> {
 

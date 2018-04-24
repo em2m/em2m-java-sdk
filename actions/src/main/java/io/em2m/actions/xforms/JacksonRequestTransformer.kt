@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ObjectNode
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.em2m.actions.model.ActionContext
-import io.em2m.actions.model.ActionTransformerSupport
+import io.em2m.actions.model.ActionTransformer
 import io.em2m.actions.model.Problem
 import io.em2m.actions.model.TypedActionFlow
 import io.em2m.flows.Priorities
@@ -15,8 +15,7 @@ import java.io.IOException
 import java.util.zip.DeflaterInputStream
 import java.util.zip.GZIPInputStream
 
-class JacksonRequestTransformer(val objectMapper: ObjectMapper = jacksonObjectMapper())
-    : ActionTransformerSupport(Priorities.PARSE) {
+class JacksonRequestTransformer(val objectMapper: ObjectMapper = jacksonObjectMapper(), override val priority: Int = Priorities.PARSE) : ActionTransformer {
 
     override fun call(source: Observable<ActionContext>): Observable<ActionContext> {
 
