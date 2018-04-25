@@ -28,7 +28,14 @@ class ServletRuntime(private val actionPrefix: String, private val processor: Pr
                 multipart = multipart,
                 response = ServletResponse(response))
         try {
-            processor.process(actionName, context).toBlocking().subscribe()
+            processor.process(actionName, context).toBlocking().subscribe(
+                    {
+
+                    },
+                    {
+                        handleError(response, context, it)
+                    }
+            )
         } catch (error: FlowNotFound) {
             handleError(response, context, error)
         }
@@ -53,6 +60,7 @@ class ServletRuntime(private val actionPrefix: String, private val processor: Pr
         val secureTransport = servletRequest.isSecure
         val contentType = servletRequest.contentType
         val contentEncoding = servletRequest.getHeader("Content-Encoding")?.toLowerCase()
+        val headers = servletRequest.headerNames.toList().associate { it to servletRequest.getHeaders(it).toList() }
 
         return mapOf(
                 "CurrentTime" to currentTime,
@@ -63,7 +71,8 @@ class ServletRuntime(private val actionPrefix: String, private val processor: Pr
                 "UserAgent" to userAgent,
                 "SecureTransport" to secureTransport,
                 "ContentType" to contentType,
-                "ContentEncoding" to contentEncoding
+                "ContentEncoding" to contentEncoding,
+                "Headers" to headers
         )
     }
 
