@@ -2,6 +2,7 @@ package io.em2m.simplex.std
 
 import com.scaleset.utils.Coerce
 import io.em2m.simplex.model.*
+import java.util.regex.Matcher
 
 
 class UpperCasePipe : PipeTransform {
@@ -71,20 +72,35 @@ open class ForAllStringHandler(val op: (String, String) -> Boolean) : ConditionH
     }
 }
 
+
+fun stringLike(k: String, v: String): Boolean {
+    val replaced = v.replace("?", "_QUESTION_MARK_").replace("*", "_STAR_")
+    val escaped = Matcher.quoteReplacement(replaced).replace("_QUESTION_MARK_", ".?").replace("_STAR_", ".*")
+    val pattern = Matcher.quoteReplacement(escaped)
+    val regex = Regex(pattern)
+    return regex.matches(k)
+}
+
 class StringEquals : SingleStringHandler({ k, v -> k == v })
 class StringNotEquals : SingleStringHandler({ k, v -> k != v })
 class StringEqualsIgnoreCase : SingleStringHandler({ k, v -> k.equals(v, ignoreCase = true) })
 class StringNotEqualsIgnoreCase : SingleStringHandler({ k, v -> !k.equals(v, ignoreCase = true) })
+class StringLike : SingleStringHandler({ k, v -> stringLike(k, v) })
+class StringNotLike : SingleStringHandler({ k, v -> !stringLike(k, v) })
 
 class ForAnyStringEquals : ForAnyStringHandler({ k, v -> k == v })
 class ForAnyStringNotEquals : ForAnyStringHandler({ k, v -> k != v })
 class ForAnyStringEqualsIgnoreCase : ForAnyStringHandler({ k, v -> k.equals(v, ignoreCase = true) })
 class ForAnyStringNotEqualsIgnoreCase : ForAnyStringHandler({ k, v -> !k.equals(v, ignoreCase = true) })
+class ForAnyStringLike : ForAnyStringHandler({ k, v -> stringLike(k, v) })
+class ForAnyStringNotLike : ForAnyStringHandler({ k, v -> !stringLike(k, v) })
 
 class ForAllStringEquals : ForAllStringHandler({ k, v -> k == v })
 class ForAllStringNotEquals : ForAllStringHandler({ k, v -> k != v })
 class ForAllStringEqualsIgnoreCase : ForAllStringHandler({ k, v -> k.equals(v, ignoreCase = true) })
 class ForAllStringNotEqualsIgnoreCase : ForAllStringHandler({ k, v -> !k.equals(v, ignoreCase = true) })
+class ForAllStringLike : ForAllStringHandler({ k, v -> stringLike(k, v) })
+class ForAllStringNotLike : ForAllStringHandler({ k, v -> !stringLike(k, v) })
 
 val StandardStringConditions = mapOf(
 
@@ -92,16 +108,22 @@ val StandardStringConditions = mapOf(
         "StringNotEquals" to StringNotEquals(),
         "StringEqualsIgnoreCase" to StringEqualsIgnoreCase(),
         "StringNotEqualsIgnoreCase" to StringNotEqualsIgnoreCase(),
+        "StringLike" to StringLike(),
+        "StringNotLike" to StringNotLike(),
 
         "ForAllValues:StringEquals" to ForAllStringEquals(),
         "ForAllValues:StringNotEquals" to ForAllStringNotEquals(),
         "ForAllValues:StringEqualsIgnoreCase" to ForAllStringEqualsIgnoreCase(),
         "ForAllValues:StringNotEqualsIgnoreCase" to ForAllStringNotEqualsIgnoreCase(),
+        "ForAllValues:StringLike" to ForAllStringLike(),
+        "ForAllValues:StringNotLike" to ForAllStringNotLike(),
 
         "ForAnyValue:StringEquals" to ForAnyStringEquals(),
         "ForAnyValue:StringNotEquals" to ForAnyStringNotEquals(),
         "ForAnyValue:StringEqualsIgnoreCase" to ForAnyStringEqualsIgnoreCase(),
-        "ForAnyValue:StringNotEqualsIgnoreCase" to ForAnyStringNotEqualsIgnoreCase()
+        "ForAnyValue:StringNotEqualsIgnoreCase" to ForAnyStringNotEqualsIgnoreCase(),
+        "ForAnyValue:StringLike" to ForAnyStringLike(),
+        "ForAnyValue:StringNotLike" to ForAnyStringNotLike()
 )
 
 object Strings {

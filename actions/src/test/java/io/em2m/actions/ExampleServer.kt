@@ -7,6 +7,7 @@ import io.em2m.actions.model.ActionContext
 import io.em2m.actions.model.TypedActionFlow
 import io.em2m.actions.runtimes.ServletRuntime
 import io.em2m.actions.xforms.JacksonRequestTransformer
+import io.em2m.actions.xforms.JacksonResponseTransformer
 import io.em2m.actions.xforms.LoggingTransformer
 import io.em2m.flows.BasicProcessor
 import io.em2m.flows.Flow
@@ -85,6 +86,7 @@ class ExampleServer {
         private val processor = BasicProcessor.Builder<ActionContext>()
                 .module(TestModule())
                 .transformer(JacksonRequestTransformer())
+                .transformer(JacksonResponseTransformer())
                 .flow("Log", LoggingFlow::class)
                 .flow("Echo", EchoFlow::class)
                 .flow("Upload", UploadFlow::class)
