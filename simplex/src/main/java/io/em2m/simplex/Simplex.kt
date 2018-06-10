@@ -2,6 +2,7 @@ package io.em2m.simplex
 
 import io.em2m.simplex.model.*
 import io.em2m.simplex.parser.ExprParser
+import io.em2m.simplex.std.Bools
 import io.em2m.simplex.std.I18n
 import io.em2m.simplex.std.Numbers
 import io.em2m.simplex.std.Strings
@@ -11,9 +12,18 @@ import java.util.concurrent.ConcurrentMap
 
 class Simplex {
 
-    private val keys = BasicKeyResolver().delegate(Numbers.keys)
-    private val pipes = BasicPipeTransformResolver().delegate(Numbers.pipes).delegate(Strings.pipes).delegate(I18n.pipes)
-    private val conditions = BasicConditionResolver().delegate(Strings.conditions)
+    private val keys = BasicKeyResolver()
+            .delegate(Numbers.keys)
+
+    private val pipes = BasicPipeTransformResolver()
+            .delegate(Numbers.pipes)
+            .delegate(Strings.pipes)
+            .delegate(I18n.pipes)
+
+    private val conditions = BasicConditionResolver()
+            .delegate(Strings.conditions)
+            .delegate(Numbers.conditions)
+            .delegate(Bools.conditions)
 
     val cache: ConcurrentMap<String, Expr> = ConcurrentHashMap()
 

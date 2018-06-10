@@ -1,5 +1,6 @@
 package io.em2m.sdk.simplex
 
+import io.em2m.simplex.std.Bool
 import io.em2m.simplex.std.ForAllStringEquals
 import io.em2m.simplex.std.ForAnyStringEquals
 import io.em2m.simplex.std.ForAnyStringLike
@@ -46,6 +47,15 @@ class ConditionTest : Assert() {
         val conditionVals = listOf("foo.*")
         val condition = ForAnyStringLike()
         assert(condition.test(keyVals, conditionVals))
+    }
+
+    @Test
+    fun bool() {
+        val condition = Bool()
+        assertTrue(condition.test(true, true))
+        assertFalse(condition.test(true, false))
+        assertTrue(condition.test("true", true))
+        assertTrue(condition.test("true", "true"))
     }
 
 }
