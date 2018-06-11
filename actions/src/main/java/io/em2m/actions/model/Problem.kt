@@ -39,23 +39,23 @@ class Problem(val type: String? = null,
 
     companion object {
 
-        fun notFound(title: String = "Not Found", detail: String? = null, ext: Map<String, Any?> = emptyMap()): Nothing {
-            return Problem(title = title, status = Status.NOT_FOUND, detail = detail, ext = ext).throwException()
+        fun notFound(title: () -> Any? = { "Not Found" }, detail: () -> Any? = {}, ext: Map<String, Any?> = emptyMap()): Nothing {
+            return Problem(title = title().toString(), status = Status.NOT_FOUND, detail = detail.toString(), ext = ext).throwException()
         }
 
-        fun conflict(title: String = "Conflict", detail: String? = null, ext: Map<String, Any?> = emptyMap()): Nothing {
-            return Problem(title = title, status = Status.CONFLICT, detail = detail, ext = ext).throwException()
+        fun conflict(title: () -> Any? = { "Conflict" }, detail: () -> Any? = {}, ext: Map<String, Any?> = emptyMap()): Nothing {
+            return Problem(title = title().toString(), status = Status.CONFLICT, detail = detail()?.toString(), ext = ext).throwException()
         }
 
-        fun unexpectedError(title: String = "Unexpected Error", detail: String? = null, ext: Map<String, Any?> = emptyMap()): Nothing {
-            return Problem(title = title, status = Status.INTERNAL_SERVER_ERROR, detail = detail, ext = ext).throwException()
+        fun unexpectedError(title: () -> Any? = { "Unexpected Error" }, detail: () -> Any? = {}, ext: Map<String, Any?> = emptyMap()): Nothing {
+            return Problem(title = title().toString(), status = Status.INTERNAL_SERVER_ERROR, detail = detail().toString(), ext = ext).throwException()
         }
 
-        fun <T> valueOrNotFound(value: T?, title: String = "Not Found", detail: String? = null, ext: Map<String, Any?> = emptyMap()): T {
+        fun <T> valueOrNotFound(value: T?, title: () -> Any? = { "Not Found" }, detail: () -> Any? = {}, ext: Map<String, Any?> = emptyMap()): T {
             return value ?: notFound(title, detail, ext)
         }
 
-        fun <T> valueOrConflict(value: T?, title: String = "Not Found", detail: String? = null, ext: Map<String, Any?> = emptyMap()): T {
+        fun <T> valueOrConflict(value: T?, title: () -> Any? = { "Not Found" }, detail: () -> Any? = {}, ext: Map<String, Any?> = emptyMap()): T {
             return value ?: conflict(title, detail, ext)
         }
 
