@@ -52,6 +52,56 @@ class RandomKey : KeyHandler {
 
 }
 
+fun toNumber(value: Any?): Number? {
+    return when (value) {
+        is Number -> value
+        is String -> value.toLongOrNull() ?: value.toDoubleOrNull()
+        else -> null
+    }
+}
+
+fun compareNumbers(n1: Number?, n2: Number?): Int {
+    return when {
+        (n1 == n2) -> 0
+        (n2 == null) -> 1
+        (n1 == null) -> -1
+        (n1 is Float) -> n1.compareTo(n2.toFloat())
+        (n1 is Double) -> n1.compareTo(n2.toDouble())
+        (n1 is Int) -> n1.compareTo(n2.toInt())
+        (n1 is Long) -> n1.compareTo(n2.toLong())
+        (n1 is Short) -> n1.compareTo(n2.toShort())
+        else -> n1.toDouble().compareTo(n2.toDouble())
+    }
+}
+
+open class SingleNumberHandler(val op: (Number?, Number?) -> Boolean) : ConditionHandler {
+
+    override fun test(keyValue: Any?, conditionValue: Any?): Boolean {
+        val keyNumber = if (keyValue is List<*>) {
+            toNumber(keyValue[0])
+        } else toNumber(keyValue)
+        val valueNumber = if (conditionValue is List<*>) {
+            toNumber(conditionValue[0])
+        } else toNumber(conditionValue)
+
+        return op(keyNumber, valueNumber)
+    }
+}
+
+class NumberEquals : SingleNumberHandler({ k, v -> k == v })
+class NumberGreaterThan : SingleNumberHandler({ k, v -> compareNumbers(k, v) > 0 })
+class NumberGreaterThanEquals : SingleNumberHandler({ k, v -> compareNumbers(k, v) >= 0 })
+class NumberLessThan : SingleNumberHandler({ k, v -> compareNumbers(k, v) < 0 })
+class NumberLessThanEquals : SingleNumberHandler({ k, v -> compareNumbers(k, v) <= 0 })
+
+val StandardNumberConditions = mapOf(
+        "NumberEquals" to NumberEquals(),
+        "NumberGreaterThan" to NumberGreaterThan(),
+        "NumberGreaterThanEquals" to NumberGreaterThanEquals(),
+        "NumberLessThan" to NumberLessThan(),
+        "NumberLessThanEquals" to NumberLessThanEquals()
+)
+
 object Numbers {
 
     val pipes = BasicPipeTransformResolver()
@@ -61,5 +111,7 @@ object Numbers {
     val keys = BasicKeyResolver()
             .key(Key("Math", "PI"), { _ -> ConstKeyHandler(Math.PI) })
             .key(Key("Math", "random"), { _ -> RandomKey() })
+
+    val conditions = BasicConditionResolver(StandardNumberConditions)
 
 }

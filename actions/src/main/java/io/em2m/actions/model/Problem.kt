@@ -39,6 +39,26 @@ class Problem(val type: String? = null,
 
     companion object {
 
+        fun notFound(title: () -> Any? = { "Not Found" }, detail: () -> Any? = {}, ext: Map<String, Any?> = emptyMap()): Nothing {
+            return Problem(title = title().toString(), status = Status.NOT_FOUND, detail = detail.toString(), ext = ext).throwException()
+        }
+
+        fun conflict(title: () -> Any? = { "Conflict" }, detail: () -> Any? = {}, ext: Map<String, Any?> = emptyMap()): Nothing {
+            return Problem(title = title().toString(), status = Status.CONFLICT, detail = detail()?.toString(), ext = ext).throwException()
+        }
+
+        fun unexpectedError(title: () -> Any? = { "Unexpected Error" }, detail: () -> Any? = {}, ext: Map<String, Any?> = emptyMap()): Nothing {
+            return Problem(title = title().toString(), status = Status.INTERNAL_SERVER_ERROR, detail = detail().toString(), ext = ext).throwException()
+        }
+
+        fun <T> valueOrNotFound(value: T?, title: () -> Any? = { "Not Found" }, detail: () -> Any? = {}, ext: Map<String, Any?> = emptyMap()): T {
+            return value ?: notFound(title, detail, ext)
+        }
+
+        fun <T> valueOrConflict(value: T?, title: () -> Any? = { "Not Found" }, detail: () -> Any? = {}, ext: Map<String, Any?> = emptyMap()): T {
+            return value ?: conflict(title, detail, ext)
+        }
+
         fun convert(throwable: Throwable): Problem {
             return when (throwable) {
                 is ProblemException -> throwable.problem

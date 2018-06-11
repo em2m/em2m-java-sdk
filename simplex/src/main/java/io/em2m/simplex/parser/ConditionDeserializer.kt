@@ -5,9 +5,7 @@ import com.fasterxml.jackson.core.JsonParser
 import com.fasterxml.jackson.core.TreeNode
 import com.fasterxml.jackson.databind.DeserializationContext
 import com.fasterxml.jackson.databind.JsonDeserializer
-import com.fasterxml.jackson.databind.node.ArrayNode
-import com.fasterxml.jackson.databind.node.ObjectNode
-import com.fasterxml.jackson.databind.node.TextNode
+import com.fasterxml.jackson.databind.node.*
 import io.em2m.simplex.model.Condition
 import java.util.*
 
@@ -15,9 +13,13 @@ import java.util.*
 class ConditionsDeserializer : JsonDeserializer<List<Condition>>() {
 
     fun parseValue(tree: TreeNode): String {
-        return if (tree is TextNode) {
-            tree.asText()
-        } else throw RuntimeException("Unexpected condition value type")
+
+        return when (tree) {
+            is TextNode -> tree.asText()
+            is BooleanNode -> tree.asBoolean().toString()
+            is ValueNode -> tree.toString()
+            else -> throw RuntimeException("Unexpected condition value type")
+        }
     }
 
     fun parseValueList(tree: TreeNode): List<String> {
