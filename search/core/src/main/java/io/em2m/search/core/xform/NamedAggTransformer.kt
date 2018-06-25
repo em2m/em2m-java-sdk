@@ -18,6 +18,12 @@ class NamedAggTransformer(val namedAggs: Map<String, Agg>) : AggTransformer() {
             return TermsAgg(agg.field, size ?: agg.size, agg.key, agg.sort, agg.format, agg.missing, agg.extensions)
         }
 
+        override fun transformDateRangeAgg(agg: DateRangeAgg): Agg {
+            val timeZone = ext["timeZone"] as? String
+
+            return DateRangeAgg(agg.field, agg.format, timeZone ?: agg.timeZone, agg.ranges, agg.key, agg.extensions)
+        }
+
         override fun transformDateHistogramAgg(agg: DateHistogramAgg): Agg {
             val interval = ext["interval"] as? String
             val timeZone = ext["timeZone"] as? String
