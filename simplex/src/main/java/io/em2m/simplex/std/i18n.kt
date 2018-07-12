@@ -7,7 +7,7 @@ import io.em2m.simplex.model.PipeTransform
 
 class SelectPipe : PipeTransform {
 
-    var mappingName: String = "mapping"
+    private var mappingName: String = "mapping"
 
     override fun args(args: List<String>) {
         if (args.isNotEmpty()) {

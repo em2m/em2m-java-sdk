@@ -27,7 +27,7 @@ class FieldKeyHandler : KeyHandler, Fielded {
     }
 
     companion object {
-        fun fields(expr: Expr): List<String> {
+        fun fields(expr: ValueExpr): List<String> {
             return expr.parts.flatMap { part ->
                 if (part is PipePart) {
                     val handler = part.handler

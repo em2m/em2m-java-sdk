@@ -7,8 +7,7 @@ import io.em2m.simplex.Simplex
 import io.em2m.simplex.model.Expr
 import rx.Observable
 
-class ExprTransformingSearchDao<T>(val simplex: Simplex,
-                                   delegate: SearchDao<T>) : SearchDaoWrapper<T>(delegate) {
+class ExprTransformingSearchDao<T>(simplex: Simplex, delegate: SearchDao<T>) : SearchDaoWrapper<T>(delegate) {
 
     val parser = simplex.parser
 
@@ -29,14 +28,14 @@ class ExprTransformingSearchDao<T>(val simplex: Simplex,
         }
     }
 
-    fun transformRows(request: SearchRequest, rows: List<List<*>>?, delegateFields: List<Field>, exprs: List<Expr?>): List<List<*>>? {
+    private fun transformRows(request: SearchRequest, rows: List<List<*>>?, delegateFields: List<Field>, exprs: List<Expr?>): List<List<*>>? {
         return if (rows != null && rows.isNotEmpty()) {
             rows.map { row: List<*> ->
                 val values = HashMap<String, Any?>()
                 (0..delegateFields.lastIndex).forEach { i ->
                     val name = delegateFields[i].name
                     if (name != null) {
-                        values.put(name, row[i])
+                        values[name] = row[i]
                     }
                 }
                 val exprContext = RowContext(request, emptyMap(), values)
@@ -55,7 +54,7 @@ class ExprTransformingSearchDao<T>(val simplex: Simplex,
         } else rows
     }
 
-    fun transformAggResults(request: SearchRequest, aggResults: Map<String, AggResult>): Map<String, AggResult> {
+    private fun transformAggResults(request: SearchRequest, aggResults: Map<String, AggResult>): Map<String, AggResult> {
 
         val aggExprs = HashMap<String, Expr?>()
         val aggMap = HashMap<String, Agg>()

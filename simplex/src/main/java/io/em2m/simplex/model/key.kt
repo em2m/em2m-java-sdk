@@ -3,11 +3,11 @@ package io.em2m.simplex.model
 
 data class Key(val namespace: String, val name: String) {
 
-    private val key = namespace + ":" + name
+    private val key = "$namespace:$name"
 
     override fun equals(other: Any?): Boolean {
         if (this === other) {
-            return true;
+            return true
         }
         if (other is Key) {
             return this.key == other.key
@@ -22,11 +22,11 @@ data class Key(val namespace: String, val name: String) {
     companion object {
         fun parse(key: String): Key {
             val parts = key.split(":")
-            return if (parts.size == 1) {
-                Key("field", parts[0])
-            } else if (parts.size == 2) {
-                Key(parts[0], parts[1])
-            } else throw IllegalArgumentException("Invalid Key: $key")
+            return when {
+                parts.size == 1 -> Key("field", parts[0])
+                parts.size == 2 -> Key(parts[0], parts[1])
+                else -> throw IllegalArgumentException("Invalid Key: $key")
+            }
         }
     }
 }
@@ -37,9 +37,7 @@ interface KeyHandler {
 
 }
 
-abstract class KeyHandlerSupport : KeyHandler {
-
-}
+abstract class KeyHandlerSupport : KeyHandler
 
 class ConstKeyHandler(val value: Any?) : KeyHandlerSupport() {
 
@@ -63,7 +61,7 @@ class BasicKeyResolver(handlers: Map<Key, KeyHandler> = emptyMap(), vararg deleg
 
     init {
         handlers.forEach {
-            this.handlers.put(it.key, { _ -> it.value })
+            this.handlers[it.key] = { _ -> it.value }
         }
         this.delegates.addAll(delegates)
     }
@@ -79,7 +77,7 @@ class BasicKeyResolver(handlers: Map<Key, KeyHandler> = emptyMap(), vararg deleg
     }
 
     fun key(key: Key, handler: KeyHandler): BasicKeyResolver {
-        handlers.put(key, { _ -> handler })
+        handlers[key] = { _ -> handler }
         return this
     }
 

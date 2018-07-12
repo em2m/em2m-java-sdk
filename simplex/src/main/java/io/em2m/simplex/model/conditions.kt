@@ -22,7 +22,7 @@ class BasicConditionResolver(conditions: Map<String, ConditionHandler> = emptyMa
     }
 
     fun condition(key: String, handler: ConditionHandler): BasicConditionResolver {
-        handlers.put(key, handler)
+        handlers[key] = handler
         return this
     }
 
@@ -41,9 +41,19 @@ class BasicConditionResolver(conditions: Map<String, ConditionHandler> = emptyMa
     }
 }
 
-class ConditionExpr(val condition: String, val handler: ConditionHandler, val first: Expr, val second: Expr) {
+interface ConditionExpr : Expr {
+    override fun call(context: ExprContext): Boolean
+}
 
-    fun call(context: ExprContext): Boolean {
+class ConstConditionExpr(val value: Boolean) : ConditionExpr {
+    override fun call(context: ExprContext): Boolean {
+        return value
+    }
+}
+
+class SingleConditionExpr(val condition: String, val handler: ConditionHandler, val first: Expr, val second: Expr) : ConditionExpr {
+
+    override fun call(context: ExprContext): Boolean {
 
         val firstVal = first.call(context)
         val secondVal = second.call(context)
@@ -51,4 +61,14 @@ class ConditionExpr(val condition: String, val handler: ConditionHandler, val fi
         return handler.test(firstVal, secondVal)
     }
 
+}
+
+class MultiConditionExpr(val conditions: List<ConditionExpr>) : ConditionExpr {
+
+    override fun call(context: ExprContext): Boolean {
+        conditions.forEach {
+            if (!it.call(context)) return false
+        }
+        return true
+    }
 }

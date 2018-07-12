@@ -1,15 +1,12 @@
 package io.em2m.policy
 
 import io.em2m.policy.basic.BasicPolicyEngine
-import io.em2m.policy.basic.ListPolicySource
+import io.em2m.policy.basic.LocalPolicySource
 import io.em2m.policy.model.Claims
 import io.em2m.policy.model.Environment
 import io.em2m.policy.model.PolicyContext
-import io.em2m.simplex.model.BasicKeyResolver
-import io.em2m.simplex.model.ExprContext
-import io.em2m.simplex.model.Key
-import io.em2m.simplex.model.KeyHandlerSupport
-import io.em2m.simplex.std.Strings
+import io.em2m.simplex.Simplex
+import io.em2m.simplex.model.*
 import org.junit.Assert
 import org.junit.Ignore
 import org.junit.Test
@@ -18,14 +15,17 @@ import java.util.*
 
 class PolicyEngineTest : Assert() {
 
-    val policySource = ListPolicySource.load(File("src/test/data/policies"), File("src/test/data/roles"))
-    val keyResolver = BasicKeyResolver(mapOf(
-            Key("ident", "orgPath") to OrgPathKey(),
-            Key("ident", "organization") to OrgPathKey(),
-            Key("claims", "org") to EnvOrganizationKey(),
-            Key("report", "ReportType") to ReportTypeKey())
-    )
-    val policyEngine = BasicPolicyEngine(policySource, keyResolver, Strings.conditions)
+    val simplex: Simplex = Simplex()
+            .keys(BasicKeyResolver(mapOf(
+                    Key("ident", "orgPath") to OrgPathKey(),
+                    Key("ident", "organization") to OrgPathKey(),
+                    Key("claims", "org") to EnvOrganizationKey(),
+                    Key("report", "ReportType") to ReportTypeKey(),
+                    Key("ident", "role") to ConstKeyHandler("sales"))
+            ))
+
+    val policySource = LocalPolicySource(File("src/test/data"), simplex)
+    val policyEngine = BasicPolicyEngine(policySource, simplex)
 
     @Test
     fun testFindAllowedActions() {
