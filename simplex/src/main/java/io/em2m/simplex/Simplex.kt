@@ -27,7 +27,10 @@ class Simplex {
 
     private val execs = BasicExecResolver()
 
+    // TODO - Make threadsafe
     val cache: ConcurrentMap<String, Expr> = ConcurrentHashMap()
+
+    val pathExprCache = ConcurrentHashMap<String, PathExpr>()
 
     val parser = ExprParser(keys, pipes)
 
@@ -66,6 +69,10 @@ class Simplex {
         }
     }
 
+    fun getPath(path: String, context: Any?): Any? {
+        val expr = pathExprCache.computeIfAbsent(path) { p -> PathExpr(p) }
+        return expr.call(context)
+    }
 
     fun testConditions(conditions: List<Condition>, context: ExprContext): Boolean {
         return compileCondition(conditions).call(context)

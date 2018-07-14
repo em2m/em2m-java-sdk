@@ -21,12 +21,13 @@ class TreeDeserializer(simplex: Simplex = Simplex()) : JsonDeserializer<Expr>() 
 
     private fun parse(node: JsonNode): Expr {
         return when (node) {
+            is BinaryNode -> SinglePartExpr(ConstPart(node.binaryValue()))
+            is BooleanNode -> SinglePartExpr(ConstPart(node.booleanValue()))
+            is MissingNode -> SinglePartExpr(ConstPart(null))
+            is NullNode -> SinglePartExpr(ConstPart(null))
+            is POJONode -> SinglePartExpr(ConstPart(node.pojo))
             is TextNode -> parser.parse(node.textValue())
-            is DoubleNode -> SinglePartExpr(ConstPart(node.doubleValue()))
-            is FloatNode -> SinglePartExpr(ConstPart(node.floatValue()))
-            is LongNode -> SinglePartExpr(ConstPart(node.longValue()))
-            is IntNode -> SinglePartExpr(ConstPart(node.intValue()))
-            is ShortNode -> SinglePartExpr(ConstPart(node.shortValue()))
+            is NumericNode -> SinglePartExpr(ConstPart(node.numberValue()))
             is ArrayNode -> parseArray(node)
             is ObjectNode -> parseObject(node)
             else -> SinglePartExpr(ConstPart(null))
