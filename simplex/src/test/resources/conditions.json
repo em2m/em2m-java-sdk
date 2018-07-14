@@ -1,5 +1,5 @@
 {
-  "conditions": [
+  "condition": [
     {
       "StringEquals": {
         "ns:key1": [
@@ -9,11 +9,11 @@
         "ns:key2": "value2"
       },
       "StringNotEquals": {
-        "ns:key3": [
-          "value3a",
-          "value3b"
-        ]
-      }
+      "ns:key3": [
+        "value3a",
+        "value3b"
+      ]
+    }
     },
     {
       "StringEquals": {

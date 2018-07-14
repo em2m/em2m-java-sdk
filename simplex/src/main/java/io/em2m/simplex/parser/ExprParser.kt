@@ -2,13 +2,11 @@ package io.em2m.simplex.parser
 
 import io.em2m.simplex.model.*
 
-class ExprParser(val keyResolver: KeyResolver, val pipeTransformResolver: PipeTransformResolver) {
+class ExprParser(private val keyResolver: KeyResolver, private val pipeTransformResolver: PipeTransformResolver) {
 
-    val pipeExpr = Regex("\\$\\{([^}]*)}")
+    private val pipeExpr = Regex("\\$\\{([^}]*)}")
 
-    val BLANK = ConstPart("")
-
-    fun parse(expr: String): Expr {
+    fun parse(expr: String): ValueExpr {
         val text = expr.split(pipeExpr).map(::ConstPart)
         val pipes = pipeExpr.findAll(expr).toList().map { parsePipe(it.groupValues[1]) }
         val parts = merge(text, pipes).filter { it != BLANK }
@@ -20,7 +18,7 @@ class ExprParser(val keyResolver: KeyResolver, val pipeTransformResolver: PipeTr
         }
     }
 
-    fun merge(splits: List<Part>, patterns: List<Part>): List<Part> {
+    private fun merge(splits: List<Part>, patterns: List<Part>): List<Part> {
         val results = ArrayList<Part>()
         (0 until patterns.size).forEach { i ->
             results.add(splits[i])
@@ -30,18 +28,18 @@ class ExprParser(val keyResolver: KeyResolver, val pipeTransformResolver: PipeTr
         return results
     }
 
-    fun parsePipe(text: String): Part {
+    private fun parsePipe(text: String): Part {
         val splits = text.split('|')
         val key = Key.parse(splits.first().trim())
-        val handler = requireNotNull(keyResolver.find(key), { "Key ($key) not found" })
+        val handler = requireNotNull(keyResolver.find(key)) { "Key ($key) not found" }
 
         val transforms: List<PipeTransform> = if (splits.size > 1) {
             splits.subList(1, splits.size).map { xformExpr ->
                 val xformParts = xformExpr.split(':')
-                require(xformParts.isNotEmpty(), { "Invalid pipe expressions" })
+                require(xformParts.isNotEmpty()) { "Invalid pipe expressions" }
                 val pipeName = xformParts.first().trim()
                 val args = xformParts.drop(1)
-                requireNotNull(pipeTransformResolver.find(pipeName), { "Unknown pipe: ${pipeName}" }).apply { args(args) }
+                requireNotNull(pipeTransformResolver.find(pipeName)) { "Unknown pipe: $pipeName" }.apply { args(args) }
             }
         } else emptyList()
 
@@ -52,5 +50,8 @@ class ExprParser(val keyResolver: KeyResolver, val pipeTransformResolver: PipeTr
         }
     }
 
+    companion object {
+        private val BLANK = ConstPart("")
+    }
 
 }

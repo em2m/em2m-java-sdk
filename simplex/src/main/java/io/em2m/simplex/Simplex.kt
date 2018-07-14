@@ -25,7 +25,12 @@ class Simplex {
             .delegate(Numbers.conditions)
             .delegate(Bools.conditions)
 
+    private val execs = BasicExecResolver()
+
+    // TODO - Make threadsafe
     val cache: ConcurrentMap<String, Expr> = ConcurrentHashMap()
+
+    val pathExprCache = ConcurrentHashMap<String, PathExpr>()
 
     val parser = ExprParser(keys, pipes)
 
@@ -47,21 +52,46 @@ class Simplex {
         return this
     }
 
-    fun testConditions(conditions: List<Condition>, context: ExprContext): Boolean {
-        var result = true
-        conditions.forEach {
-            val conditionHandler = getCondition(it.op)
-            val keyValue = getKeyValue(it.key, context)
-            val values = it.value.map { eval(it, context) }
-            if (!conditionHandler.test(keyValue, values)) {
-                result = false
-            }
-        }
-        return result
+    fun execs(delegate: ExecResolver): Simplex {
+        execs.delegate(delegate)
+        cache.clear()
+        return this
     }
 
-    private fun getCondition(op: String): ConditionHandler {
-        return requireNotNull(conditions.getCondition(op))
+    fun exec(exec: Exec, context: ExprContext) {
+        // todo - add cache
+        val handler = execs.findHandler(exec)
+        if (handler != null) {
+            val config = exec.config.mapValues { eval(it.value, context) }
+            val params = exec.params.mapValues { eval(it.value, context) }
+            handler.configure(config)
+            handler.call(context, params)
+        }
+    }
+
+    fun getPath(path: String, context: Any?): Any? {
+        val expr = pathExprCache.computeIfAbsent(path) { p -> PathExpr(p) }
+        return expr.call(context)
+    }
+
+    fun testConditions(conditions: List<Condition>, context: ExprContext): Boolean {
+        return compileCondition(conditions).call(context)
+    }
+
+    fun compileCondition(conditions: List<Condition>): ConditionExpr {
+        return if (conditions.size == 1) {
+            getConditionExpr(conditions.first())
+        } else {
+            MultiConditionExpr(conditions.map { getConditionExpr(it) })
+        }
+    }
+
+    private fun getConditionExpr(condition: Condition): SingleConditionExpr {
+        val op = condition.op
+        val keyExpr = parser.parse("$" + "{" + condition.key + "}")
+        val values = ArrayExpr(condition.value.map { parser.parse(it) })
+        val handler = requireNotNull(conditions.getCondition(op))
+        return SingleConditionExpr(op, handler, keyExpr, values)
     }
 
     private fun getKeyValue(key: String, context: ExprContext): Any? {

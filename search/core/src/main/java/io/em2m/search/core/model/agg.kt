@@ -5,6 +5,7 @@ import com.vividsolutions.jts.geom.Coordinate
 
 @JsonPropertyOrder("type")
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "op")
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonSubTypes(
         JsonSubTypes.Type(value = DateHistogramAgg::class, name = "date_histogram"),
         JsonSubTypes.Type(value = DateRangeAgg::class, name = "date_range"),

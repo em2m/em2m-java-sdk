@@ -25,7 +25,7 @@ class CapitalizePipe : PipeTransform {
 }
 
 
-open class SingleStringHandler(val op: (String, String) -> Boolean) : ConditionHandler {
+open class SingleStringHandler(private val op: (String?, String?) -> Boolean) : ConditionHandler {
 
     override fun test(keyValue: Any?, conditionValue: Any?): Boolean {
         val keyString = if (keyValue is List<*>) {
@@ -39,7 +39,7 @@ open class SingleStringHandler(val op: (String, String) -> Boolean) : ConditionH
     }
 }
 
-open class ForAnyStringHandler(val op: (String, String) -> Boolean) : ConditionHandler {
+open class ForAnyStringHandler(private val op: (String?, String?) -> Boolean) : ConditionHandler {
 
     override fun test(keyValue: Any?, conditionValue: Any?): Boolean {
         val keyList = keyValue as? List<*> ?: listOf(keyValue)
@@ -58,7 +58,7 @@ open class ForAnyStringHandler(val op: (String, String) -> Boolean) : ConditionH
     }
 }
 
-open class ForAllStringHandler(val op: (String, String) -> Boolean) : ConditionHandler {
+open class ForAllStringHandler(private val op: (String?, String?) -> Boolean) : ConditionHandler {
 
     override fun test(keyValue: Any?, conditionValue: Any?): Boolean {
         val keyList = if (keyValue == null) {
@@ -72,8 +72,9 @@ open class ForAllStringHandler(val op: (String, String) -> Boolean) : ConditionH
     }
 }
 
-
-fun stringLike(k: String, v: String): Boolean {
+fun stringLike(k: String?, v: String?): Boolean {
+    if (k == null && v == null) return true
+    if (k == null || v == null) return false
     val replaced = v.replace("?", "_QUESTION_MARK_").replace("*", "_STAR_")
     val escaped = Matcher.quoteReplacement(replaced).replace("_QUESTION_MARK_", ".?").replace("_STAR_", ".*")
     val pattern = Matcher.quoteReplacement(escaped)
