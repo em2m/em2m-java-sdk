@@ -4,8 +4,8 @@ interface TreeExpr : Expr
 
 class ArrayExpr(val values: List<Expr>) : TreeExpr {
 
-    override fun call(context: ExprContext): Array<Any?> {
-        return values.map { it.call(context) }.toTypedArray()
+    override fun call(context: ExprContext): List<Any?> {
+        return values.map { it.call(context) }.toList()
     }
 
 }
