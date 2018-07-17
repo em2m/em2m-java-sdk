@@ -31,7 +31,7 @@ class ExprParser(private val keyResolver: KeyResolver, private val pipeTransform
     private fun parsePipe(text: String): Part {
         val splits = text.split('|')
         val key = Key.parse(splits.first().trim())
-        val handler = requireNotNull(keyResolver.find(key)) { "Key ($key) not found" }
+        val handler = keyResolver.find(key)
 
         val transforms: List<PipeTransform> = if (splits.size > 1) {
             splits.subList(1, splits.size).map { xformExpr ->
