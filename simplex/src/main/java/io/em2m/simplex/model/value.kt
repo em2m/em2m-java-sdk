@@ -12,33 +12,33 @@ interface Part {
 
 interface PipePart : Part {
     val key: Key
-    val handler: KeyHandler
+    val handler: KeyHandler?
 }
 
-data class KeyOnlyPipePart(override val key: Key, override val handler: KeyHandler) : PipePart {
+data class KeyOnlyPipePart(override val key: Key, override val handler: KeyHandler?) : PipePart {
     override fun call(context: ExprContext): Any? {
         val contextKeys: KeyResolver? = context["keys"] as? KeyResolver
         val handler = contextKeys?.find(key) ?: handler
-        return handler.call(key, context)
+        return requireNotNull(handler) { "Handler not found for $key"}.call(key, context)
     }
 }
 
-data class SingleTransformPipePart(override val key: Key, override val handler: KeyHandler, val transform: PipeTransform) : PipePart {
+data class SingleTransformPipePart(override val key: Key, override val handler: KeyHandler?, val transform: PipeTransform) : PipePart {
 
     override fun call(context: ExprContext): Any? {
         val contextKeys: KeyResolver? = context["keys"] as? KeyResolver
         val handler = contextKeys?.find(key) ?: handler
-        val initial = handler.call(key, context)
+        val initial = requireNotNull(handler) { "Handler not found for $key"}.call(key, context)
         return transform.transform(initial, context)
     }
 }
 
-data class MultiTransformPipePart(override val key: Key, override val handler: KeyHandler, val transforms: List<PipeTransform> = emptyList()) : PipePart {
+data class MultiTransformPipePart(override val key: Key, override val handler: KeyHandler?, val transforms: List<PipeTransform> = emptyList()) : PipePart {
 
     override fun call(context: ExprContext): Any? {
         val contextKeys: KeyResolver? = context["keys"] as? KeyResolver
         val handler = contextKeys?.find(key) ?: handler
-        val initial = handler.call(key, context)
+        val initial = requireNotNull(handler) { "Handler not found for $key"}.call(key, context)
         return transforms.fold(initial) { current, pipe -> pipe.transform(current, context) }
     }
 }

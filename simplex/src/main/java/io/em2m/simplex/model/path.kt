@@ -23,9 +23,9 @@ class BeanPropertiesLoader : Function<Class<*>, Map<String, PropertyDescriptor>>
 
 object BeanHelper {
 
-    val cache = ConcurrentHashMap<Class<*>, Map<String, PropertyDescriptor>>()
+    private val cache = ConcurrentHashMap<Class<*>, Map<String, PropertyDescriptor>>()
 
-    val loader = BeanPropertiesLoader()
+    private val loader = BeanPropertiesLoader()
 
     fun getProperties(clazz: Class<*>): Map<String, PropertyDescriptor>? {
         return cache.computeIfAbsent(clazz, loader)
@@ -53,19 +53,17 @@ interface PathPart {
 class PropertyPathPart(val property: String) : PathPart {
 
     override fun call(obj: Any?): Any? {
-        val result = if (obj is Map<*, *>) {
-            obj[property]
-        } else if (obj is ObjectNode) {
-            obj.get(property)
-        } else {
-            BeanHelper.getPropertyValue(obj, property)
+        val result = when (obj) {
+            is Map<*, *> -> obj[property]
+            is ObjectNode -> obj.get(property)
+            else -> BeanHelper.getPropertyValue(obj, property)
         }
         return if (result is JsonNode) {
             unwrapNode(result)
         } else result
     }
 
-    fun unwrapNode(node: JsonNode): Any? {
+    private fun unwrapNode(node: JsonNode): Any? {
         return when (node) {
             is BinaryNode -> node.binaryValue()
             is BooleanNode -> node.booleanValue()
@@ -90,11 +88,10 @@ class PathExpr(val path: String) {
 
     fun parse(expr: String): List<PathPart> {
         // split by '.'
-        val parts = expr.split(".")
+        return expr.split(".")
                 .map {
                     PropertyPathPart(it)
                 }
-        return parts
     }
 
 }

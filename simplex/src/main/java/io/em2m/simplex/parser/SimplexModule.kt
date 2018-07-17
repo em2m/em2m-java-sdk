@@ -9,7 +9,7 @@ import io.em2m.simplex.model.Expr
 class SimplexModule(simplex: Simplex = Simplex()) : SimpleModule() {
 
     init {
-        addDeserializer(Expr::class.java, TreeDeserializer(simplex));
+        addDeserializer(Expr::class.java, TreeDeserializer(simplex))
         addDeserializer(ConditionExpr::class.java, ConditionsDeserializer(simplex))
     }
 
