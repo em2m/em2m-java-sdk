@@ -18,7 +18,6 @@
 package io.em2m.search.bean
 
 
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.em2m.search.core.model.*
 import org.junit.Assert.*
 import org.junit.Before
@@ -83,7 +82,19 @@ class MapBackedDaoTest {
             assertEquals(5000, results.totalItems)
             assertEquals(0, results.items?.size)
             assertEquals(2, results.aggs.size)
-            println(jacksonObjectMapper().writeValueAsString(results))
+        }
+    }
+
+    @Test
+    @Throws(Exception::class)
+    fun testSort() {
+        var req = SearchRequest(limit = 100, fields = listOf(Field(name = "fields.rank")),
+                query = MatchAllQuery(), sorts = listOf(DocSort("fields.rank", Direction.Descending))
+        )
+        dao.search(req).toBlocking().subscribe { results ->
+            assertNotNull(results)
+            assertNotNull(results.rows)
+            assertEquals(5000, results.rows?.get(0)?.get(0))
         }
     }
 
