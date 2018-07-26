@@ -18,7 +18,8 @@
     from Elastic M2M Incorporated.
 
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
     <modelVersion>4.0.0</modelVersion>
 
@@ -29,6 +30,7 @@
     <version>2.15.0-SNAPSHOT</version>
 
     <modules>
+        <module>utils</module>
         <module>flows</module>
         <module>actions</module>
         <module>simplex</module>
@@ -115,13 +117,7 @@
             <artifactId>config</artifactId>
             <version>1.3.3</version>
         </dependency>
-
-        <dependency>
-            <groupId>com.scaleset</groupId>
-            <artifactId>scaleset-utils</artifactId>
-            <version>0.2.0</version>
-        </dependency>
-
+        
     </dependencies>
 
     <dependencyManagement>
@@ -296,45 +292,45 @@
                     </execution>
                 </executions>
             </plugin>
-<!--
-            <plugin>
-                <groupId>org.jfrog.buildinfo</groupId>
-                <artifactId>artifactory-maven-plugin</artifactId>
-                <version>2.6.1</version>
-                <inherited>false</inherited>
-                <executions>
-                    <execution>
-                        <id>build-info</id>
-                        <goals>
-                            <goal>publish</goal>
-                        </goals>
-                        <configuration>
-                            <deployProperties>
-                                <gradle>awesome</gradle>
-                            </deployProperties>
-                            <artifactory>
-                                <includeEnvVars>true</includeEnvVars>
-                                <timeoutSec>60</timeoutSec>
-                                <propertiesFile>publish.properties</propertiesFile>
-                            </artifactory>
-                            <publisher>
-                                <contextUrl>${env.ARTIFACTORY_URL}</contextUrl>
-                                <username>${env.ARTIFACTORY_USERNAME}</username>
-                                <password>${env.ARTIFACTORY_PASSWORD}</password>
-                                <excludePatterns>*-tests.jar</excludePatterns>
-                                <repoKey>libs-release-local</repoKey>
-                                <snapshotRepoKey>libs-snapshot-local</snapshotRepoKey>
-                            </publisher>
-                            <buildInfo>
-                                <buildName>em2m-java-sdk</buildName>
-                                <buildNumber>${env.CIRCLE_BUILD_NUM}</buildNumber>
-                                <buildUrl>${env.CIRCLE_BUILD_URL}</buildUrl>
-                            </buildInfo>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
--->
+            <!--
+                        <plugin>
+                            <groupId>org.jfrog.buildinfo</groupId>
+                            <artifactId>artifactory-maven-plugin</artifactId>
+                            <version>2.6.1</version>
+                            <inherited>false</inherited>
+                            <executions>
+                                <execution>
+                                    <id>build-info</id>
+                                    <goals>
+                                        <goal>publish</goal>
+                                    </goals>
+                                    <configuration>
+                                        <deployProperties>
+                                            <gradle>awesome</gradle>
+                                        </deployProperties>
+                                        <artifactory>
+                                            <includeEnvVars>true</includeEnvVars>
+                                            <timeoutSec>60</timeoutSec>
+                                            <propertiesFile>publish.properties</propertiesFile>
+                                        </artifactory>
+                                        <publisher>
+                                            <contextUrl>${env.ARTIFACTORY_URL}</contextUrl>
+                                            <username>${env.ARTIFACTORY_USERNAME}</username>
+                                            <password>${env.ARTIFACTORY_PASSWORD}</password>
+                                            <excludePatterns>*-tests.jar</excludePatterns>
+                                            <repoKey>libs-release-local</repoKey>
+                                            <snapshotRepoKey>libs-snapshot-local</snapshotRepoKey>
+                                        </publisher>
+                                        <buildInfo>
+                                            <buildName>em2m-java-sdk</buildName>
+                                            <buildNumber>${env.CIRCLE_BUILD_NUM}</buildNumber>
+                                            <buildUrl>${env.CIRCLE_BUILD_URL}</buildUrl>
+                                        </buildInfo>
+                                    </configuration>
+                                </execution>
+                            </executions>
+                        </plugin>
+            -->
         </plugins>
     </build>
 
