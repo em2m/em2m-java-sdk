@@ -30,16 +30,10 @@
     </parent>
 
     <packaging>jar</packaging>
-    <artifactId>em2m-java-sdk-simplex</artifactId>
-    <name>em2m-java-sdk-simplex</name>
+    <artifactId>em2m-java-sdk-utils</artifactId>
+    <name>em2m-java-sdk-utils</name>
 
     <dependencies>
-
-        <dependency>
-            <groupId>io.em2m.sdk</groupId>
-            <artifactId>em2m-java-sdk-utils</artifactId>
-            <version>${project.version}</version>
-        </dependency>
 
         <dependency>
             <groupId>com.fasterxml.jackson.module</groupId>
@@ -56,13 +50,6 @@
             <groupId>com.fasterxml.jackson.datatype</groupId>
             <artifactId>jackson-datatype-joda</artifactId>
             <version>${jackson.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-simple</artifactId>
-            <version>1.7.12</version>
-            <scope>test</scope>
         </dependency>
 
     </dependencies>
@@ -92,5 +79,6 @@
             </plugin>
         </plugins>
     </build>
+
 
 </project>

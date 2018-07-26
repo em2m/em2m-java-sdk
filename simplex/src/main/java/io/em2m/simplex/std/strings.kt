@@ -1,7 +1,7 @@
 package io.em2m.simplex.std
 
-import com.scaleset.utils.Coerce
 import io.em2m.simplex.model.*
+import io.em2m.utils.coerce
 import java.util.regex.Matcher
 
 
@@ -28,12 +28,12 @@ class CapitalizePipe : PipeTransform {
 open class SingleStringHandler(private val op: (String?, String?) -> Boolean) : ConditionHandler {
 
     override fun test(keyValue: Any?, conditionValue: Any?): Boolean {
-        val keyString = if (keyValue is List<*>) {
-            Coerce.toString(keyValue[0])
-        } else Coerce.toString(keyValue)
-        val valueString = if (conditionValue is List<*>) {
-            Coerce.toString(conditionValue[0])
-        } else Coerce.toString(conditionValue)
+        val keyString: String? = if (keyValue is List<*>) {
+            keyValue[0].coerce()
+        } else keyValue.coerce()
+        val valueString: String? = if (conditionValue is List<*>) {
+            conditionValue[0].coerce()
+        } else conditionValue.coerce()
 
         return op(keyString, valueString)
     }
@@ -49,7 +49,7 @@ open class ForAnyStringHandler(private val op: (String?, String?) -> Boolean) : 
 
         keyList.forEach { first ->
             valList.forEach { second ->
-                if (op(Coerce.toString(first), Coerce.toString(second))) {
+                if (op(first.coerce(), second.coerce())) {
                     result = true
                 }
             }
@@ -67,7 +67,7 @@ open class ForAllStringHandler(private val op: (String?, String?) -> Boolean) : 
         val valList = conditionValue as? List<*> ?: listOf(conditionValue)
 
         return keyList.fold(true) { result, key ->
-            result && valList.any { op(Coerce.toString(key), Coerce.toString(it)) }
+            result && valList.any { op(key.coerce(), it.coerce()) }
         }
     }
 }
