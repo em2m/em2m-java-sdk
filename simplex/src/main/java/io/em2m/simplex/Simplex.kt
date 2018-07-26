@@ -111,11 +111,12 @@ class Simplex {
     }
 
     companion object {
-        private val simplex = Simplex()
+        val simplex = Simplex()
     }
 
-    fun Any?.evalPath(path: String): Any? {
-        return simplex.getPath(path, this)
-    }
 
+}
+
+fun Any?.evalPath(path: String): Any? {
+    return Simplex.simplex.getPath(path, this)
 }
