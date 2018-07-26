@@ -110,4 +110,12 @@ class Simplex {
         return parsed.call(context)
     }
 
+    companion object {
+        private val simplex = Simplex()
+    }
+
+    fun Any?.evalPath(path: String): Any? {
+        return simplex.getPath(path, this)
+    }
+
 }
