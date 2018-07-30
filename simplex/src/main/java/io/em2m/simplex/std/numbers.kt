@@ -10,7 +10,7 @@ class NumberPipe : PipeTransform {
     private val format: DecimalFormat = DecimalFormat().apply { maximumFractionDigits = 3 }
 
     override fun args(args: List<String>) {
-        if (args.size > 0) {
+        if (args.isNotEmpty()) {
             val fractionSize = args[0].toInt()
             format.maximumFractionDigits = fractionSize
         }
@@ -74,7 +74,7 @@ fun compareNumbers(n1: Number?, n2: Number?): Int {
     }
 }
 
-open class SingleNumberHandler(val op: (Number?, Number?) -> Boolean) : ConditionHandler {
+open class SingleNumberHandler(private val op: (Number?, Number?) -> Boolean) : ConditionHandler {
 
     override fun test(keyValue: Any?, conditionValue: Any?): Boolean {
         val keyNumber = if (keyValue is List<*>) {
@@ -105,12 +105,12 @@ val StandardNumberConditions = mapOf(
 object Numbers {
 
     val pipes = BasicPipeTransformResolver()
-            .transform("number", { _ -> NumberPipe() })
-            .transform("round", { _ -> RoundPipe() })
+            .transform("number") { _ -> NumberPipe() }
+            .transform("round") { _ -> RoundPipe() }
 
     val keys = BasicKeyResolver()
-            .key(Key("Math", "PI"), { _ -> ConstKeyHandler(Math.PI) })
-            .key(Key("Math", "random"), { _ -> RandomKey() })
+            .key(Key("Math", "PI")) { _ -> ConstKeyHandler(Math.PI) }
+            .key(Key("Math", "random")) { _ -> RandomKey() }
 
     val conditions = BasicConditionResolver(StandardNumberConditions)
 

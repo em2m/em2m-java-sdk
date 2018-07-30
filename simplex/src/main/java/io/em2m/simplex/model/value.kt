@@ -12,51 +12,50 @@ interface Part {
 
 interface PipePart : Part {
     val key: Key
-    val handler: KeyHandler
+    val handler: KeyHandler?
 }
 
-data class KeyOnlyPipePart(override val key: Key, override val handler: KeyHandler) : PipePart {
+data class KeyOnlyPipePart(override val key: Key, override val handler: KeyHandler?) : PipePart {
     override fun call(context: ExprContext): Any? {
         val contextKeys: KeyResolver? = context["keys"] as? KeyResolver
         val handler = contextKeys?.find(key) ?: handler
-        return handler.call(key, context)
+        return requireNotNull(handler) { "Handler not found for $key"}.call(key, context)
     }
 }
 
-data class SingleTransformPipePart(override val key: Key, override val handler: KeyHandler, val transform: PipeTransform) : PipePart {
+data class SingleTransformPipePart(override val key: Key, override val handler: KeyHandler?, val transform: PipeTransform) : PipePart {
 
     override fun call(context: ExprContext): Any? {
         val contextKeys: KeyResolver? = context["keys"] as? KeyResolver
         val handler = contextKeys?.find(key) ?: handler
-        val initial = handler.call(key, context)
+        val initial = requireNotNull(handler) { "Handler not found for $key"}.call(key, context)
         return transform.transform(initial, context)
     }
 }
 
-data class MultiTransformPipePart(override val key: Key, override val handler: KeyHandler, val transforms: List<PipeTransform> = emptyList()) : PipePart {
+data class MultiTransformPipePart(override val key: Key, override val handler: KeyHandler?, val transforms: List<PipeTransform> = emptyList()) : PipePart {
 
     override fun call(context: ExprContext): Any? {
         val contextKeys: KeyResolver? = context["keys"] as? KeyResolver
         val handler = contextKeys?.find(key) ?: handler
-        val initial = handler.call(key, context)
-        return transforms.fold(initial, { current, pipe -> pipe.transform(current, context) })
+        val initial = requireNotNull(handler) { "Handler not found for $key"}.call(key, context)
+        return transforms.fold(initial) { current, pipe -> pipe.transform(current, context) }
     }
 }
 
 
-data class ConstPart(val value: String) : Part {
+data class ConstPart(val value: Any?) : Part {
 
     override fun call(context: ExprContext): Any? {
         return value
     }
 }
 
-interface Expr {
-    fun call(context: ExprContext): Any?
+interface ValueExpr : Expr {
     val parts: List<Part>
 }
 
-data class SinglePartExpr(val part: Part) : Expr {
+data class SinglePartExpr(val part: Part) : ValueExpr {
 
     override val parts = listOf(part)
 
@@ -65,7 +64,7 @@ data class SinglePartExpr(val part: Part) : Expr {
     }
 }
 
-data class TwoPartExpr(val first: Part, val second: Part) : Expr {
+data class TwoPartExpr(val first: Part, val second: Part) : ValueExpr {
 
     override val parts = listOf(first, second)
 
@@ -83,7 +82,7 @@ data class TwoPartExpr(val first: Part, val second: Part) : Expr {
     }
 }
 
-data class ThreePartExpr(val first: Part, val second: Part, val third: Part) : Expr {
+data class ThreePartExpr(val first: Part, val second: Part, val third: Part) : ValueExpr {
 
     override val parts = listOf(first, second, third)
 
@@ -105,7 +104,7 @@ data class ThreePartExpr(val first: Part, val second: Part, val third: Part) : E
     }
 }
 
-data class MultiPartExpr(override val parts: List<Part>) : Expr {
+data class MultiPartExpr(override val parts: List<Part>) : ValueExpr {
 
     override fun call(context: ExprContext): Any? {
         val builder = StringBuilder()
@@ -125,13 +124,13 @@ interface PipeTransformResolver {
 
 class BasicPipeTransformResolver(handlers: Map<String, PipeTransform> = emptyMap()) : PipeTransformResolver {
 
-    val handlers = HashMap<String, (String) -> PipeTransform>()
+    private val handlers = HashMap<String, (String) -> PipeTransform>()
 
     private val delegates = ArrayList<PipeTransformResolver>()
 
     init {
         handlers.forEach {
-            this.handlers.put(it.key, { _ -> it.value })
+            this.handlers[it.key] = { _ -> it.value }
         }
     }
 
@@ -141,12 +140,12 @@ class BasicPipeTransformResolver(handlers: Map<String, PipeTransform> = emptyMap
     }
 
     fun transform(key: String, transform: PipeTransform): BasicPipeTransformResolver {
-        handlers.put(key, { _ -> transform })
+        handlers[key] = { _ -> transform }
         return this
     }
 
     fun transform(key: String, transform: (String) -> PipeTransform): BasicPipeTransformResolver {
-        handlers.put(key, transform)
+        handlers[key] = transform
         return this
     }
 

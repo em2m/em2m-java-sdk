@@ -87,6 +87,11 @@ class BasicProcessor<T>(val flowResolver: FlowResolver<T>, val standardXforms: L
             return this
         }
 
+        fun flow(flowClass: KClass<out Flow<T>>): Builder<T> {
+            classes.put(requireNotNull(flowClass.simpleName), flowClass)
+            return this
+        }
+
         fun build(): Processor<T> {
             val injector = injector?.createChildInjector(modules) ?: Guice.createInjector(modules)
             val resolver = LookupFlowResolver(injector, classes, instances)

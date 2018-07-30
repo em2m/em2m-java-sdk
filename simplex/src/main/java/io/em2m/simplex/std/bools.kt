@@ -1,14 +1,14 @@
 package io.em2m.simplex.std
 
-import com.scaleset.utils.Coerce
 import io.em2m.simplex.model.BasicConditionResolver
 import io.em2m.simplex.model.ConditionHandler
+import io.em2m.utils.coerce
 
 class Bool : ConditionHandler {
 
     override fun test(keyValue: Any?, conditionValue: Any?): Boolean {
-        val keyBool = Coerce.toBoolean(keyValue)
-        val valueBool = Coerce.toBoolean(conditionValue)
+        val keyBool: Boolean? = keyValue.coerce()
+        val valueBool: Boolean? = conditionValue.coerce()
         return keyBool == valueBool
     }
 
