@@ -3,7 +3,6 @@ import org.junit.Test
 import java.util.*
 import java.util.Calendar.*
 import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
 
 
 class CoerceTest {
