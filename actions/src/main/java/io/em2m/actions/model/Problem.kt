@@ -40,7 +40,7 @@ class Problem(val type: String? = null,
     companion object {
 
         fun notFound(title: () -> Any? = { "Not Found" }, detail: () -> Any? = {}, ext: Map<String, Any?> = emptyMap()): Nothing {
-            return Problem(title = title().toString(), status = Status.NOT_FOUND, detail = detail.toString(), ext = ext).throwException()
+            return Problem(title = title().toString(), status = Status.NOT_FOUND, detail = detail().toString(), ext = ext).throwException()
         }
 
         fun conflict(title: () -> Any? = { "Conflict" }, detail: () -> Any? = {}, ext: Map<String, Any?> = emptyMap()): Nothing {
