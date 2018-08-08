@@ -15,6 +15,7 @@ class Priorities {
         val AUDIT = 6000
         val RESPONSE = 7000
         val COMPLETE = 8000
+        val ERROR = 9000
     }
 
 }
