@@ -14,7 +14,9 @@ import javax.servlet.http.Part
 
 data class ActionContext(val actionName: String,
                          val inputStream: InputStream? = null, val parts: List<Part> = emptyList(),
-                         var claims: Map<String, Any?> = emptyMap(), var environment: Map<String, Any?> = emptyMap(), var resource: String? = null,
+                         var claims: Map<String, Any?> = emptyMap(),
+                         var environment: Map<String, Any?> = emptyMap(),
+                         var resource: String? = null,
                          val scope: MutableMap<String, Any?> = HashMap(),
                          var debug: Boolean = false,
                          var requestId: String = UUID.randomUUID().toString(),

@@ -27,6 +27,7 @@ class ServletRuntime(private val actionPrefix: String, private val processor: Pr
                 environment = env,
                 multipart = multipart,
                 response = ServletResponse(response))
+        context.scope["servletContext"] = request
         try {
             processor.process(actionName, context).toBlocking().subscribe(
                     {
@@ -61,6 +62,7 @@ class ServletRuntime(private val actionPrefix: String, private val processor: Pr
         val contentType = servletRequest.contentType
         val contentEncoding = servletRequest.getHeader("Content-Encoding")?.toLowerCase()
         val headers = servletRequest.headerNames.toList().associate { it to servletRequest.getHeaders(it).toList() }
+        val cookies = servletRequest.cookies
 
         return mapOf(
                 "CurrentTime" to currentTime,
@@ -72,7 +74,8 @@ class ServletRuntime(private val actionPrefix: String, private val processor: Pr
                 "SecureTransport" to secureTransport,
                 "ContentType" to contentType,
                 "ContentEncoding" to contentEncoding,
-                "Headers" to headers
+                "Headers" to headers,
+                "cookies" to cookies
         )
     }
 
