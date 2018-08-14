@@ -25,30 +25,29 @@ import org.junit.Test
 import kotlin.properties.Delegates.notNull
 
 class MapBackedDaoTest {
-    private var dao: MapBackedSearchDao<Movie> by notNull()
+    private var dao: MapBackedSyncDao<Movie> by notNull()
 
     @Before
     fun setup() {
-        dao = MapBackedSearchDao(MovieMapper(), movies)
+        dao = MapBackedSyncDao(MovieMapper(), movies)
     }
 
     @Test
     @Throws(Exception::class)
     fun testFindOne() {
-        val movie = dao.findOne(TermQuery("fields.title", "Robocop")).toBlocking().first() ?: error("expect movie")
-        assertTrue(dao.exists(movie.id).toBlocking().first())
+        val movie = dao.findOne(TermQuery("fields.title", "Robocop")) ?: error("expect movie")
+        assertTrue(dao.exists(movie.id))
     }
 
     @Test
     @Throws(Exception::class)
     fun testSearch() {
         var req = SearchRequest(limit = 10, query = TermQuery("fields.genres", "Sci-Fi"))
-        dao.search(req).toBlocking().subscribe { results ->
-            assertNotNull(results)
-            assertNotNull(results.items)
-            assertEquals(591, results.totalItems)
-            assertEquals(10, results.items?.size)
-        }
+        val results = dao.search(req)
+        assertNotNull(results)
+        assertNotNull(results.items)
+        assertEquals(591, results.totalItems)
+        assertEquals(10, results.items?.size)
     }
 
     @Test
@@ -57,18 +56,16 @@ class MapBackedDaoTest {
         var req = SearchRequest(
                 limit = 10,
                 fields = listOf(Field("fields.title"), Field("fields.genres")))
-        dao.search(req).toBlocking().subscribe { results ->
-            assertNotNull(results)
-            assertNotNull(results.rows)
-            assertNull(results.items)
-            assertEquals(5000, results.totalItems)
-            assertEquals(10, results.rows?.size)
-            val row = requireNotNull(results.rows?.get(0))
-            assertEquals(2, row.size)
-            assertTrue(row[0] is String)
-        }
+        val results = dao.search(req)
+        assertNotNull(results)
+        assertNotNull(results.rows)
+        assertNull(results.items)
+        assertEquals(5000, results.totalItems)
+        assertEquals(10, results.rows?.size)
+        val row = requireNotNull(results.rows?.get(0))
+        assertEquals(2, row.size)
+        assertTrue(row[0] is String)
     }
-
 
     @Test
     @Throws(Exception::class)
@@ -76,13 +73,12 @@ class MapBackedDaoTest {
         var req = SearchRequest(limit = 0, query = MatchAllQuery(), aggs = listOf(
                 TermsAgg("fields.actors", key = "actors", size = 10),
                 FiltersAgg(mapOf("sci-fi" to TermQuery("fields.genres", "Sci-Fi"), "fantasy" to TermQuery("fields.genres", "Drama")), key = "genres")))
-        dao.search(req).toBlocking().subscribe { results ->
-            assertNotNull(results)
-            assertNotNull(results.items)
-            assertEquals(5000, results.totalItems)
-            assertEquals(0, results.items?.size)
-            assertEquals(2, results.aggs.size)
-        }
+        val results = dao.search(req)
+        assertNotNull(results)
+        assertNotNull(results.items)
+        assertEquals(5000, results.totalItems)
+        assertEquals(0, results.items?.size)
+        assertEquals(2, results.aggs.size)
     }
 
     @Test
@@ -91,11 +87,10 @@ class MapBackedDaoTest {
         var req = SearchRequest(limit = 100, fields = listOf(Field(name = "fields.rank")),
                 query = MatchAllQuery(), sorts = listOf(DocSort("fields.rank", Direction.Descending))
         )
-        dao.search(req).toBlocking().subscribe { results ->
-            assertNotNull(results)
-            assertNotNull(results.rows)
-            assertEquals(5000, results.rows?.get(0)?.get(0))
-        }
+        val results = dao.search(req)
+        assertNotNull(results)
+        assertNotNull(results.rows)
+        assertEquals(5000, results.rows?.get(0)?.get(0))
     }
 
     companion object {

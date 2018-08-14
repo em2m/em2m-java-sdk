@@ -29,6 +29,29 @@ interface SearchDao<T> : Closeable {
 
 }
 
+interface SyncDao<T> : Closeable {
+
+    fun create(entity: T): T?
+
+    fun deleteById(id: String): Boolean
+
+    fun exists(id: String): Boolean
+
+    fun search(request: SearchRequest): SearchResult<T>
+
+    fun count(query: Query): Long
+
+    fun findById(id: String): T?
+
+    fun findOne(query: Query): T?
+
+    fun save(id: String, entity: T): T?
+
+    fun saveBatch(entities: List<T>): List<T>
+
+}
+
+
 interface IdMapper<T> {
     val idField: String
     fun getId(obj: T): String
