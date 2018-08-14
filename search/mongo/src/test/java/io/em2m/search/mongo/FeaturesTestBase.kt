@@ -1,6 +1,8 @@
 package io.em2m.search.mongo
 
 import com.mongodb.ConnectionString
+import com.mongodb.MongoClient
+import com.mongodb.MongoClientURI
 import com.mongodb.async.client.MongoClientSettings
 import com.mongodb.connection.ClusterSettings
 import com.mongodb.rx.client.MongoClients
@@ -11,6 +13,7 @@ import com.scaleset.geo.geojson.GeoJsonParser
 import com.typesafe.config.ConfigFactory
 import io.em2m.search.core.model.IdMapper
 import io.em2m.search.core.model.SearchDao
+import io.em2m.search.core.model.SyncDao
 import io.em2m.search.core.parser.SimpleSchemaMapper
 import org.junit.Assert
 import org.junit.Before
@@ -22,10 +25,10 @@ open class FeaturesTestBase : Assert() {
 
     private var schemaMapper: SimpleSchemaMapper by Delegates.notNull()
     var searchDao: SearchDao<Feature> by Delegates.notNull()
+    var syncDao: SyncDao<Feature> by Delegates.notNull()
     val config = ConfigFactory.load()
 
     @Before
-    @Throws(Exception::class)
     fun before() {
         schemaMapper = SimpleSchemaMapper("test")
         schemaMapper.withMapping("properties.mag", Double::class.java)
@@ -51,6 +54,22 @@ open class FeaturesTestBase : Assert() {
             searchDao.save(feature.id, feature).toBlocking().first()
         }
     }
+
+    @Before
+    fun syncDaoSetup() {
+        // Mongo Database
+        val mongoUri = config.getString("mongo.uri")
+        val mongoDb = config.getString("mongo.db")
+        val settings = MongoClientSettings.builder()
+                .clusterSettings(ClusterSettings.builder().applyConnectionString(ConnectionString(mongoUri)).build())
+                .build()
+        val client = MongoClient(MongoClientURI(mongoUri))
+        val database = client.getDatabase((mongoDb))
+        val collection = database.getCollection("test")
+
+        syncDao = MongoSyncDao(FeatureIdMapper(), JacksonDocumentMapper(Feature::class.java), collection, schemaMapper)
+    }
+
 
     fun earthquakes(): FeatureCollection {
         val handler = FeatureCollectionHandler()

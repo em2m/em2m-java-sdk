@@ -198,7 +198,7 @@ class RequestConverter(private val schemaMapper: SchemaMapper, val objectMapper:
                     }
                 }
                 else -> {
-                    throw NotImplementedError()
+                    throw NotImplementedError(it.javaClass.simpleName)
                 }
             }
         }
