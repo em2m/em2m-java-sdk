@@ -9,10 +9,10 @@ open class TypedActionFlow<T, R>(val requestType: Class<out Any>, val resultType
     @Suppress("UNCHECKED_CAST")
     fun request(context: ActionContext): T {
         val result = context.request as? T
-        return result ?: Problem(title="Missing request object").throwException()
+        return result ?: Problem(title = "Missing request object").throwException()
     }
 
-    fun response(context: ActionContext, entity: R?, statusCode: Int? = null, headers: Map<String, String>? = null) : ActionContext {
+    fun response(context: ActionContext, entity: R?, statusCode: Int? = null, headers: Map<String, String>? = null): ActionContext {
         context.response.entity = entity
         if (statusCode != null) {
             context.response.statusCode = statusCode
@@ -21,6 +21,17 @@ open class TypedActionFlow<T, R>(val requestType: Class<out Any>, val resultType
             context.response.headers.putAll(headers)
         }
         return context
+    }
+
+    override fun main(context: ActionContext) {
+        val result = main(context, request(context))
+        if (result != null) {
+            response(context, result)
+        }
+    }
+
+    open fun main(context: ActionContext, req: T): R? {
+        return null
     }
 
 }
