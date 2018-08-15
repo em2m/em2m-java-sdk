@@ -16,7 +16,7 @@ class CookieTokenTransformer(val cookieName: String, override val priority: Int 
             if (cookies is List<*>) {
                 cookies.forEach { cookie ->
                     if (cookie is Cookie && cookie.name == cookieName) {
-                        context.environment = context.environment.plus("Token" to cookie.value)
+                        context.environment["Token"] = cookie.value
                     }
                 }
             }

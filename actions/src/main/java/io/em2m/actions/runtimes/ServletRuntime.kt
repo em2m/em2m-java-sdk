@@ -18,13 +18,13 @@ class ServletRuntime(private val actionPrefix: String, private val processor: Pr
     fun process(actionName: String, request: HttpServletRequest, response: HttpServletResponse) {
 
         val env = createEnvironment(request)
-        val contentType = request.contentType
-        val parts = if (contentType.startsWith("multipart")) request.parts.toList() else emptyList()
+        val contentType: String? = request.contentType
+        val parts = if (contentType?.startsWith("multipart") == true) request.parts.toList() else emptyList()
         val multipart = MultipartData.fromParts(parts)
         val context = ActionContext("$actionPrefix:$actionName",
                 inputStream = request.inputStream as InputStream,
                 parts = parts,
-                environment = env,
+                environment = env.toMutableMap(),
                 multipart = multipart,
                 response = ServletResponse(response))
         context.scope["servletContext"] = request
@@ -62,7 +62,7 @@ class ServletRuntime(private val actionPrefix: String, private val processor: Pr
         val contentType = servletRequest.contentType
         val contentEncoding = servletRequest.getHeader("Content-Encoding")?.toLowerCase()
         val headers = servletRequest.headerNames.toList().associate { it to servletRequest.getHeaders(it).toList() }
-        val cookies = servletRequest.cookies
+        val cookies = servletRequest.cookies.toList()
 
         return mapOf(
                 "CurrentTime" to currentTime,
@@ -75,7 +75,9 @@ class ServletRuntime(private val actionPrefix: String, private val processor: Pr
                 "ContentType" to contentType,
                 "ContentEncoding" to contentEncoding,
                 "Headers" to headers,
-                "cookies" to cookies
+                "Method" to servletRequest.method,
+                "cookies" to cookies,
+                "Parameters" to servletRequest.parameterMap
         )
     }
 
