@@ -6,7 +6,7 @@ class Priorities {
         val INIT = 1000
         val PRE_AUTHENTICATE = 1500
         val AUTHENTICATE = 2000
-        val POST_AUTHENTICATE = 2500
+        val PRE_PARSE = 2500
         val PARSE = 3000
         val PRE_AUTHORIZE = 3500
         val AUTHORIZE = 4000
