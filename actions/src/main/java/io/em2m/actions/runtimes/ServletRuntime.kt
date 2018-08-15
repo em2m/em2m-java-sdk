@@ -62,7 +62,7 @@ class ServletRuntime(private val actionPrefix: String, private val processor: Pr
         val contentType = servletRequest.contentType
         val contentEncoding = servletRequest.getHeader("Content-Encoding")?.toLowerCase()
         val headers = servletRequest.headerNames.toList().associate { it to servletRequest.getHeaders(it).toList() }
-        val cookies = servletRequest.cookies.toList()
+        val cookies = servletRequest.cookies?.toList() ?: emptyList()
 
         return mapOf(
                 "CurrentTime" to currentTime,
