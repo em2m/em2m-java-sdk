@@ -61,6 +61,21 @@ interface IdMapper<T> {
     }
 }
 
+class FnIdMapper<T>(override val idField: String, val getFn: ((T) -> String), val setFn: ((T, String) -> T)? = null) : IdMapper<T> {
+
+    override fun getId(obj: T): String {
+        return getFn(obj)
+    }
+
+    override fun setId(obj: T, id: String): T {
+        return if (setFn != null) {
+            setFn.invoke(obj, id)
+        } else {
+            throw NotImplementedError()
+        }
+    }
+}
+
 interface DocMapper<T> {
     fun toDoc(obj: T): ObjectNode?
     fun fromDoc(doc: ObjectNode): T?
