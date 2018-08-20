@@ -44,7 +44,7 @@ class MongoSearchDao<T>(idMapper: IdMapper<T>, val documentMapper: DocumentMappe
 
     private val log = LoggerFactory.getLogger(javaClass)
 
-    private val timeout = 10L
+    private val timeout = 60L
 
     val queryConverter = RequestConverter(schemaMapper)
 
@@ -156,7 +156,9 @@ class MongoSearchDao<T>(idMapper: IdMapper<T>, val documentMapper: DocumentMappe
 
 
     override fun save(id: String, entity: T): Observable<T> {
-        return collection.replaceOne(Document("_id", id), encode(entity), UpdateOptions().upsert(true)).timeout(timeout, TimeUnit.SECONDS).map { it -> entity }
+        return collection.replaceOne(Document("_id", id), encode(entity), UpdateOptions().upsert(true))
+                /*.timeout(timeout, TimeUnit.SECONDS)*/
+                .map { it -> entity }
     }
 
     fun bulkSave(entities: List<T>): Observable<BulkWriteResult> {
@@ -164,7 +166,8 @@ class MongoSearchDao<T>(idMapper: IdMapper<T>, val documentMapper: DocumentMappe
             ReplaceOneModel(Document("_id", idMapper.getId(entity)), encode(entity), UpdateOptions().upsert(true))
         }
 
-        return collection.bulkWrite(writes).timeout(timeout, TimeUnit.SECONDS)
+        return collection.bulkWrite(writes)
+                /*.timeout(timeout, TimeUnit.SECONDS)*/
     }
 
     fun dropCollection(): Observable<Boolean> {
