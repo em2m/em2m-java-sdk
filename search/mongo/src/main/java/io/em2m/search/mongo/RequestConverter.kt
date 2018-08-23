@@ -11,6 +11,8 @@ import com.mongodb.client.model.Sorts
 import io.em2m.search.core.model.*
 import io.em2m.search.core.parser.LuceneExprParser
 import io.em2m.search.core.parser.SchemaMapper
+import io.em2m.search.core.xform.PushDownNotQueryTransformer
+import io.em2m.search.core.xform.SimplifyQueryTransformer
 import io.em2m.simplex.parser.DateMathParser
 import org.bson.Document
 import org.bson.conversions.Bson
@@ -21,87 +23,103 @@ import java.util.regex.Pattern
 
 class RequestConverter(private val schemaMapper: SchemaMapper, val objectMapper: ObjectMapper = jacksonObjectMapper(), val dateParser: DateMathParser = DateMathParser(DateTimeZone.UTC)) {
 
-    fun convertQuery(query: Query?): Bson = when (query) {
+    val notXform = PushDownNotQueryTransformer()
+    val simplifyXform = SimplifyQueryTransformer()
 
-        is AndQuery -> {
-            and(query.of.map { convertQuery(it) })
-        }
-        is OrQuery -> {
-            or(query.of.map { convertQuery(it) })
-        }
-        is NotQuery -> {
-            Filters.not(and(query.of.map { convertQuery(it) }))
-        }
-        is MatchAllQuery -> {
-            Document()
-        }
-        is TermQuery -> {
-            val field = query.field
-            val value = convertValue(field, query.value)
-            Filters.eq<Any>(field, value)
-        }
-        is MatchQuery -> {
-            val field = schemaMapper.mapPath(query.field)
-            if (query.value == "*") {
-                Filters.ne(field, null)
-            } else if (field == "\$text") {
-                Filters.text(query.value)
-            } else {
-                var value = query.value.replace("?", "_QUESTION_MARK_").replace("*", "_STAR_")
-                value = Matcher.quoteReplacement(value)
-                value = value.replace("_QUESTION_MARK_", ".?").replace("_STAR_", ".*")
-                val pattern = Pattern.compile(".*" + Matcher.quoteReplacement(value) + ".*", Pattern.CASE_INSENSITIVE)
+    private fun Query.fixNot() = notXform.transform(this)
+    private fun Query.simplify() = simplifyXform.transform(this)
+
+    fun convertQuery(query: Query): Bson {
+        return convertInternal(query.fixNot().simplify())
+    }
+
+    private fun convertInternal(query: Query?): Bson {
+
+        return when (query) {
+            is AndQuery -> {
+                and(query.of.map { convertInternal(it) })
+            }
+            is OrQuery -> {
+                or(query.of.map { convertInternal(it) })
+            }
+            is NotQuery -> {
+                if (query.of.size == 1) {
+                    Filters.not(convertInternal(query.of.first()))
+                } else {
+                    throw IllegalArgumentException("Not of multiple values is not supported")
+                }
+            }
+            is MatchAllQuery -> {
+                Document()
+            }
+            is TermQuery -> {
+                val field = query.field
+                val value = convertValue(field, query.value)
+                Filters.eq<Any>(field, value)
+            }
+            is MatchQuery -> {
+                val field = schemaMapper.mapPath(query.field)
+                if (query.value == "*") {
+                    Filters.ne(field, null)
+                } else if (field == "\$text") {
+                    Filters.text(query.value)
+                } else {
+                    var value = query.value.replace("?", "_QUESTION_MARK_").replace("*", "_STAR_")
+                    value = Matcher.quoteReplacement(value)
+                    value = value.replace("_QUESTION_MARK_", ".?").replace("_STAR_", ".*")
+                    val pattern = Pattern.compile(".*" + Matcher.quoteReplacement(value) + ".*", Pattern.CASE_INSENSITIVE)
+                    Filters.regex(field, pattern)
+                }
+            }
+            is PrefixQuery -> {
+                val pattern = Pattern.compile("^" + Matcher.quoteReplacement(query.value) + ".*", Pattern.CASE_INSENSITIVE)
+                Filters.regex(query.field, pattern)
+            }
+            is RangeQuery -> {
+                val field = query.field
+                val fieldType = schemaMapper.typeOf(field) ?: String::class.java
+
+                val expr = ArrayList<Bson>()
+                if (Date::class.java.isAssignableFrom(fieldType)) {
+                    val now = Date().time
+                    query.lt?.let { expr.add(Filters.lt(field, parseDate(it.toString(), now, true))) }
+                    query.lte?.let { expr.add(Filters.lte(field, parseDate(it.toString(), now, true))) }
+                    query.gt?.let { expr.add(Filters.gt(field, parseDate(it.toString(), now, false))) }
+                    query.gte?.let { expr.add(Filters.gte(field, parseDate(it.toString(), now, false))) }
+                } else {
+                    query.lt?.let { expr.add(Filters.lt(field, convertValue(field, it))) }
+                    query.lte?.let { expr.add(Filters.lte(field, convertValue(field, it))) }
+                    query.gt?.let { expr.add(Filters.gt(field, convertValue(field, it))) }
+                    query.gte?.let { expr.add(Filters.gte(field, convertValue(field, it))) }
+                }
+                and(expr)
+            }
+            is PhraseQuery -> {
+                val field = query.field
+                val phrase = query.value.joinToString(" ")
+                val pattern = Pattern.compile(Matcher.quoteReplacement(phrase), Pattern.CASE_INSENSITIVE)
                 Filters.regex(field, pattern)
             }
-        }
-        is PrefixQuery -> {
-            val pattern = Pattern.compile("^" + Matcher.quoteReplacement(query.value) + ".*", Pattern.CASE_INSENSITIVE)
-            Filters.regex(query.field, pattern)
-        }
-        is RangeQuery -> {
-            val field = query.field
-            val fieldType = schemaMapper.typeOf(field) ?: String::class.java
-
-            val expr = ArrayList<Bson>()
-            if (Date::class.java.isAssignableFrom(fieldType)) {
-                val now = Date().time
-                query.lt?.let { expr.add(Filters.lt(field, parseDate(it.toString(), now, true))) }
-                query.lte?.let { expr.add(Filters.lte(field, parseDate(it.toString(), now, true))) }
-                query.gt?.let { expr.add(Filters.gt(field, parseDate(it.toString(), now, false))) }
-                query.gte?.let { expr.add(Filters.gte(field, parseDate(it.toString(), now, false))) }
-            } else {
-                query.lt?.let { expr.add(Filters.lt(field, convertValue(field, it))) }
-                query.lte?.let { expr.add(Filters.lte(field, convertValue(field, it))) }
-                query.gt?.let { expr.add(Filters.gt(field, convertValue(field, it))) }
-                query.gte?.let { expr.add(Filters.gte(field, convertValue(field, it))) }
+            is RegexQuery -> {
+                val pattern = Pattern.compile(query.value, Pattern.CASE_INSENSITIVE)
+                Filters.regex(query.field, pattern)
             }
-            and(expr)
-        }
-        is PhraseQuery -> {
-            val field = query.field
-            val phrase = query.value.joinToString(" ")
-            val pattern = Pattern.compile(Matcher.quoteReplacement(phrase), Pattern.CASE_INSENSITIVE)
-            Filters.regex(field, pattern)
-        }
-        is RegexQuery -> {
-            val pattern = Pattern.compile(query.value, Pattern.CASE_INSENSITIVE)
-            Filters.regex(query.field, pattern)
-        }
-        is BboxQuery -> {
-            val bbox = query.value
-            Filters.geoWithinBox(query.field, bbox.minX, bbox.minY, bbox.maxX, bbox.maxY)
-        }
-        is LuceneQuery -> {
-            convertQuery(LuceneExprParser("text").parse(query.query))
-        }
-        is NativeQuery -> {
-            objectMapper.convertValue(query.value, Document::class.java)
-        }
-        is ExistsQuery -> {
-            Filters.exists(query.field, query.value ?: true)
-        }
-        else -> {
-            throw NotImplementedError("Query type (${query?.javaClass} Not supported")
+            is BboxQuery -> {
+                val bbox = query.value
+                Filters.geoWithinBox(query.field, bbox.minX, bbox.minY, bbox.maxX, bbox.maxY)
+            }
+            is LuceneQuery -> {
+                convertInternal(LuceneExprParser("text").parse(query.query))
+            }
+            is NativeQuery -> {
+                objectMapper.convertValue(query.value, Document::class.java)
+            }
+            is ExistsQuery -> {
+                Filters.exists(query.field, query.value ?: true)
+            }
+            else -> {
+                throw NotImplementedError("Query type (${query?.javaClass} Not supported")
+            }
         }
     }
 
@@ -192,7 +210,7 @@ class RequestConverter(private val schemaMapper: SchemaMapper, val objectMapper:
                     it.filters.forEach {
                         val facetKey = "${key}:${it.key}"
                         facets.add(Facet(facetKey,
-                                Aggregates.match(convertQuery(it.value)),
+                                Aggregates.match(convertInternal(it.value)),
                                 Document(mapOf("\$group" to mapOf("_id" to null, "count" to mapOf("\$sum" to 1))))
                         ))
                     }

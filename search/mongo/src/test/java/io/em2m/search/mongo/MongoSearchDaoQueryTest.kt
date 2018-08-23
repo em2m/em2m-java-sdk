@@ -103,6 +103,18 @@ class MongoSearchDaoQueryTest : FeaturesTestBase() {
     }
 
     @Test
+    fun testNotBool() {
+        val sub = TestSubscriber<Any>()
+        val boolQuery = NotQuery(OrQuery(AndQuery(TermQuery("properties.mag", "2.5")), AndQuery(TermQuery("properties.mag", 5.2))))
+        val request = SearchRequest(0, 0, boolQuery)
+        searchDao.search(request).doOnNext { result ->
+            Assert.assertEquals(42, result.totalItems)
+        }.subscribe(sub)
+        sub.awaitTerminalEvent()
+        sub.assertNoErrors()
+    }
+
+    @Test
     fun testBbox() {
         val sub = TestSubscriber<Any>()
         val request = SearchRequest(0, 0, BboxQuery("geometry.coordinates", Envelope(-180.0, 180.0, -90.0, 90.0)))
