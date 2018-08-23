@@ -13,7 +13,7 @@ import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
 
 
-class ServletRuntime(private val actionPrefix: String, private val processor: Processor<ActionContext>, val mapper: ObjectMapper = jacksonObjectMapper()) {
+open class ServletRuntime(private val actionPrefix: String, private val processor: Processor<ActionContext>, val mapper: ObjectMapper = jacksonObjectMapper()) {
 
     fun process(actionName: String, request: HttpServletRequest, response: HttpServletResponse) {
 
@@ -33,20 +33,31 @@ class ServletRuntime(private val actionPrefix: String, private val processor: Pr
                     {
 
                     },
-                    {
-                        handleError(response, context, it)
+                    { error ->
+                        handleError(response, actionName, context, error)
                     }
             )
         } catch (error: FlowNotFound) {
-            handleError(response, context, error)
+            handleError(response, actionName, context, error)
         }
     }
 
-    private fun handleError(response: HttpServletResponse, context: ActionContext, error: Throwable) {
-        val problem = Problem.convert(error)
+    protected open fun mapError(error: Throwable): Problem {
+        return Problem.convert(error)
+    }
+
+    private fun handleError(response: HttpServletResponse, actionName: String, context: ActionContext, error: Throwable) {
+        val problem = mapError(error)
+        context.error = error
         if (context.debug) {
             problem.setAny("stackTrace", error.stackTrace)
         }
+        context.response.entity = problem
+        context.response.statusCode = problem.status
+        context.response.contentType = "application/json"
+
+        processor.handleError(actionName, context)
+
         response.contentType = "application/json"
         response.status = problem.status
         mapper.writeValue(response.outputStream, problem)

@@ -17,18 +17,41 @@ class BasicProcessor<T>(val flowResolver: FlowResolver<T>, val standardXforms: L
         return obs.compose(transformer(key))
     }
 
+    override fun handleError(key: String, value: T): Observable<T> {
+        return handleError(key, Observable.just(value))
+    }
+
+    override fun handleError(key: String, obs: Observable<T>): Observable<T> {
+        return obs.compose(errorTransformer(key))
+    }
+
     override fun transformer(key: String): Observable.Transformer<T, T> {
 
         val flow = flowResolver.findFlow(key) ?: throw FlowNotFound(key)
 
-        val transformers = ArrayList(flow.transformers)
+        val transformers = flow.transformers
                 .plus(standardXforms)
+                .filter { it.priority < Priorities.ERROR }
                 .plus(MainTransformer(flow))
                 .plus(InitTransformer(flow))
                 .sortedBy { it.priority }
 
         return Observable.Transformer { observable ->
-            transformers.fold(observable) { single, xform -> single.compose(xform) }
+            transformers.fold(observable) { obs, xform -> obs.compose(xform) }
+        }
+    }
+
+    override fun errorTransformer(key: String): Observable.Transformer<T, T> {
+
+        val flow = flowResolver.findFlow(key) ?: throw FlowNotFound(key)
+
+        val transformers = flow.transformers
+                .plus(standardXforms)
+                .filter { it.priority >= Priorities.ERROR }
+                .sortedBy { it.priority }
+
+        return Observable.Transformer { observable ->
+            transformers.fold(observable) { obs, xform -> obs.compose(xform) }
         }
     }
 

@@ -24,6 +24,7 @@ data class ActionContext(val actionName: String,
                          var requestId: String = UUID.randomUUID().toString(),
                          var request: Any? = null,
                          var multipart: MultipartData? = null,
+                         var error: Throwable? = null,
                          val response: Response) : FlowAware {
 
     val keyHandlers = HashMap<Key, KeyHandler>()
