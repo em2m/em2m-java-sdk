@@ -56,7 +56,7 @@ open class ServletRuntime(private val actionPrefix: String, private val processo
         context.response.statusCode = problem.status
         context.response.contentType = "application/json"
 
-        processor.handleError(actionName, context)
+        processor.handleError(actionName, context).subscribe()
 
         response.contentType = "application/json"
         response.status = problem.status
