@@ -21,6 +21,8 @@ class JacksonResponseTransformer(val objectMapper: ObjectMapper = jacksonObjectM
                     response.contentType = "application/json"
                     response.statusCode = HttpServletResponse.SC_OK
                     objectMapper.writeValue(response.outputStream, response.entity)
+                } else {
+                    response.statusCode = HttpServletResponse.SC_NO_CONTENT
                 }
             } catch (ioEx: IOException) {
                 Problem(status = Problem.Status.BAD_REQUEST, title = "Error sending response", detail = ioEx.message).throwException()
