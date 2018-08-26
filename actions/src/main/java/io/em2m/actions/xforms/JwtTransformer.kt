@@ -17,7 +17,6 @@ class JwtTransformer(val secretKey: String, val requireAuth: Boolean = false, ov
     val mapper = jacksonObjectMapper()
     val decoder = Base64.getDecoder()
 
-
     override fun call(obs: Observable<ActionContext>): Observable<ActionContext> {
 
         return obs.doOnNext { context ->

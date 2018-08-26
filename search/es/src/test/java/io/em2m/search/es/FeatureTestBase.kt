@@ -13,8 +13,7 @@ import feign.Feign
 import feign.jackson.JacksonDecoder
 import feign.jackson.JacksonEncoder
 import feign.slf4j.Slf4jLogger
-import io.em2m.search.core.model.IdMapper
-
+import io.em2m.search.core.model.FnIdMapper
 import org.junit.Assert
 import org.junit.Before
 import java.io.File
@@ -26,7 +25,7 @@ abstract class FeatureTestBase : Assert() {
     open fun before() {
         try {
             esClient.deleteIndex("features")
-        } catch(e: Exception) {
+        } catch (e: Exception) {
         }
         flush();
         esClient.createIndex("features")
@@ -50,6 +49,8 @@ abstract class FeatureTestBase : Assert() {
                 .enable(SerializationFeature.INDENT_OUTPUT)
                 .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
 
+        val idMapper = FnIdMapper<Feature>("id", { it.id }, { f, id -> f.id = id; f })
+
         fun earthquakes(): FeatureCollection {
             val handler = FeatureCollectionHandler();
             val parser = GeoJsonParser();
@@ -68,21 +69,7 @@ abstract class FeatureTestBase : Assert() {
                 .logger(Slf4jLogger())
                 .logLevel(feign.Logger.Level.FULL)
                 .target(EsApi::class.java, "http://localhost:9200")
+
     }
-
-    class FeatureMapper : IdMapper<Feature> {
-
-        override val idField = "id"
-
-        override fun getId(obj: Feature): String {
-            return obj.id
-        }
-
-        override fun setId(obj: Feature, id: String): Feature {
-            obj.id = id
-            return obj
-        }
-    }
-
 
 }

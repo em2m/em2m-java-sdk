@@ -13,39 +13,51 @@ import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
 
 
-class ServletRuntime(private val actionPrefix: String, private val processor: Processor<ActionContext>, val mapper: ObjectMapper = jacksonObjectMapper()) {
+open class ServletRuntime(private val actionPrefix: String, private val processor: Processor<ActionContext>, val mapper: ObjectMapper = jacksonObjectMapper()) {
 
     fun process(actionName: String, request: HttpServletRequest, response: HttpServletResponse) {
 
         val env = createEnvironment(request)
-        val contentType = request.contentType
-        val parts = if (contentType.startsWith("multipart")) request.parts.toList() else emptyList()
+        val contentType: String? = request.contentType
+        val parts = if (contentType?.startsWith("multipart") == true) request.parts.toList() else emptyList()
         val multipart = MultipartData.fromParts(parts)
         val context = ActionContext("$actionPrefix:$actionName",
                 inputStream = request.inputStream as InputStream,
                 parts = parts,
-                environment = env,
+                environment = env.toMutableMap(),
                 multipart = multipart,
                 response = ServletResponse(response))
+        context.scope["servletContext"] = request
         try {
             processor.process(actionName, context).toBlocking().subscribe(
                     {
 
                     },
-                    {
-                        handleError(response, context, it)
+                    { error ->
+                        handleError(response, actionName, context, error)
                     }
             )
         } catch (error: FlowNotFound) {
-            handleError(response, context, error)
+            handleError(response, actionName, context, error)
         }
     }
 
-    private fun handleError(response: HttpServletResponse, context: ActionContext, error: Throwable) {
-        val problem = Problem.convert(error)
+    protected open fun mapError(error: Throwable): Problem {
+        return Problem.convert(error)
+    }
+
+    private fun handleError(response: HttpServletResponse, actionName: String, context: ActionContext, error: Throwable) {
+        val problem = mapError(error)
+        context.error = error
         if (context.debug) {
             problem.setAny("stackTrace", error.stackTrace)
         }
+        context.response.entity = problem
+        context.response.statusCode = problem.status
+        context.response.contentType = "application/json"
+
+        processor.handleError(actionName, context).subscribe()
+
         response.contentType = "application/json"
         response.status = problem.status
         mapper.writeValue(response.outputStream, problem)
@@ -61,6 +73,7 @@ class ServletRuntime(private val actionPrefix: String, private val processor: Pr
         val contentType = servletRequest.contentType
         val contentEncoding = servletRequest.getHeader("Content-Encoding")?.toLowerCase()
         val headers = servletRequest.headerNames.toList().associate { it to servletRequest.getHeaders(it).toList() }
+        val cookies = servletRequest.cookies?.toList() ?: emptyList()
 
         return mapOf(
                 "CurrentTime" to currentTime,
@@ -72,7 +85,10 @@ class ServletRuntime(private val actionPrefix: String, private val processor: Pr
                 "SecureTransport" to secureTransport,
                 "ContentType" to contentType,
                 "ContentEncoding" to contentEncoding,
-                "Headers" to headers
+                "Headers" to headers,
+                "Method" to servletRequest.method,
+                "cookies" to cookies,
+                "Parameters" to servletRequest.parameterMap
         )
     }
 

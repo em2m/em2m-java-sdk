@@ -17,53 +17,48 @@
  */
 package io.em2m.search.mongo
 
+import com.mongodb.MongoClient
 import com.mongodb.ServerAddress
-import com.mongodb.async.client.MongoClientSettings
 import com.mongodb.bulk.BulkWriteResult
+import com.mongodb.client.MongoCollection
 import com.mongodb.client.model.Aggregates
 import com.mongodb.client.model.Filters
 import com.mongodb.client.model.ReplaceOneModel
 import com.mongodb.client.model.UpdateOptions
-import com.mongodb.connection.ClusterSettings
-import com.mongodb.rx.client.MongoClients
-import com.mongodb.rx.client.MongoCollection
-import io.em2m.search.core.daos.AbstractSearchDao
+import io.em2m.search.core.daos.AbstractSyncDao
 import io.em2m.search.core.model.*
 import io.em2m.search.core.parser.SchemaMapper
 import io.em2m.search.core.parser.SimpleSchemaMapper
 import org.bson.Document
 import org.bson.conversions.Bson
 import org.slf4j.LoggerFactory
-import rx.Observable
-import rx.Observable.just
 import java.util.*
-import java.util.concurrent.TimeUnit
 
-class MongoSearchDao<T>(idMapper: IdMapper<T>, val documentMapper: DocumentMapper<T>, val collection: MongoCollection<Document>, schemaMapper: SchemaMapper = SimpleSchemaMapper("")) :
-        AbstractSearchDao<T>(idMapper) {
+class MongoSyncDao<T>(idMapper: IdMapper<T>, val documentMapper: DocumentMapper<T>, val collection: MongoCollection<Document>, schemaMapper: SchemaMapper = SimpleSchemaMapper("")) :
+        AbstractSyncDao<T>(idMapper) {
 
     private val log = LoggerFactory.getLogger(javaClass)
 
-    private val timeout = 60L
+    private val timeout = 10L
 
     val queryConverter = RequestConverter(schemaMapper)
 
-    override fun create(entity: T): Observable<T> {
+    override fun create(entity: T): T? {
         val doc = encode(entity)
         doc.put("_id", generateId())
-        return collection.insertOne(doc)
-                .map { decodeItem(doc) }
+        collection.insertOne(doc)
+        return decodeItem(doc)
     }
 
-    override fun deleteById(id: String): Observable<Boolean> {
-        return collection.deleteOne(Filters.eq("_id", id)).map { it.deletedCount > 0 }
+    override fun deleteById(id: String): Boolean {
+        return collection.deleteOne(Filters.eq("_id", id)).deletedCount > 0
     }
 
-    fun deleteByQuery(query: Query): Observable<Long> {
-        return collection.deleteMany(queryConverter.convertQuery(query)).map { it.deletedCount }
+    fun deleteByQuery(query: Query): Long {
+        return collection.deleteMany(queryConverter.convertQuery(query)).deletedCount
     }
 
-    fun doSearch(request: SearchRequest, mongoQuery: Bson): Observable<List<Document>> {
+    fun doSearch(request: SearchRequest, mongoQuery: Bson): List<Document> {
         return if (request.limit > 0) {
             val fields = Document()
             request.fields.forEach { fields.put(it.name, "1") }
@@ -71,28 +66,25 @@ class MongoSearchDao<T>(idMapper: IdMapper<T>, val documentMapper: DocumentMappe
                     .projection(fields)
                     .sort(queryConverter.convertSorts(request.sorts))
                     .limit(request.limit.toInt()).skip(request.offset.toInt())
-                    .toObservable().toList()
-                    .doOnError {
-                        log.error("Error in mongo!")
-                    }
-        } else Observable.just(emptyList())
+                    .toList()
+        } else emptyList()
     }
 
-    fun doCount(request: SearchRequest, mongoQuery: Bson): Observable<Long> {
+    fun doCount(request: SearchRequest, mongoQuery: Bson): Long {
         return if (request.countTotal) {
             collection.count(mongoQuery)
-        } else just(0L)
+        } else 0L
     }
 
-    fun doAggs(request: SearchRequest, mongoQuery: Bson, mongoAggs: Bson): Observable<Document> {
+    fun doAggs(request: SearchRequest, mongoQuery: Bson, mongoAggs: Bson): List<Document> {
         return if (request.aggs.isNotEmpty()) {
-            collection.aggregate(listOf(Aggregates.match(mongoQuery), mongoAggs)).toObservable()
+            collection.aggregate(listOf(Aggregates.match(mongoQuery), mongoAggs)).toList()
         } else {
-            just(null)
+            emptyList()
         }
     }
 
-    fun handleResult(request: SearchRequest, docs: List<Document>, totalItems: Long, aggs: Document?): SearchResult<T> {
+    fun handleResult(request: SearchRequest, docs: List<Document>, totalItems: Long, aggs: List<Document>): SearchResult<T> {
         val fields = request.fields
         val items = if (fields.isEmpty()) docs.map { decodeItem(it) } else null
         val rows = if (fields.isNotEmpty()) docs.map { decodeRow(request.fields, it) } else null
@@ -100,78 +92,62 @@ class MongoSearchDao<T>(idMapper: IdMapper<T>, val documentMapper: DocumentMappe
                 items = items, rows = rows,
                 totalItems = if (totalItems > 0) totalItems else docs.size.toLong(),
                 fields = fields,
-                aggs = decodeAggs(aggs))
+                aggs = decodeAggs(aggs.firstOrNull()))
     }
 
-
-    override fun search(request: SearchRequest): Observable<SearchResult<T>> {
+    override fun search(request: SearchRequest): SearchResult<T> {
         val mongoQuery = queryConverter.convertQuery(request.query ?: MatchAllQuery())
         val mongoAggs = queryConverter.convertAggs(request.aggs)
-        try {
-            return Observable.zip(
-                    doSearch(request, mongoQuery), doCount(request, mongoQuery), doAggs(request, mongoQuery, mongoAggs)
-            ) { docs, totalItems, aggs ->
-                handleResult(request, docs, totalItems, aggs)
-            }
-                    .doOnError { err -> log.error("Error searching mongo", err) }
-                    .doOnNext { results -> log.debug("results: " + results) }
-        } catch (e: Exception) {
-            return Observable.error(e)
-        }
+        val docs = doSearch(request, mongoQuery)
+        val totalItems = doCount(request, mongoQuery)
+        val aggs = doAggs(request, mongoQuery, mongoAggs)
+        return handleResult(request, docs, totalItems, aggs)
     }
 
-    fun streamItems(request: SearchRequest): Observable<T> {
+    fun streamItems(request: SearchRequest): List<T> {
         val mongoQuery = queryConverter.convertQuery(request.query ?: MatchAllQuery())
         return if (request.limit > 0) {
             val fields = Document()
-            request.fields.forEach { fields.put(it.name, "1") }
+            request.fields.forEach { fields[it.name] = "1" }
             collection.find(mongoQuery)
                     .projection(fields)
                     .sort(queryConverter.convertSorts(request.sorts))
                     .limit(request.limit.toInt()).skip(request.offset.toInt())
-                    .toObservable()
+                    .toList()
                     .map { decodeItem(it) }
-                    .doOnError {
-                        log.error("Error in mongo!")
-                    }
-        } else Observable.empty()
+        } else emptyList()
     }
 
-    fun streamRows(request: SearchRequest): Observable<List<Any?>> {
+    fun streamRows(request: SearchRequest): List<Any?> {
         val mongoQuery = queryConverter.convertQuery(request.query ?: MatchAllQuery())
         return if (request.limit > 0) {
             val fields = Document()
-            request.fields.forEach { fields.put(it.name, "1") }
+            request.fields.forEach { fields[it.name] = "1" }
             collection.find(mongoQuery)
                     .projection(fields)
                     .sort(queryConverter.convertSorts(request.sorts))
                     .limit(request.limit.toInt()).skip(request.offset.toInt())
-                    .toObservable()
+                    .toList()
                     .map { decodeRow(request.fields, it) }
-                    .doOnError {
-                        log.error("Error in mongo!")
-                    }
-        } else Observable.empty()
+        } else emptyList()
     }
 
 
-    override fun save(id: String, entity: T): Observable<T> {
-        return collection.replaceOne(Document("_id", id), encode(entity), UpdateOptions().upsert(true))
-                /*.timeout(timeout, TimeUnit.SECONDS)*/
-                .map { it -> entity }
+    override fun save(id: String, entity: T): T? {
+        collection.replaceOne(Document("_id", id), encode(entity), UpdateOptions().upsert(true))
+        return entity
     }
 
-    fun bulkSave(entities: List<T>): Observable<BulkWriteResult> {
+    fun bulkSave(entities: List<T>): BulkWriteResult {
         val writes = entities.map { entity ->
             ReplaceOneModel(Document("_id", idMapper.getId(entity)), encode(entity), UpdateOptions().upsert(true))
         }
-
         return collection.bulkWrite(writes)
-                /*.timeout(timeout, TimeUnit.SECONDS)*/
     }
 
-    fun dropCollection(): Observable<Boolean> {
-        return collection.drop().map({ true })
+    fun dropCollection(): Boolean {
+        collection.drop()
+        return true
     }
 
     fun encode(value: T): Document {
@@ -183,11 +159,12 @@ class MongoSearchDao<T>(idMapper: IdMapper<T>, val documentMapper: DocumentMappe
     }
 
     fun getFieldValue(field: String, doc: Document): Any? {
-        return field.split(".").fold(doc as Any?, { value, property ->
+        return field.split(".").fold(doc as Any?)
+        { value, property ->
             if (value is Map<*, *>) {
                 value.get(property)
             } else value
-        })
+        }
     }
 
     fun decodeRow(fields: List<Field>, doc: Document): List<Any?> {
@@ -224,10 +201,12 @@ class MongoSearchDao<T>(idMapper: IdMapper<T>, val documentMapper: DocumentMappe
 
     companion object {
         fun collection(hostName: String, dbName: String, collectionName: String): MongoCollection<Document> {
-            val settings = MongoClientSettings.builder()
+
+            /*val settings = MongoClientSettings.builder()
                     .clusterSettings(ClusterSettings.builder().hosts(listOf(ServerAddress(hostName))).build())
-                    .build()
-            val client = MongoClients.create(settings)
+                    .build()*/
+
+            val client = MongoClient(listOf(ServerAddress(hostName)))
             val database = client.getDatabase(dbName)
             return database.getCollection(collectionName)
         }

@@ -16,7 +16,7 @@ class EsSearchDaoAggTest : FeatureTestBase() {
     @Before
     override fun before() {
         super.before()
-        searchDao = EsSearchDao(esClient, "features", "feature", Feature::class.java, FeatureMapper())
+        searchDao = EsSearchDao(esClient, "features", "feature", Feature::class.java, idMapper)
     }
 
     @Test
@@ -148,7 +148,7 @@ class EsSearchDaoAggTest : FeatureTestBase() {
 
     @Test
     fun testDateHistogram() {
-        val request = SearchRequest(0, 0, MatchAllQuery(), aggs = listOf(DateHistogramAgg("properties.time", interval =  "hour", key = "time")))
+        val request = SearchRequest(0, 0, MatchAllQuery(), aggs = listOf(DateHistogramAgg("properties.time", interval = "hour", key = "time")))
         val sub = TestSubscriber<Any>()
         searchDao.search(request).doOnNext { result ->
             val agg = result.aggs["time"] ?: error("agg should not be null")

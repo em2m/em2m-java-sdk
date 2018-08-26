@@ -15,7 +15,7 @@ class EsSearchDaoTest : FeatureTestBase() {
     @Before
     override fun before() {
         super.before()
-        searchDao = EsSearchDao(esClient, "features", "feature", Feature::class.java, FeatureMapper())
+        searchDao = EsSearchDao(esClient, "features", "feature", Feature::class.java, idMapper)
     }
 
     @Test
