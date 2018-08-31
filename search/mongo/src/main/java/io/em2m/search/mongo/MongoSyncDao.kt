@@ -102,7 +102,11 @@ class MongoSyncDao<T>(idMapper: IdMapper<T>, val documentMapper: DocumentMapper<
         val mongoQuery = queryConverter.convertQuery(request.query ?: MatchAllQuery())
         val mongoAggs = queryConverter.convertAggs(request.aggs)
         val docs = doSearch(request, mongoQuery)
-        val totalItems = doCount(request, mongoQuery)
+        val totalItems: Long = if (docs.size < request.limit) {
+            docs.size.toLong()
+        } else {
+            doCount(request, mongoQuery)
+        }
         val aggs = doAggs(request, mongoQuery, mongoAggs)
         return handleResult(request, docs, totalItems, aggs)
     }
