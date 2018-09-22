@@ -337,7 +337,7 @@ class EsAliasAction(var add: EsAliasDefinition? = null, var remove: EsAliasDefin
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 class EsAliasDefinition(val index: String, val alias: String)
 
-class AliasRequest() {
+class EsAliasRequest() {
     var actions: MutableList<EsAliasAction> = mutableListOf()
 }
 
@@ -397,7 +397,7 @@ interface EsApi {
     fun getMetadata(): ObjectNode
 
     @RequestLine("POST /_aliases")
-    fun putAliases(request: AliasRequest)
+    fun putAliases(request: EsAliasRequest)
 
     @RequestLine("GET /_aliases")
     fun getAliases(): ObjectNode
