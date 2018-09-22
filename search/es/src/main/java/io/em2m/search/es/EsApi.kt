@@ -331,13 +331,18 @@ class EsSearchResult(
     }
 }
 
+class EsBulkResult(val took: Long, val errors: Boolean, val items: Array<Item>) {
+    class Item(val index: ItemData? = null, val delete: ItemData? = null, val create: ItemData? = null, val update: ItemData? = null)
+    class ItemData(val _index: String, val _type: String, val _id: String, val _version: Int, val result: String? = null, val status: Int)
+}
+
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 class EsAliasAction(var add: EsAliasDefinition? = null, var remove: EsAliasDefinition? = null)
 
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 class EsAliasDefinition(val index: String, val alias: String)
 
-class AliasRequest() {
+class EsAliasRequest() {
     var actions: MutableList<EsAliasAction> = mutableListOf()
 }
 
@@ -388,7 +393,7 @@ interface EsApi {
 
     @Headers("Content-Type: text/plain")
     @RequestLine("POST /_bulk")
-    fun bulkUpdate(bulkRequest: String)
+    fun bulkUpdate(bulkRequest: String) : EsBulkResult
 
     @RequestLine("POST /_flush")
     fun flush()
@@ -397,7 +402,7 @@ interface EsApi {
     fun getMetadata(): ObjectNode
 
     @RequestLine("POST /_aliases")
-    fun putAliases(request: AliasRequest)
+    fun putAliases(request: EsAliasRequest)
 
     @RequestLine("GET /_aliases")
     fun getAliases(): ObjectNode
@@ -448,7 +453,6 @@ class EsScrollIterator(val client: EsApi, result: EsSearchResult, val scroll: St
 
 class EsBucketListDeserializer : JsonDeserializer<List<EsBucket>>() {
 
-
     override fun deserialize(parser: JsonParser, context: DeserializationContext): List<EsBucket> {
         val buckets = ArrayList<EsBucket>()
 
@@ -471,5 +475,4 @@ class EsBucketListDeserializer : JsonDeserializer<List<EsBucket>>() {
 
         return buckets
     }
-
 }

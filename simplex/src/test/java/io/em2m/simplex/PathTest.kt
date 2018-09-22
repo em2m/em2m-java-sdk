@@ -64,7 +64,7 @@ class PathTest {
     fun testKeyHandler() {
         val simplex = Simplex()
         simplex.keys(BasicKeyResolver().key(Key("field", "*"), PathKeyHandler(simplex)))
-        val expr = "#{a.b.c}".replace("#", "$")
+        val expr = "\${a.b.c}"
         val context = map
         assertEquals("value", simplex.eval(expr, context))
     }
