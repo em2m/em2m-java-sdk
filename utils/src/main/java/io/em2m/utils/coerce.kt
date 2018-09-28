@@ -18,3 +18,13 @@ inline fun <reified T : Any> Any?.coerce(fallback: T? = null, objectMapper: Obje
         fallback
     }
 }
+
+inline fun <reified T : Any> Any?.coerceNonNull(fallback: T? = null, objectMapper: ObjectMapper = Coerce.objectMapper): T {
+    return try {
+        if (this != null) {
+            objectMapper.convertValue(this)
+        } else requireNotNull(fallback)
+    } catch (t: Throwable) {
+        requireNotNull(fallback)
+    }
+}
