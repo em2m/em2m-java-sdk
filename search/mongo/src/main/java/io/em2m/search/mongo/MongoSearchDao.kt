@@ -17,6 +17,7 @@
  */
 package io.em2m.search.mongo
 
+import com.mongodb.ReadPreference
 import com.mongodb.ServerAddress
 import com.mongodb.async.client.MongoClientSettings
 import com.mongodb.bulk.BulkWriteResult
@@ -37,7 +38,6 @@ import org.slf4j.LoggerFactory
 import rx.Observable
 import rx.Observable.just
 import java.util.*
-import java.util.concurrent.TimeUnit
 
 class MongoSearchDao<T>(idMapper: IdMapper<T>, val documentMapper: DocumentMapper<T>, val collection: MongoCollection<Document>, schemaMapper: SchemaMapper = SimpleSchemaMapper("")) :
         AbstractSearchDao<T>(idMapper) {
@@ -86,7 +86,9 @@ class MongoSearchDao<T>(idMapper: IdMapper<T>, val documentMapper: DocumentMappe
 
     fun doAggs(request: SearchRequest, mongoQuery: Bson, mongoAggs: Bson): Observable<Document> {
         return if (request.aggs.isNotEmpty()) {
-            collection.aggregate(listOf(Aggregates.match(mongoQuery), mongoAggs)).toObservable()
+            collection
+                    .withReadPreference(ReadPreference.secondary())
+                    .aggregate(listOf(Aggregates.match(mongoQuery), mongoAggs)).toObservable()
         } else {
             just(null)
         }
@@ -167,7 +169,7 @@ class MongoSearchDao<T>(idMapper: IdMapper<T>, val documentMapper: DocumentMappe
         }
 
         return collection.bulkWrite(writes)
-                /*.timeout(timeout, TimeUnit.SECONDS)*/
+        /*.timeout(timeout, TimeUnit.SECONDS)*/
     }
 
     fun dropCollection(): Observable<Boolean> {
@@ -198,7 +200,7 @@ class MongoSearchDao<T>(idMapper: IdMapper<T>, val documentMapper: DocumentMappe
         if (document == null) return emptyMap()
 
         log.debug(document.toString())
-        val result = HashMap <String, AggResult>()
+        val result = HashMap<String, AggResult>()
 
         val keyIndex = document.keys.groupBy { key ->
             if (key.contains(":")) key.split(":")[0] else key

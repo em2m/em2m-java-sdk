@@ -23,8 +23,8 @@ import java.util.regex.Pattern
 
 class RequestConverter(private val schemaMapper: SchemaMapper, val objectMapper: ObjectMapper = jacksonObjectMapper(), val dateParser: DateMathParser = DateMathParser(DateTimeZone.UTC)) {
 
-    val notXform = PushDownNotQueryTransformer()
-    val simplifyXform = SimplifyQueryTransformer()
+    private val notXform = PushDownNotQueryTransformer()
+    private val simplifyXform = SimplifyQueryTransformer()
 
     private fun Query.fixNot() = notXform.transform(this)
     private fun Query.simplify() = simplifyXform.transform(this)
@@ -59,16 +59,16 @@ class RequestConverter(private val schemaMapper: SchemaMapper, val objectMapper:
             }
             is MatchQuery -> {
                 val field = schemaMapper.mapPath(query.field)
-                if (query.value == "*") {
-                    Filters.ne(field, null)
-                } else if (field == "\$text") {
-                    Filters.text(query.value)
-                } else {
-                    var value = query.value.replace("?", "_QUESTION_MARK_").replace("*", "_STAR_")
-                    value = Matcher.quoteReplacement(value)
-                    value = value.replace("_QUESTION_MARK_", ".?").replace("_STAR_", ".*")
-                    val pattern = Pattern.compile(".*" + Matcher.quoteReplacement(value) + ".*", Pattern.CASE_INSENSITIVE)
-                    Filters.regex(field, pattern)
+                when {
+                    query.value == "*" -> Filters.ne(field, null)
+                    field == "\$text" -> Filters.text(query.value)
+                    else -> {
+                        var value = query.value.replace("?", "_QUESTION_MARK_").replace("*", "_STAR_")
+                        value = Matcher.quoteReplacement(value)
+                        value = value.replace("_QUESTION_MARK_", ".?").replace("_STAR_", ".*")
+                        val pattern = Pattern.compile(".*" + Matcher.quoteReplacement(value) + ".*", Pattern.CASE_INSENSITIVE)
+                        Filters.regex(field, pattern)
+                    }
                 }
             }
             is PrefixQuery -> {
@@ -115,7 +115,7 @@ class RequestConverter(private val schemaMapper: SchemaMapper, val objectMapper:
                 objectMapper.convertValue(query.value, Document::class.java)
             }
             is ExistsQuery -> {
-                Filters.exists(query.field, query.value ?: true)
+                Filters.exists(query.field, query.value)
             }
             else -> {
                 throw NotImplementedError("Query type (${query?.javaClass} Not supported")
@@ -133,7 +133,7 @@ class RequestConverter(private val schemaMapper: SchemaMapper, val objectMapper:
         })
     }
 
-    fun convertValue(path: String, value: Any?): Any? {
+    private fun convertValue(path: String, value: Any?): Any? {
         var result: Any? = value
         if (value is String) {
             result = schemaMapper.valueOf(path, value)
@@ -141,35 +141,31 @@ class RequestConverter(private val schemaMapper: SchemaMapper, val objectMapper:
         return result
     }
 
-    fun and(filters: List<Bson>): Bson {
-        return if (filters.isEmpty()) {
-            Document()
-        } else if (filters.size == 1) {
-            filters[0]
-        } else {
-            Filters.and(filters)
+    private fun and(filters: List<Bson>): Bson {
+        return when {
+            filters.isEmpty() -> Document()
+            filters.size == 1 -> filters[0]
+            else -> Filters.and(filters)
         }
     }
 
-    fun or(filters: List<Bson>): Bson {
-        return if (filters.isEmpty()) {
-            Document()
-        } else if (filters.size == 1) {
-            filters[0]
-        } else {
-            Filters.or(filters)
+    private fun or(filters: List<Bson>): Bson {
+        return when {
+            filters.isEmpty() -> Document()
+            filters.size == 1 -> filters[0]
+            else -> Filters.or(filters)
         }
     }
 
     fun convertAggs(aggs: List<Agg>): Bson {
         val facets = ArrayList<Facet>()
-        aggs.forEach {
-            when (it) {
+        aggs.forEach { agg ->
+            when (agg) {
                 is TermsAgg -> {
-                    facets.add(Facet(it.key,
-                            Document("\$unwind", "\$${it.field}"),
-                            Document("\$sortByCount", "\$${it.field}"),
-                            Document("\$limit", it.size)))
+                    facets.add(Facet(agg.key,
+                            Document("\$unwind", "\$${agg.field}"),
+                            Document("\$sortByCount", "\$${agg.field}"),
+                            Document("\$limit", agg.size)))
                 }
 //                is HistogramAgg -> {
 //                    Facet(it.key, Document(mapOf("\$bucketAuto" to mapOf("groupBy" to "_id", "buckets" to "4"))))
@@ -188,42 +184,41 @@ class RequestConverter(private val schemaMapper: SchemaMapper, val objectMapper:
                     */
                 }
                 is NativeAgg -> {
-                    val value = when (it.value) {
+                    val value = when (agg.value) {
                         is Bson -> {
-                            listOf(it as Bson)
+                            listOf(agg.value as Bson)
                         }
                         is String -> {
-                            val parsed = Document.parse("{ \"pipe\": ${it.value}}")
-                            parsed["pipe"] as List<Bson>
+                            Document.parse(agg.value.toString()) as List<Bson>
                         }
                         is ArrayNode -> {
-                            (it.value as ArrayNode).map { objectMapper.convertValue(it, Document::class.java) }
+                            (agg.value as ArrayNode).map { objectMapper.convertValue(it, Document::class.java) }
                         }
                         else -> {
                             throw IllegalArgumentException("Unsupported native agg")
                         }
                     }
-                    facets.add(Facet(it.key, value))
+                    facets.add(Facet(agg.key, value))
                 }
                 is FiltersAgg -> {
-                    val key = it.key
-                    it.filters.forEach {
-                        val facetKey = "${key}:${it.key}"
+                    val key = agg.key
+                    agg.filters.forEach { filter ->
+                        val facetKey = "$key:${filter.key}"
                         facets.add(Facet(facetKey,
-                                Aggregates.match(convertInternal(it.value)),
+                                Aggregates.match(convertInternal(filter.value)),
                                 Document(mapOf("\$group" to mapOf("_id" to null, "count" to mapOf("\$sum" to 1))))
                         ))
                     }
                 }
                 else -> {
-                    throw NotImplementedError(it.javaClass.simpleName)
+                    throw NotImplementedError(agg.javaClass.simpleName)
                 }
             }
         }
         return Aggregates.facet(facets)
     }
 
-    fun parseDate(value: Any?, now: Long, roundUp: Boolean): Long? {
+    private fun parseDate(value: Any?, now: Long, roundUp: Boolean): Long? {
         return if (value is String) {
             try {
                 Date(dateParser.parse(value, now, roundUp)).time

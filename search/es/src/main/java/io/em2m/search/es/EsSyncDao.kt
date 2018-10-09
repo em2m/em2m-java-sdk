@@ -81,8 +81,15 @@ class EsSyncDao<T>(val esApi: EsApi, val index: String, val type: String, tClass
 
     override fun saveBatch(entities: List<T>): List<T> {
         val bulkRequest = entities.map { bulkIndex(index, type, idMapper.getId(it), it) }.joinToString("")
-        esApi.bulkUpdate(bulkRequest)
-        return entities
+        val bulkResult = esApi.bulkUpdate(bulkRequest)
+        return if (bulkResult.errors) {
+            val errorIds = bulkResult.items.filter {
+                (it.index?.status ?: 0) >= 400
+            }.map { it.index?._id }.toSet()
+            entities.filter { errorIds.contains(idMapper.getId(it)) }
+        } else {
+            emptyList()
+        }
     }
 
     internal fun encode(obj: T): JsonNode? {

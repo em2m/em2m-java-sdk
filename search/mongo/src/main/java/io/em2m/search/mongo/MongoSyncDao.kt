@@ -18,6 +18,7 @@
 package io.em2m.search.mongo
 
 import com.mongodb.MongoClient
+import com.mongodb.ReadPreference
 import com.mongodb.ServerAddress
 import com.mongodb.bulk.BulkWriteResult
 import com.mongodb.client.MongoCollection
@@ -78,7 +79,9 @@ class MongoSyncDao<T>(idMapper: IdMapper<T>, val documentMapper: DocumentMapper<
 
     fun doAggs(request: SearchRequest, mongoQuery: Bson, mongoAggs: Bson): List<Document> {
         return if (request.aggs.isNotEmpty()) {
-            collection.aggregate(listOf(Aggregates.match(mongoQuery), mongoAggs)).toList()
+            collection
+                    .withReadPreference(ReadPreference.secondary())
+                    .aggregate(listOf(Aggregates.match(mongoQuery), mongoAggs)).toList()
         } else {
             emptyList()
         }
@@ -99,7 +102,11 @@ class MongoSyncDao<T>(idMapper: IdMapper<T>, val documentMapper: DocumentMapper<
         val mongoQuery = queryConverter.convertQuery(request.query ?: MatchAllQuery())
         val mongoAggs = queryConverter.convertAggs(request.aggs)
         val docs = doSearch(request, mongoQuery)
-        val totalItems = doCount(request, mongoQuery)
+        val totalItems: Long = if (docs.size < request.limit) {
+            docs.size.toLong()
+        } else {
+            doCount(request, mongoQuery)
+        }
         val aggs = doAggs(request, mongoQuery, mongoAggs)
         return handleResult(request, docs, totalItems, aggs)
     }
@@ -175,7 +182,7 @@ class MongoSyncDao<T>(idMapper: IdMapper<T>, val documentMapper: DocumentMapper<
         if (document == null) return emptyMap()
 
         log.debug(document.toString())
-        val result = HashMap <String, AggResult>()
+        val result = HashMap<String, AggResult>()
 
         val keyIndex = document.keys.groupBy { key ->
             if (key.contains(":")) key.split(":")[0] else key

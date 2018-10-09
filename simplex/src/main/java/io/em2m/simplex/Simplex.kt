@@ -6,6 +6,7 @@ import io.em2m.simplex.std.Bools
 import io.em2m.simplex.std.I18n
 import io.em2m.simplex.std.Numbers
 import io.em2m.simplex.std.Strings
+import io.em2m.utils.coerce
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentMap
 
@@ -119,4 +120,8 @@ class Simplex {
 
 fun Any?.evalPath(path: String): Any? {
     return Simplex.simplex.getPath(path, this)
+}
+
+inline fun <reified T : Any> Any?.evalPath(path: String, fallback: T?): T? {
+    return Simplex.simplex.getPath(path, this).coerce(fallback)
 }
