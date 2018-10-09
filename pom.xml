@@ -333,6 +333,7 @@
         </plugins>
     </build>
 
+<!--
     <repositories>
         <repository>
             <id>central</id>
@@ -356,6 +357,7 @@
             <url>https://jcenter.bintray.com</url>
         </pluginRepository>
     </pluginRepositories>
+-->
 
     <distributionManagement>
         <repository>
