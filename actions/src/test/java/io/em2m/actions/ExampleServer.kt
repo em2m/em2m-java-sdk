@@ -75,7 +75,7 @@ class ExampleServer {
     class UploadFlow : TypedActionFlow<Any, Any>(UploadRequest::class.java, Any::class.java) {
         override fun main(obs: Observable<ActionContext>): Observable<ActionContext> {
             return obs.doOnNext { context ->
-                val filePart = context.parts.find { it.name == "file" }
+                val filePart = context.multipart?.files?.get("file")
                 response(context, context.request)
             }
         }
