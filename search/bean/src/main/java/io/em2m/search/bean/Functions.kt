@@ -17,11 +17,9 @@
  */
 package io.em2m.search.bean
 
-import com.fasterxml.jackson.databind.node.ObjectNode
 import com.scaleset.utils.Coerce
 import io.em2m.search.core.model.*
-import org.mvel2.MVEL
-import org.mvel2.integration.PropertyHandlerFactory
+import io.em2m.simplex.evalPath
 import java.lang.reflect.Array
 import java.util.*
 import java.util.regex.Matcher
@@ -40,10 +38,6 @@ fun <T> List<T>.page(offset: Int, limit: Int): List<T> {
 class Functions {
 
     companion object {
-
-        init {
-            PropertyHandlerFactory.registerPropertyHandler(ObjectNode::class.java, JsonNodePropertyHandler())
-        }
 
         fun term(path: String, term: Any?): (Any) -> Boolean {
             val fieldGetter = field(path)
@@ -182,7 +176,7 @@ class Functions {
         internal fun field(field: String): (Any) -> List<Any?> {
             return { obj ->
                 try {
-                    asList(MVEL.eval(field, obj))
+                    asList(obj.evalPath(field))
                 } catch (e: Throwable) {
                     emptyList<Any>()
                 }
@@ -192,7 +186,7 @@ class Functions {
         internal fun fieldValue(field: String): (Any) -> Any? {
             return { obj ->
                 try {
-                    MVEL.eval(field, obj)
+                    obj.evalPath(field)
                 } catch (e: Throwable) {
                     null
                 }
