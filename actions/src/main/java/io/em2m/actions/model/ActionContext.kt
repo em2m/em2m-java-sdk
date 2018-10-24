@@ -15,7 +15,6 @@ import kotlin.collections.HashMap
 
 data class ActionContext(val actionName: String,
                          var inputStream: InputStream? = null,
-                         val parts: List<Part> = emptyList(),
                          var claims: Map<String, Any?> = emptyMap(),
                          var environment: MutableMap<String, Any?> = HashMap(),
                          var resource: String? = null,
