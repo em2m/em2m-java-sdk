@@ -5,7 +5,7 @@ import com.google.inject.Module
 import com.google.inject.name.Names
 import io.em2m.actions.model.ActionContext
 import io.em2m.actions.model.TypedActionFlow
-import io.em2m.actions.runtimes.ServletRuntime
+import io.em2m.actions.servlet.ServletRuntime
 import io.em2m.actions.xforms.JacksonRequestTransformer
 import io.em2m.actions.xforms.JacksonResponseTransformer
 import io.em2m.actions.xforms.LoggingTransformer
