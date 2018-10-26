@@ -1,0 +1,31 @@
+package io.em2m.actions.lambda
+
+import com.amazonaws.services.lambda.runtime.Context
+import com.amazonaws.services.lambda.runtime.RequestStreamHandler
+import com.fasterxml.jackson.databind.ObjectMapper
+import java.io.InputStream
+import java.io.OutputStream
+
+
+abstract class ActionRequestStreamHandler : RequestStreamHandler {
+
+    abstract val mapper: ObjectMapper
+    abstract val runtime: LambdaRuntime
+
+    open fun actionName(req: LambdaRequest): String {
+        // assume a pattern /actions/{actionName} mapped to /action/*
+        return req.requestUri.substring(9)
+    }
+
+    override fun handleRequest(input: InputStream, output: OutputStream, context: Context) {
+        val req = mapper.readValue(input, LambdaRequest::class.java)
+        val res = handlRequest(req, context)
+        mapper.writeValue(output, res)
+    }
+
+    open fun handlRequest(request: LambdaRequest, context: Context): LambdaResponse {
+        val actionName = actionName(request)
+        return runtime.process(actionName, request)
+    }
+
+}

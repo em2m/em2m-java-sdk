@@ -1,4 +1,4 @@
-package io.em2m.actions.runtimes
+package io.em2m.actions.servlet
 
 import javax.servlet.http.HttpServlet
 import javax.servlet.http.HttpServletRequest
@@ -19,8 +19,7 @@ abstract class ActionServlet() : HttpServlet() {
     }
 
     override fun doGet(req: HttpServletRequest, resp: HttpServletResponse) {
-        val actionName = req.pathInfo.substring(1)
-        runtime.process(actionName, req, resp)
+        runtime.process(actionName(req), req, resp)
     }
 
 }
