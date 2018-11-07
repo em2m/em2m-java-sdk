@@ -1,7 +1,6 @@
 package io.em2m.actions.lambda
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.em2m.actions.model.Response
 import java.io.ByteArrayOutputStream
 import java.io.OutputStream
@@ -17,31 +16,36 @@ class LambdaResponse : Response {
         get() = headers.get("Content-Type")
         set(value) = headers.set("Content-Type", value)
 
-    override val headers: Response.Headers = LambdaResponseHeaders()
+    override val headers = LambdaResponseHeaders()
 
     override val outputStream: OutputStream by lazy<OutputStream> {
         ByteArrayOutputStream()
     }
 
-    inner class LambdaResponseHeaders() : Response.Headers {
+    class LambdaResponseHeaders() : Response.Headers {
 
-        val headers = HashMap<String, String?>()
+        val data: MutableMap<String, String?> = HashMap()
 
         override fun set(key: String, value: String?) {
-            headers[key] = value
+            data[key] = value
         }
 
         override fun get(key: String): String? {
-            return headers[key]
+            return data[key]
         }
+    }
+
+    fun toData(mapper: ObjectMapper): ResponseData {
+        // TODO: Check OutputStream
+        val body = mapper.writeValueAsString(entity)
+        return ResponseData(false, statusCode, headers.data, body)
     }
 
     data class ResponseData(
             val isBase64Encoded: Boolean = false,
-            val headers: Map<String, String>
+            val statusCode: Int,
+            val headers: Map<String, String?>,
+            val body: String
     )
 
-    companion object {
-
-    }
 }

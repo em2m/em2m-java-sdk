@@ -7,7 +7,6 @@ import io.em2m.actions.model.MultipartData
 import io.em2m.actions.model.Problem
 import io.em2m.flows.FlowNotFound
 import io.em2m.flows.Processor
-import java.io.InputStream
 import java.util.*
 
 
@@ -26,7 +25,7 @@ open class LambdaRuntime(
         val multipart: MultipartData? = null
 
         val context = ActionContext("$actionPrefix:$actionName",
-                inputStream = request.body as InputStream,
+                inputStream = request.body?.toByteArray()?.inputStream() ?: byteArrayOf().inputStream(),
                 environment = env.toMutableMap(),
                 multipart = multipart,
                 response = response)
@@ -62,7 +61,7 @@ open class LambdaRuntime(
     }
 
     private fun createEnvironment(request: LambdaRequest): Map<String, Any?> {
-        val headers = request.headers
+        val headers = request.headers ?: emptyMap()
         val currentTime = Date()
         val sourceIp = headers["X-Forwarded-For"]
         val referer = headers["referer"]
@@ -70,7 +69,7 @@ open class LambdaRuntime(
         val userAgent = headers["User-Agent"]
         val secureTransport = true
         val contentType = request.contentType
-        val contentEncoding = request.headers["Content-Encoding"]?.toLowerCase()
+        val contentEncoding = headers["Content-Encoding"]?.toLowerCase()
 
         return mapOf(
                 "CurrentTime" to currentTime,
@@ -83,7 +82,7 @@ open class LambdaRuntime(
                 "ContentType" to contentType,
                 "ContentEncoding" to contentEncoding,
                 "Headers" to headers,
-                "Method" to request.method,
+                "Method" to (request.httpMethod ?: request.method),
                 "Parameters" to request.queryStringParameters
         )
     }
