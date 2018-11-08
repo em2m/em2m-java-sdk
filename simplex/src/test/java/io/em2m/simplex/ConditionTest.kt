@@ -81,6 +81,14 @@ class ConditionTest : Assert() {
     }
 
     @Test
+    fun testNegativeDates() {
+        val condition = DateEquals()
+        val date1 = "-112303030303"
+        val date2 = "-112303030303"
+        assert(condition.test(date1, date2))
+    }
+
+    @Test
     fun dateNotEquals() {
         val condition = DateNotEquals()
         val date1 = "2015-04-20"

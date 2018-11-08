@@ -7,8 +7,12 @@ import io.em2m.simplex.std.Dates
 import io.em2m.simplex.std.Numbers
 import io.em2m.utils.coerce
 import io.em2m.utils.coerceNonNull
+import org.joda.time.DateTime
+import org.joda.time.format.DateTimeFormat
+import org.joda.time.format.DateTimeFormatter
 import org.junit.Assert
 import org.junit.Test
+import java.text.SimpleDateFormat
 import java.util.*
 
 
@@ -82,11 +86,12 @@ class ExprTest : Assert() {
 
     @Test
     fun testDateMath() {
-        val resultDate: Date = "2015-04-21".coerceNonNull()
-        val exprString = "#{ns:dateKey | dateMath:now+1d-1m/d}".replace("#", "$")
+        var pattern: DateTimeFormatter = DateTimeFormat.forPattern("yyyy-MM-dd")
+        val actual = pattern.print(DateTime(("2015-04-21").coerceNonNull<Date>()).plusDays(30))
+        val exprString = "#{ns:dateKey | dateMath:now+30d/d}".replace("#", "$")
         val expr = requireNotNull(simplex.parser.parse(exprString))
-        val result: Date = expr.call(emptyMap()).coerceNonNull()
-        assertEquals(result, resultDate)
+        val result = expr.call(emptyMap())
+        assertEquals(SimpleDateFormat("yyyy-MM-dd").format(result), actual)
     }
 
 }

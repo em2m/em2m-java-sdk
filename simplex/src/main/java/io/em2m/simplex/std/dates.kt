@@ -40,7 +40,7 @@ class DateMathPipe : PipeTransform {
     override fun transform(value: Any?, context: ExprContext): Any? {
         val dateInput : Date? = value?.coerce()
         return if (dateInput != null && dateMath != null) {
-            dateMathParser.parse(dateMath.toString(), dateInput.time)
+            dateMathParser.parse(dateMath.toString(), dateInput.time).coerce<Date>()
         } else value
     }
 }
