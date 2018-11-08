@@ -59,8 +59,25 @@ class ConditionTest : Assert() {
     @Test
     fun dateEquals() {
         val condition = DateEquals()
-        val date = Date()
-        assert(condition.test(date, date))
+        val date1 = Date()
+        val date2 = date1.clone()
+        assert(condition.test(date1, date2))
+    }
+
+    @Test
+    fun dateEqualsString() {
+        val condition = DateEquals()
+        val date1 = "2015-02-20"
+        val date2 = "2015-02-20"
+        assert(condition.test(date1, date2))
+    }
+
+    @Test
+    fun dateEqualsFailure() {
+        val condition = DateEquals()
+        val date1 = "2015-02-21"
+        val date2 = "2015-02-20"
+        assertFalse(condition.test(date1, date2))
     }
 
     @Test

@@ -5,22 +5,22 @@ import io.em2m.simplex.parser.DateMathParser
 import io.em2m.utils.coerce
 import io.em2m.utils.coerceNonNull
 import org.joda.time.format.DateTimeFormat
+import org.joda.time.format.DateTimeFormatter
 import java.util.*
 
 class FormatDatePipe : PipeTransform {
 
-    private var dateFormat: String = ""
+    private var pattern: DateTimeFormatter = DateTimeFormat.forPattern("YYYY-mm-dd")
 
     override fun args(args: List<String>) {
         if (args.isNotEmpty()) {
-            dateFormat = args[0]
+            pattern = DateTimeFormat.forPattern(args[0])
         }
     }
 
     override fun transform(value: Any?, context: ExprContext): Any? {
         val dateInput : Date? = value?.coerce()
          return if (dateInput != null) {
-             val pattern = DateTimeFormat.forPattern(dateFormat)
              pattern.print(dateInput.time)
          } else value
     }
@@ -29,7 +29,7 @@ class FormatDatePipe : PipeTransform {
 class DateMathPipe : PipeTransform {
 
     private val dateMathParser = DateMathParser()
-    private var dateMath: String = ""
+    private var dateMath: String? = null
 
     override fun args(args: List<String>) {
         if (args.isNotEmpty()) {
@@ -39,8 +39,8 @@ class DateMathPipe : PipeTransform {
 
     override fun transform(value: Any?, context: ExprContext): Any? {
         val dateInput : Date? = value?.coerce()
-        return if (dateInput != null) {
-            dateMathParser.parse(dateMath, dateInput.time)
+        return if (dateInput != null && dateMath != null) {
+            dateMathParser.parse(dateMath.toString(), dateInput.time)
         } else value
     }
 }
