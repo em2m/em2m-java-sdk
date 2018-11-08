@@ -49,7 +49,6 @@ class RandomKey : KeyHandler {
     override fun call(key: Key, context: ExprContext): Any? {
         return Math.random()
     }
-
 }
 
 fun toNumber(value: Any?): Number? {
