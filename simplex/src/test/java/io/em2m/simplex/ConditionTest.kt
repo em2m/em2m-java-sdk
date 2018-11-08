@@ -1,11 +1,9 @@
 package io.em2m.sdk.simplex
 
-import io.em2m.simplex.std.Bool
-import io.em2m.simplex.std.ForAllStringEquals
-import io.em2m.simplex.std.ForAnyStringEquals
-import io.em2m.simplex.std.ForAnyStringLike
+import io.em2m.simplex.std.*
 import org.junit.Assert
 import org.junit.Test
+import java.util.*
 
 class ConditionTest : Assert() {
 
@@ -56,6 +54,53 @@ class ConditionTest : Assert() {
         assertFalse(condition.test(true, false))
         assertTrue(condition.test("true", true))
         assertTrue(condition.test("true", "true"))
+    }
+
+    @Test
+    fun dateEquals() {
+        val condition = DateEquals()
+        val date = Date()
+        assert(condition.test(date, date))
+    }
+
+    @Test
+    fun dateNotEquals() {
+        val condition = DateNotEquals()
+        val date1 = "2015-04-20"
+        val date2 = "2015-05-20"
+        assert(condition.test(date1, date2))
+    }
+
+    @Test
+    fun dateLessThan() {
+        val condition = DateLessThan()
+        val date1 = "2015-04-20"
+        val date2 = "2015-05-20"
+        assert(condition.test(date1, date2))
+    }
+
+    @Test
+    fun dateGreaterThan() {
+        val condition = DateGreaterThan()
+        val date1 = "2015-04-20"
+        val date2 = "2015-05-20"
+        assert(condition.test(date2, date1))
+    }
+
+    @Test
+    fun dateGreaterThanEquals() {
+        val condition = DateGreaterThanEquals()
+        val date1 = "2015-04-20"
+        val date2 = "2015-04-20"
+        assert(condition.test(date2, date1))
+    }
+
+    @Test
+    fun dateLessThanEquals() {
+        val condition = DateLessThanEquals()
+        val date1 = "2015-04-20"
+        val date2 = "2015-04-20"
+        assert(condition.test(date2, date1))
     }
 
 }
