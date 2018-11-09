@@ -32,7 +32,7 @@ class ExprTest : Assert() {
 
     @Test
     fun testParse() {
-        val exprStr = "#{ns:key1 | upperCase}/#{ns:key2 | capitalize}".replace("#", "$")
+        val exprStr = "\${ns:key1 | upperCase}/\${ns:key2 | capitalize}"
         val expr = simplex.parser.parse(exprStr)
         assertNotNull(expr)
         val result = expr.call(emptyMap())
@@ -42,7 +42,7 @@ class ExprTest : Assert() {
 
     @Test
     fun testContextKey() {
-        val exprStr = "#{ns:key1 | upperCase}/#{ns:key2 | capitalize}".replace("#", "$")
+        val exprStr = "\${ns:key1 | upperCase}/\${ns:key2 | capitalize}"
         val expr = requireNotNull(simplex.parser.parse(exprStr))
         val keys = BasicKeyResolver(mapOf(
                 Key("ns", "key1") to ConstKeyHandler("alt1"),
@@ -53,7 +53,7 @@ class ExprTest : Assert() {
 
     @Test
     fun testArgs() {
-        val exprStr = "#{Math:PI | number:2}".replace("#", "$")
+        val exprStr = "\${Math:PI | number:2}"
         val expr = requireNotNull(simplex.parser.parse(exprStr))
         val result = expr.call(emptyMap())
         assertEquals("3.14", result)
@@ -61,7 +61,7 @@ class ExprTest : Assert() {
 
     @Test
     fun testSelect() {
-        val exprStr = "#{ns:key1 | select:labels}".replace("#", "$")
+        val exprStr = "\${ns:key1 | select:labels}"
         val labels = mapOf("value1" to "Enabled", "value2" to "Disabled")
         val context = mapOf("labels" to labels)
         val result = simplex.eval(exprStr, context)
@@ -70,7 +70,7 @@ class ExprTest : Assert() {
 
     @Test
     fun testDateNow() {
-        val exprString = "#{Date:now}".replace("#", "$")
+        val exprString = "\${Date:now}"
         val expr = simplex.parser.parse(exprString)
         val resultingDate: Date = expr.call(emptyMap()).coerceNonNull()
         assertTrue(Date().time - 1000 < resultingDate.time && resultingDate.time < Date().time + 1000 )
@@ -78,7 +78,7 @@ class ExprTest : Assert() {
 
     @Test
     fun testFormatDate() {
-        val exprString = "#{ns:dateKey | formatDate:yyyy}".replace("#", "$")
+        val exprString = "\${ns:dateKey | formatDate:yyyy}"
         val expr = requireNotNull(simplex.parser.parse(exprString))
         val result = expr.call(emptyMap())
         assertEquals(result, "2015")
@@ -88,7 +88,7 @@ class ExprTest : Assert() {
     fun testDateMath() {
         var pattern: DateTimeFormatter = DateTimeFormat.forPattern("yyyy-MM-dd")
         val actual = pattern.print(DateTime(("2015-04-21").coerceNonNull<Date>()).plusDays(30))
-        val exprString = "#{ns:dateKey | dateMath:now+30d/d}".replace("#", "$")
+        val exprString = "\${ns:dateKey | dateMath:now+30d/d}"
         val expr = requireNotNull(simplex.parser.parse(exprString))
         val result = expr.call(emptyMap())
         assertEquals(SimpleDateFormat("yyyy-MM-dd").format(result), actual)
