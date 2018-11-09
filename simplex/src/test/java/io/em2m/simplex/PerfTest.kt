@@ -28,7 +28,7 @@ class PerfTest : Assert() {
 
     @Test
     fun testContextKey() {
-        val exprStr = "#{ns:key1 | upperCase}/#{ns:key2 | capitalize}".replace("#", "$")
+        val exprStr = "\${ns:key1 | upperCase}/\${ns:key2 | capitalize}"
         val start = System.currentTimeMillis()
         val expr = requireNotNull(parser.parse(exprStr))
         val keys = BasicKeyResolver(mapOf(
@@ -46,7 +46,7 @@ class PerfTest : Assert() {
 
     @Test
     fun testSinglePipe() {
-        val exprStr = "#{ns:key1}".replace("#", "$")
+        val exprStr = "\${ns:key1}"
         val start = System.currentTimeMillis()
         val expr = requireNotNull(parser.parse(exprStr))
         val keys = BasicKeyResolver(mapOf(
@@ -65,7 +65,7 @@ class PerfTest : Assert() {
 
     @Test
     fun testParser() {
-        val exprStr = "#{ns:key1 | upperCase}/#{ns:key2 | capitalize}".replace("#", "$")
+        val exprStr = "\${ns:key1 | upperCase}/\${ns:key2 | capitalize}"
         val start = System.currentTimeMillis()
         (0..1_000_000).forEach {
             val expr = requireNotNull(parser.parse(exprStr))
