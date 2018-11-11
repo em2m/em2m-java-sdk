@@ -25,14 +25,14 @@ class ErrorLogTransformer(private val mapper: ObjectMapper)
             val requestId = context.requestId
             val environment = context.environment
             val errorMsg = mapOf(
-                    problem to problem,
-                    claims to claims,
-                    resource to resource,
-                    stackTrace to stackTrace,
-                    actionName to actionName,
-                    request to request,
-                    requestId to requestId,
-                    environment to environment)
+                    "problem" to problem,
+                    "claims" to claims,
+                    "resource" to resource,
+                    "stackTrace" to stackTrace,
+                    "actionName" to actionName,
+                    "request" to request,
+                    "requestId" to requestId,
+                    "environment" to environment)
             logger.error(mapper.writeValueAsString(errorMsg))
         }
     }
