@@ -4,6 +4,9 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ObjectNode
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.em2m.search.core.model.*
+import io.em2m.simplex.parser.DateMathParser
+import org.joda.time.DateTimeZone
+import java.util.*
 
 class RequestConverter(val objectMapper: ObjectMapper = jacksonObjectMapper()) {
 
@@ -113,10 +116,28 @@ class RequestConverter(val objectMapper: ObjectMapper = jacksonObjectMapper()) {
                 is DateRangeAgg -> {
                     val esAgg = result.agg(it.key, "date_range").put("field", it.field)
                     if (it.format != null) esAgg.put("format", it.format)
-                    if (it.timeZone != null) esAgg.put("timeZone", it.timeZone)
+                    //if (it.timeZone != null) esAgg.put("time_zone", it.timeZone)
                     val esRanges = esAgg.withArray("ranges")
-                    it.ranges.forEach {
-                        esRanges.addPOJO(it)
+
+                    val timeZone = DateTimeZone.forID(it.timeZone ?: "America/Los_Angeles")
+                    val dateMathParser = DateMathParser(timeZone)
+                    it.ranges.forEach { range ->
+                        if (it.timeZone != null) {
+                            val now = Date()
+                            val from = if (range.from is String)
+                                dateMathParser.parse(range.from as String, now.time, false, timeZone)
+                            else
+                                range.from
+
+                            val to = if (range.to is String)
+                                dateMathParser.parse(range.to as String, now.time, true, timeZone)
+                            else
+                                range.to
+
+                            esRanges.addPOJO(mapOf("key" to range.key, "from" to from, "to" to to))
+                        } else {
+                            esRanges.addPOJO(range)
+                        }
                     }
                 }
                 is GeoHashAgg -> {
