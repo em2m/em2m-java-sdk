@@ -16,7 +16,7 @@ class RequestConverter(val objectMapper: ObjectMapper = jacksonObjectMapper()) {
         val size = request.limit
         val query = convertQuery(request.query)
         val fields = convertFields(request.fields)
-        val aggs = convertAggs(request.aggs)
+        val aggs = convertAggs(request.aggs, request.params)
         val sort = convertSorts(request.sorts)
 
         return EsSearchRequest(from, size, query, fields, aggs, sort)
@@ -87,8 +87,9 @@ class RequestConverter(val objectMapper: ObjectMapper = jacksonObjectMapper()) {
     }
 
 
-    fun convertAggs(aggs: List<Agg>): EsAggs {
+    fun convertAggs(aggs: List<Agg>, params: Map<String, Any>): EsAggs {
         val result = EsAggs()
+        val timeZone = DateTimeZone.forID(params["timeZone"] as? String ?: "America/Los_Angeles")
         aggs.forEach {
             when (it) {
                 is TermsAgg -> {
@@ -104,7 +105,7 @@ class RequestConverter(val objectMapper: ObjectMapper = jacksonObjectMapper()) {
                     result.stats(it.key, it.field)
                 }
                 is DateHistogramAgg -> {
-                    result.dateHistogram(it.key, it.field, it.format, it.interval, it.offset, it.timeZone)
+                    result.dateHistogram(it.key, it.field, it.format, it.interval, it.offset, timeZone.id)
                 }
                 is RangeAgg -> {
                     val esRanges = result.agg(it.key, "range").put("field", it.field)
@@ -116,10 +117,9 @@ class RequestConverter(val objectMapper: ObjectMapper = jacksonObjectMapper()) {
                 is DateRangeAgg -> {
                     val esAgg = result.agg(it.key, "date_range").put("field", it.field)
                     if (it.format != null) esAgg.put("format", it.format)
-                    //if (it.timeZone != null) esAgg.put("time_zone", it.timeZone)
+                    //if (it.timeZone != null) esAgg.put("time_zone", timeZone.id)
                     val esRanges = esAgg.withArray("ranges")
 
-                    val timeZone = DateTimeZone.forID(it.timeZone ?: "America/Los_Angeles")
                     val dateMathParser = DateMathParser(timeZone)
                     it.ranges.forEach { range ->
                         if (it.timeZone != null) {
