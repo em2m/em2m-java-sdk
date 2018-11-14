@@ -122,7 +122,7 @@ class RequestConverter(val objectMapper: ObjectMapper = jacksonObjectMapper()) {
                     val timeZone = DateTimeZone.forID(it.timeZone ?: "America/Los_Angeles")
                     val dateMathParser = DateMathParser(timeZone)
                     it.ranges.forEach { range ->
-                        if (it.timeZone != null) {
+                        if (timeZone != null) {
                             val now = Date()
                             val from = if (range.from is String)
                                 dateMathParser.parse(range.from as String, now.time, false, timeZone)
