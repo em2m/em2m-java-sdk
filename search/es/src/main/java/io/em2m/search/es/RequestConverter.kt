@@ -124,11 +124,17 @@ class RequestConverter(val objectMapper: ObjectMapper = jacksonObjectMapper()) {
                     it.ranges.forEach { range ->
                         if (it.timeZone != null) {
                             val now = Date()
-                            esRanges.addPOJO(mapOf(
-                                    "key" to range.key,
-                                    "from" to dateMathParser.parse(range.from as String, now.time, false, timeZone),
-                                    "to" to dateMathParser.parse(range.to as String, now.time, true, timeZone)
-                            ))
+                            val from = if (range.from is String)
+                                dateMathParser.parse(range.from as String, now.time, false, timeZone)
+                            else
+                                range.from
+
+                            val to = if (range.to is String)
+                                dateMathParser.parse(range.to as String, now.time, true, timeZone)
+                            else
+                                range.to
+
+                            esRanges.addPOJO(mapOf("key" to range.key, "from" to from, "to" to to))
                         } else {
                             esRanges.addPOJO(range)
                         }
