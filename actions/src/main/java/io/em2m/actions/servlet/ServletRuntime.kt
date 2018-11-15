@@ -1,4 +1,4 @@
-package io.em2m.actions.runtimes
+package io.em2m.actions.servlet
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
@@ -11,6 +11,7 @@ import java.io.InputStream
 import java.util.*
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
+import javax.servlet.http.Part
 
 
 open class ServletRuntime(private val actionPrefix: String, private val processor: Processor<ActionContext>, val mapper: ObjectMapper = jacksonObjectMapper()) {
@@ -20,10 +21,9 @@ open class ServletRuntime(private val actionPrefix: String, private val processo
         val env = createEnvironment(request)
         val contentType: String? = request.contentType
         val parts = if (contentType?.startsWith("multipart") == true) request.parts.toList() else emptyList()
-        val multipart = MultipartData.fromParts(parts)
+        val multipart = fromParts(parts)
         val context = ActionContext("$actionPrefix:$actionName",
                 inputStream = request.inputStream as InputStream,
-                parts = parts,
                 environment = env.toMutableMap(),
                 multipart = multipart,
                 response = ServletResponse(response))
@@ -92,4 +92,36 @@ open class ServletRuntime(private val actionPrefix: String, private val processo
         )
     }
 
+    private fun fromParts(parts: List<Part>): MultipartData {
+
+        val files = HashMap<String, MultipartData.File>()
+        val form = HashMap<String, String>()
+        parts.forEach { part ->
+            val filename = extractFileName(part)
+            if (filename?.isNotEmpty() == true) {
+                val headers = HashMap<String, List<String>>()
+                files.put(part.name, MultipartData.File(filename, headers, part.inputStream))
+            } else {
+                try {
+                    val name = part.name
+                    val text = part.inputStream.reader().readText()
+                    form.put(name, text)
+                } catch (ex: Exception) {
+                    MultipartData.log.error("Error parsing part ${part.name}", ex)
+                }
+            }
+        }
+        return MultipartData(files, form)
+    }
+
+    private fun extractFileName(part: Part): String? {
+        val contentDisp = part.getHeader("content-disposition");
+        val items = contentDisp.split(";");
+        for (s in items) {
+            if (s.trim().startsWith("filename")) {
+                return s.substring(s.indexOf("=") + 2, s.length - 1);
+            }
+        }
+        return null;
+    }
 }

@@ -10,12 +10,10 @@ import io.em2m.simplex.model.Key
 import io.em2m.simplex.model.KeyHandler
 import java.io.InputStream
 import java.util.*
-import javax.servlet.http.Part
 import kotlin.collections.HashMap
 
 data class ActionContext(val actionName: String,
                          var inputStream: InputStream? = null,
-                         val parts: List<Part> = emptyList(),
                          var claims: Map<String, Any?> = emptyMap(),
                          var environment: MutableMap<String, Any?> = HashMap(),
                          var resource: String? = null,

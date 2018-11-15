@@ -19,9 +19,8 @@ class JacksonResponseTransformer(val objectMapper: ObjectMapper = jacksonObjectM
                 val response = context.response
                 if (response.entity != null) {
                     response.contentType = "application/json"
-                    response.statusCode = HttpServletResponse.SC_OK
                     objectMapper.writeValue(response.outputStream, response.entity)
-                } else {
+                } else if (response.statusCode == 200) {
                     response.statusCode = HttpServletResponse.SC_NO_CONTENT
                 }
             } catch (ioEx: IOException) {
