@@ -20,6 +20,8 @@
  */
 package io.em2m.simplex.parser
 
+import io.em2m.utils.coerce
+import io.em2m.utils.coerceNonNull
 import org.joda.time.DateTimeZone
 import org.joda.time.MutableDateTime
 import org.joda.time.format.DateTimeFormatter
@@ -181,9 +183,9 @@ class DateMathParser(private val dateTimeFormatter: FormatDateTimeFormatter = Fo
             parser = parser.withZone(timeZone)
         }
         try {
-            return parser.parseMillis(value)
+            val date = value.coerceNonNull<Date>()
+            return date.time
         } catch (e: IllegalArgumentException) {
-
             throw RuntimeException("failed to parse date field [$value] with format [${dateTimeFormatter.format}]")
         }
 

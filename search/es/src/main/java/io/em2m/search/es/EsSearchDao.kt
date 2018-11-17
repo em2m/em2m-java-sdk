@@ -10,12 +10,12 @@ import rx.Observable
 import rx.Observable.just
 import java.util.*
 
-class EsSearchDao<T>(val esApi: EsApi, val index: String, val type: String, tClass: Class<T>, idMapper: IdMapper<T>, docMapper: DocMapper<T>? = null) :
+class EsSearchDao<T>(val esApi: EsApi, val index: String, val type: String, tClass: Class<T>, idMapper: IdMapper<T>, docMapper: DocMapper<T>? = null, val es6: Boolean = false) :
         AbstractSearchDao<T>(idMapper) {
 
     val objectMapper: ObjectMapper = jacksonObjectMapper().registerModule(GeoJsonModule())
     val docMapper: DocMapper<T> = docMapper ?: JacksonDocMapper(tClass, objectMapper)
-    val requestConverter = RequestConverter(objectMapper)
+    val requestConverter = RequestConverter(objectMapper, es6)
     val resultConverter = ResultConverter(this.docMapper)
 
     override fun create(entity: T): Observable<T> {

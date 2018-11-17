@@ -8,7 +8,7 @@ class TextPlainEncoder(val delegate: Encoder) : Encoder {
 
     override fun encode(obj: Any, bodyType: Type, request: RequestTemplate) {
         val headers = request.headers()["Content-Type"]
-        if (headers?.contains("text/plain") == true) {
+        if (headers?.contains("text/plain") == true || headers?.contains("application/x-ndjson") == true) {
             request.body(obj.toString())
         } else {
             delegate.encode(obj, bodyType, request)

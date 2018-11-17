@@ -250,8 +250,10 @@ class EsSearchRequest(var from: Long = 0,
                       var query: EsQuery = EsMatchAllQuery(),
                       var fields: List<String>? = null,
                       var aggs: EsAggs? = null,
-                      var sort: List<Map<String, String>>? = mutableListOf())
-
+                      var sort: List<Map<String, String>>? = mutableListOf(),
+                      @JsonProperty("stored_fields")
+                      var storedFields: List<String>? = null
+)
 
 class EsBucket(var key: String? = null, @JsonProperty("key_as_string") val keyAsString: String? = null, @JsonProperty("doc_count") val docCount: Int?, val from: Any? = null, val to: Any? = null) {
 
@@ -391,9 +393,9 @@ interface EsApi {
     @RequestLine("DELETE /{index}/{type}/{id}")
     fun delete(@Param("index") index: String, @Param("type") type: String, @Param("id") id: String)
 
-    @Headers("Content-Type: text/plain")
+    @Headers("Content-Type: application/x-ndjson")
     @RequestLine("POST /_bulk")
-    fun bulkUpdate(bulkRequest: String) : EsBulkResult
+    fun bulkUpdate(bulkRequest: String): EsBulkResult
 
     @RequestLine("POST /_flush")
     fun flush()
