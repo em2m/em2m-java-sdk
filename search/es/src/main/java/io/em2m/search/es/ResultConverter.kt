@@ -103,7 +103,7 @@ class ResultConverter<T>(val mapper: DocMapper<T>) {
                 val stats = Stats(count, sum, min, max, avg)
                 buckets = listOf(Bucket(key = result.key, count = count, stats = stats))
             }
-            if (buckets == null && esValue.other.containsKey("location")) {
+            if (esValue.other.containsKey("location")) {
                 val location = esValue.other["location"] as Map<*, *>
                 val lat = location["lat"] as Double
                 val lon = location["lon"] as Double

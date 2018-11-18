@@ -11,12 +11,12 @@ import kotlin.properties.Delegates
 
 class EsSearchDaoAggTest : FeatureTestBase() {
 
-    var searchDao: SearchDao<Feature> by Delegates.notNull()
+   var searchDao: SearchDao<Feature> by Delegates.notNull()
 
     @Before
     override fun before() {
         super.before()
-        searchDao = EsSearchDao(esClient, "features", "feature", Feature::class.java, idMapper)
+        searchDao = EsSearchDao(esClient, FeatureTestBase.index, FeatureTestBase.type, Feature::class.java, idMapper, es6 = FeatureTestBase.es6)
     }
 
     @Test

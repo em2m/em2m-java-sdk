@@ -30,10 +30,10 @@ abstract class FeatureTestBase : Assert() {
         flush();
         esClient.createIndex("features")
         flush();
-        esClient.putMapping("features", "feature", mapping)
+        esClient.putMapping("features", "doc", mapping)
         flush();
         for (feature in earthquakes().features) {
-            esClient.put("features", "feature", feature.id, feature);
+            esClient.put("features", "doc", feature.id, feature);
         }
         flush()
     }
@@ -61,7 +61,17 @@ abstract class FeatureTestBase : Assert() {
             return result;
         }
 
-        val mapping = mapper.readTree(File("src/test/resources/mapping_es2.json")) as ObjectNode
+        val es6 = false
+        val mappingPath = if (es6) {
+            "src/test/resources/mapping_es6.json"
+        } else {
+            "src/test/resources/mapping_es2.json"
+        }
+
+        val type = "doc"
+        val index = "features"
+
+        val mapping = mapper.readTree(File(mappingPath)) as ObjectNode
 
         val esClient = Feign.builder()
                 .encoder(TextPlainEncoder(JacksonEncoder(mapper)))
