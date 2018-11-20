@@ -3,27 +3,49 @@ package io.em2m.simplex.std
 import io.em2m.simplex.model.*
 import io.em2m.simplex.parser.DateMathParser
 import io.em2m.utils.coerce
-import io.em2m.utils.coerceNonNull
-import org.joda.time.format.DateTimeFormat
-import org.joda.time.format.DateTimeFormatter
+import io.em2m.utils.fromNow
+import org.joda.time.DateTimeZone
+import java.time.Duration
+import java.time.Instant
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 import java.util.*
 
 class FormatDatePipe : PipeTransform {
 
-    private var pattern: DateTimeFormatter = DateTimeFormat.forPattern("YYYY-mm-dd")
+    private var pattern: DateTimeFormatter = DateTimeFormatter.ofPattern("YYYY-mm-dd")
+            .withZone(ZoneId.of("America/Los_Angeles"))
 
     override fun args(args: List<String>) {
         if (args.isNotEmpty()) {
-            pattern = DateTimeFormat.forPattern(args[0])
+            pattern = DateTimeFormatter.ofPattern(args[0])
+            if (args.size == 2) {
+                try {
+                    pattern = pattern.withZone(ZoneId.of(args[1]))
+                } catch (ex: Exception) {
+                }
+            }
         }
     }
 
     override fun transform(value: Any?, context: ExprContext): Any? {
-        val dateInput : Date? = value?.coerce()
-         return if (dateInput != null) {
-             pattern.print(dateInput.time)
-         } else value
+        val dateInput: Date? = value?.coerce()
+        return if (dateInput != null) {
+            val date = dateInput.toInstant()
+            pattern.format(date)
+        } else value
     }
+}
+
+class FromNowPipe : PipeTransform {
+
+    override fun transform(value: Any?, context: ExprContext): Any? {
+        val date: Date? = value.coerce()
+        return if (date != null) {
+            Duration.between(Instant.now(), date.toInstant()).fromNow()
+        } else value
+    }
+
 }
 
 class DateMathPipe : PipeTransform {
@@ -38,7 +60,7 @@ class DateMathPipe : PipeTransform {
     }
 
     override fun transform(value: Any?, context: ExprContext): Any? {
-        val dateInput : Date? = value?.coerce()
+        val dateInput: Date? = value?.coerce()
         return if (dateInput != null && dateMath != null) {
             dateMathParser.parse(dateMath.toString(), dateInput.time).coerce<Date>()
         } else value
@@ -98,6 +120,7 @@ object Dates {
     val pipes = BasicPipeTransformResolver()
             .transform("formatDate") { _ -> FormatDatePipe() }
             .transform("dateMath") { _ -> DateMathPipe() }
+            .transform("fromNow") { _ -> FromNowPipe() }
 
     val keys = BasicKeyResolver()
             .key(Key("Date", "now")) { _ -> DateNowHandler() }

@@ -21,7 +21,7 @@ class ExprTest : Assert() {
     val keyResolver = BasicKeyResolver(mapOf(
             Key("ns", "key1") to ConstKeyHandler("value1"),
             Key("ns", "key2") to ConstKeyHandler("value2"),
-            Key("ns", "dateKey") to ConstKeyHandler("2015-04-21")))
+            Key("ns", "dateKey") to ConstKeyHandler("2015-04-21T17:31:06-07")))
             .delegate(Numbers.keys)
 
     val dateKeyResolver = Dates.keys
@@ -81,7 +81,23 @@ class ExprTest : Assert() {
         val exprString = "\${ns:dateKey | formatDate:yyyy}"
         val expr = requireNotNull(simplex.parser.parse(exprString))
         val result = expr.call(emptyMap())
-        assertEquals(result, "2015")
+        assertEquals( "2015", result)
+    }
+
+    @Test
+    fun testFormatDateWithColon() {
+        val exprString = "\${ns:dateKey | formatDate:yyyy-MM-dd HH\\:mm:America/Los_Angeles}"
+        val expr = requireNotNull(simplex.parser.parse(exprString))
+        val result = expr.call(emptyMap())
+        assertEquals("2015-04-21 17:31",result)
+    }
+
+    @Test
+    fun testFromNow() {
+        val exprString = "\${ns:dateKey | fromNow}"
+        val expr = requireNotNull(simplex.parser.parse(exprString))
+        val result = expr.call(emptyMap())
+        assertTrue(result.toString().endsWith("ago"))
     }
 
     @Test
