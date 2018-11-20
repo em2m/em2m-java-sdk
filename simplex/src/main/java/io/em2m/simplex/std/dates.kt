@@ -4,7 +4,6 @@ import io.em2m.simplex.model.*
 import io.em2m.simplex.parser.DateMathParser
 import io.em2m.utils.coerce
 import io.em2m.utils.fromNow
-import org.joda.time.DateTimeZone
 import java.time.Duration
 import java.time.Instant
 import java.time.ZoneId
@@ -13,8 +12,9 @@ import java.util.*
 
 class FormatDatePipe : PipeTransform {
 
+    private val defaultZoneId = ZoneId.of("America/Los_Angeles")
     private var pattern: DateTimeFormatter = DateTimeFormatter.ofPattern("YYYY-mm-dd")
-            .withZone(ZoneId.of("America/Los_Angeles"))
+            .withZone(defaultZoneId)
 
     override fun args(args: List<String>) {
         if (args.isNotEmpty()) {
@@ -24,6 +24,8 @@ class FormatDatePipe : PipeTransform {
                     pattern = pattern.withZone(ZoneId.of(args[1]))
                 } catch (ex: Exception) {
                 }
+            } else {
+                pattern = pattern.withZone(defaultZoneId)
             }
         }
     }
