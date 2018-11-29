@@ -8,9 +8,7 @@ import org.joda.time.DateTimeZone
 import java.text.SimpleDateFormat
 import java.util.*
 
-
 class Aggs {
-    constructor()
 
     companion object {
 
@@ -107,8 +105,10 @@ class Aggs {
                 val to = parseDate(range.to, now, true, agg.timeZone)
 
                 val predicate = Functions.toPredicate(RangeQuery(field = agg.field, gte = from, lt = to))
-                val count = matches.filter { predicate.invoke(it as Any) }.size.toLong()
-                Bucket(range.key, count, from = fromVal, to = toVal)
+                val bucketMatches = matches.filter { predicate.invoke(it as Any) }
+                val count = bucketMatches.size.toLong()
+                val bucketAggs = processAggs(agg.aggs, bucketMatches)
+                Bucket(range.key, count, from = fromVal, to = toVal, aggs = bucketAggs)
             }
             return AggResult(agg.key, buckets)
         }
@@ -140,6 +140,7 @@ class Aggs {
         fun <T> processDateHistogramAgg(agg: DateHistogramAgg, matches: List<T>): AggResult {
             val value = null
             val countMap = HashMap<Any, Long>()
+            val bucketsMap = HashMap<String, MutableList<T>>()
             val fieldGetter = Functions.field(agg.field)
             val missingKey = agg.missing
             var missingCount = 0L
@@ -172,6 +173,7 @@ class Aggs {
 
                     var count = countMap[key] ?: 0
                     count += 1
+                    bucketsMap.computeIfAbsent(key) { ArrayList() }.add(it)
                     countMap[key] = count
                 }
             }
@@ -179,7 +181,8 @@ class Aggs {
                 countMap.put(missingKey, missingCount)
             }
             val buckets = countMap.map {
-                Bucket(it.key, it.value, it.key.toString())
+                val bucketAggs = processAggs(agg.aggs, bucketsMap[it.key] ?: emptyList())
+                Bucket(it.key, it.value, it.key.toString(), aggs = bucketAggs)
             }
             // todo
             val sortedBuckets = sortBuckets(agg, buckets, Agg.Sort(Agg.Sort.Type.Lexical, Direction.Ascending))
@@ -221,9 +224,28 @@ class Aggs {
             return AggResult(agg.key, sortedBuckets, null, value)
         }
 
-
         fun <T> processStatsAgg(agg: StatsAgg, matches: List<T>): AggResult {
-            throw NotImplementedError("Aggregation Stats not yet supported")
+
+            var count: Long = 0
+            var min: Double = Double.MAX_VALUE
+            var max: Double = Double.MIN_VALUE
+            var sum: Double = 0.0
+
+            val fieldGetter = Functions.field(agg.field)
+
+            matches.forEach { match ->
+                val fieldValues = fieldGetter.invoke(match as Any).filter { it is Number }
+                fieldValues.forEach { value ->
+                    val d: Double = (value as Number).toDouble()
+                    sum += d
+                    count++
+                    min = Math.min(min, d)
+                    max = Math.max(max, d)
+                }
+            }
+            val avg = sum / count
+            val bucket = Bucket(stats = Stats(count = count, sum = sum, min = min, max = max, avg = avg), count = count)
+            return AggResult(key = agg.key, buckets = listOf(bucket))
         }
 
         fun <T> processMissingAgg(agg: MissingAgg, matches: List<T>): AggResult {
