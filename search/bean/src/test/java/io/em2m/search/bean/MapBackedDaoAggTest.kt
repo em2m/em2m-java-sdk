@@ -171,7 +171,7 @@ class MapBackedDaoAggTest : Assert() {
     fun testNestedAggs() {
         val request = SearchRequest(0, 0, MatchAllQuery(),
                 aggs = listOf(DateHistogramAgg("properties.time", interval = "hour", key = "time",
-                        aggs = listOf(FiltersAgg(mapOf("reviewed" to TermQuery("properties.status", "reviewed")), "reviews")))))
+                        aggs = listOf(StatsAgg("properties.mag", key = "magnitude")))))
         val sub = TestSubscriber<Any>()
         searchDao.search(request).doOnNext { result ->
             val agg = result.aggs["time"] ?: error("agg should not be null")
@@ -292,7 +292,7 @@ class MapBackedDaoAggTest : Assert() {
         val result = handler.collection;
         Assert.assertEquals(46, result.features.size);
         // loweCase status to tests work same as for ElasticSearch
-        result.features.forEach { it.properties.put("status", (it.properties.get("status") as String).toLowerCase())}
+        result.features.forEach { it.properties.put("status", (it.properties.get("status") as String).toLowerCase()) }
         return result;
     }
 
