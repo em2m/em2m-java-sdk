@@ -23,7 +23,7 @@ class ExprTransformingSyncDao<T>(simplex: Simplex, delegate: SyncDao<T>) : SyncD
         }
         val exprFields = rowExprs.filterNotNull().flatMap { FieldKeyHandler.fields(it) }
         val delegateFields = exprFields.plus(rowNames).filterNotNull().map { Field(name = it) }
-        return delegate.search(request.copy(fields = delegateFields)).let { results ->
+        return delegate.search(request.copy(fields = delegateFields, aggs = transformAggs(request.aggs))).let { results ->
             val rows = transformRows(request, results.rows, delegateFields, rowExprs)
             val aggs = transformAggResults(request, results.aggs)
             results.copy(fields = request.fields, rows = rows, aggs = aggs)
