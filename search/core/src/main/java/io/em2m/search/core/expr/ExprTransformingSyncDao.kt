@@ -3,6 +3,9 @@ package io.em2m.search.core.expr
 import io.em2m.search.core.daos.SyncDaoWrapper
 import io.em2m.search.core.model.*
 import io.em2m.search.core.xform.AggResultTransformer
+import io.em2m.search.core.xform.FieldAliasAggTransformer
+import io.em2m.search.core.xform.NamedAggTransformer
+import io.em2m.search.core.xform.SourceFormatAggTransformer
 import io.em2m.simplex.Simplex
 import io.em2m.simplex.model.Expr
 
@@ -20,11 +23,18 @@ class ExprTransformingSyncDao<T>(simplex: Simplex, delegate: SyncDao<T>) : SyncD
         }
         val exprFields = rowExprs.filterNotNull().flatMap { FieldKeyHandler.fields(it) }
         val delegateFields = exprFields.plus(rowNames).filterNotNull().map { Field(name = it) }
-        return delegate.search(request.copy(fields = delegateFields)).let { results ->
+        return delegate.search(request.copy(fields = delegateFields, aggs = transformAggs(request.aggs))).let { results ->
             val rows = transformRows(request, results.rows, delegateFields, rowExprs)
             val aggs = transformAggResults(request, results.aggs)
             results.copy(fields = request.fields, rows = rows, aggs = aggs)
         }
+    }
+
+    private fun transformAggs(aggs: List<Agg>): List<Agg> {
+        val sourceFormatXform = SourceFormatAggTransformer()
+        return aggs.map {
+                    sourceFormatXform.transform((it))
+                }
     }
 
     private fun transformRows(request: SearchRequest, rows: List<List<*>>?, delegateFields: List<Field>, exprs: List<Expr?>): List<List<*>>? {
