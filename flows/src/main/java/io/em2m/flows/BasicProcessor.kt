@@ -6,8 +6,8 @@ import com.google.inject.Module
 import rx.Observable
 import kotlin.reflect.KClass
 
-
-class BasicProcessor<T>(val flowResolver: FlowResolver<T>, val standardXforms: List<Transformer<T>> = emptyList()) : Processor<T> {
+@Suppress("unused")
+class BasicProcessor<T>(private val flowResolver: FlowResolver<T>, private val standardXforms: List<Transformer<T>> = emptyList()) : Processor<T> {
 
     override fun process(key: String, value: T): Observable<T> {
         return process(key, Observable.just(value))
@@ -101,17 +101,17 @@ class BasicProcessor<T>(val flowResolver: FlowResolver<T>, val standardXforms: L
         }
 
         fun flow(key: String, flow: Flow<T>): Builder<T> {
-            instances.put(key, flow)
+            instances[key] = flow
             return this
         }
 
         fun flow(key: String, flowClass: KClass<out Flow<T>>): Builder<T> {
-            classes.put(key, flowClass)
+            classes[key] = flowClass
             return this
         }
 
         fun flow(flowClass: KClass<out Flow<T>>): Builder<T> {
-            classes.put(requireNotNull(flowClass.simpleName), flowClass)
+            classes[requireNotNull(flowClass.simpleName)] = flowClass
             return this
         }
 
