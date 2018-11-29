@@ -8,6 +8,7 @@ import io.em2m.simplex.Simplex
 import io.em2m.simplex.model.BasicKeyResolver
 import io.em2m.simplex.model.Key
 import org.junit.Assert
+import org.junit.Ignore
 import org.junit.Test
 import rx.Observable
 
@@ -57,6 +58,23 @@ class ExprDaoTest : Assert() {
     fun testTransformAggs() {
         val format = "#{bucket:key | capitalize}".replace("#", "$")
         val request = SearchRequest(aggs = listOf(TermsAgg(field = "lastName", key = "lastName", format = format)))
+        val result = dao.search(request).toBlocking().first()
+        assertNotNull(result)
+
+        val aggs = result.aggs
+        assertNotNull(aggs)
+
+        val buckets = requireNotNull(aggs["lastName"]?.buckets)
+        assertEquals("Flinstone", buckets[0].label)
+        assertEquals("Rubble", buckets[1].label)
+    }
+
+    @Test
+    @Ignore
+    fun testSourceFormatAggs() {
+        val sourceFormat = "\${bucket:key | capitalize}"
+        val format = "\${bucket:key}"
+        val request = SearchRequest(aggs = listOf(TermsAgg(field = "lastName", key = "lastName", format = format, ext = mapOf("sourceFormat" to sourceFormat))))
         val result = dao.search(request).toBlocking().first()
         assertNotNull(result)
 

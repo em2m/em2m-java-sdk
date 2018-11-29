@@ -236,14 +236,18 @@ class Aggs {
             matches.forEach { match ->
                 val fieldValues = fieldGetter.invoke(match as Any).filter { it is Number }
                 fieldValues.forEach { value ->
-                    val d: Double = (value as Number).toDouble()
-                    sum += d
-                    count++
-                    min = Math.min(min, d)
-                    max = Math.max(max, d)
+                    try {
+                        val d: Double = (value as Number).toDouble()
+                        sum += d
+                        count++
+                        min = Math.min(min, d)
+                        max = Math.max(max, d)
+                    } catch (err: Throwable) {
+                    }
                 }
             }
-            val avg = sum / count
+
+            val avg = if (count == 0L) 0.0 else sum / count
             val bucket = Bucket(stats = Stats(count = count, sum = sum, min = min, max = max, avg = avg), count = count)
             return AggResult(key = agg.key, buckets = listOf(bucket))
         }
