@@ -23,7 +23,7 @@ class ExprDaoTest : Assert() {
 
     val request = SearchRequest()
 
-    val mock = mock<SearchDao<Any>> {
+    val mock = mock<SyncDao<Any>> {
         val rows = listOf(
                 listOf("fred", "flinstone"),
                 listOf("wilma", "flinstone"),
@@ -35,17 +35,17 @@ class ExprDaoTest : Assert() {
                         Bucket(key = "flinstone", count = 2),
                         Bucket(key = "rubble", count = 2)
                 )))
-        on { search(any()) } doReturn Observable.just(SearchResult<Any>(rows = rows, aggs = aggResults, totalItems = rows.size.toLong()))
+        on { search(any()) } doReturn SearchResult<Any>(rows = rows, aggs = aggResults, totalItems = rows.size.toLong())
     }
 
     val simplex = Simplex().keys(keyResolver)
-    val dao = ExprTransformingSearchDao(simplex, mock)
+    val dao = ExprTransformingSyncDao(simplex, mock)
 
     @Test
     fun testTransformRows() {
 
         val request = SearchRequest(fields = listOf(Field(expr = "#{f:firstName | capitalize} #{f:lastName | capitalize}".replace("#", "$"))))
-        val result = dao.search(request).toBlocking().first()
+        val result = dao.search(request)
         val rows = requireNotNull(result.rows)
         assertEquals("Fred Flinstone", rows[0][0])
         assertEquals("Wilma Flinstone", rows[1][0])
@@ -58,7 +58,7 @@ class ExprDaoTest : Assert() {
     fun testTransformAggs() {
         val format = "#{bucket:key | capitalize}".replace("#", "$")
         val request = SearchRequest(aggs = listOf(TermsAgg(field = "lastName", key = "lastName", format = format)))
-        val result = dao.search(request).toBlocking().first()
+        val result = dao.search(request)
         assertNotNull(result)
 
         val aggs = result.aggs
@@ -70,20 +70,18 @@ class ExprDaoTest : Assert() {
     }
 
     @Test
-    @Ignore
     fun testSourceFormatAggs() {
         val sourceFormat = "\${bucket:key | capitalize}"
-        val format = "\${bucket:key}"
+        val format = "\${bucket:key | upperCase}"
         val request = SearchRequest(aggs = listOf(TermsAgg(field = "lastName", key = "lastName", format = format, ext = mapOf("sourceFormat" to sourceFormat))))
-        val result = dao.search(request).toBlocking().first()
+        val result = dao.search(request)
         assertNotNull(result)
 
         val aggs = result.aggs
         assertNotNull(aggs)
 
         val buckets = requireNotNull(aggs["lastName"]?.buckets)
-        assertEquals("Flinstone", buckets[0].label)
-        assertEquals("Rubble", buckets[1].label)
+        assertEquals("FLINSTONE", buckets[0].label)
     }
 
 }
