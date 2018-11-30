@@ -4,16 +4,16 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ObjectNode
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.em2m.flows.Priorities
+import io.em2m.flows.Transformer
 import io.em2m.messages.model.MessageContext
-import io.em2m.messages.model.MessageTransformer
 import io.em2m.messages.model.TypedMessageFlow
 import org.xerial.snappy.SnappyInputStream
 import rx.Observable
 import java.util.zip.DeflaterInputStream
 import java.util.zip.GZIPInputStream
-import javax.inject.Inject
 
-class JacksonMessageTransformer @Inject constructor(val objectMapper: ObjectMapper = jacksonObjectMapper(), override val priority: Int = Priorities.PARSE) : MessageTransformer {
+class JacksonMessageTransformer(private val objectMapper: ObjectMapper = jacksonObjectMapper(), override val priority: Int = Priorities.PARSE)
+    : Transformer<MessageContext> {
 
     override fun call(source: Observable<MessageContext>): Observable<MessageContext> {
 
