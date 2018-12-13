@@ -13,6 +13,7 @@ class Aggs {
     companion object {
 
         val dateParser: DateMathParser = DateMathParser(DateTimeZone.UTC)
+        val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
         val objectMapper = jacksonObjectMapper()
 
         fun <T> processAggs(aggs: List<Agg>, matches: List<T>): Map<String, AggResult> {
@@ -149,13 +150,13 @@ class Aggs {
             val now = Date().time
 
             val keyFormat = SimpleDateFormat(when (interval) {
-                "year" -> "yyyy"
-                "month" -> "yyyy-MM"
-                "day" -> "yyyy-MM-dd"
-                "hour" -> "yyyy-MM-dd HH"
-                "minute" -> "yyyy-MM-dd HH:mm"
+                "year" -> "yyyy-01-01 00:00:00"
+                "month" -> "yyyy-MM-01 00:00:00"
+                "day" -> "yyyy-MM-dd 00:00:00"
+                "hour" -> "yyyy-MM-dd HH:00:00"
+                "minute" -> "yyyy-MM-dd HH:mm:00"
                 "second" -> "yyyy-MM-dd HH:mm:ss"
-                else -> throw IllegalArgumentException("Intervale '$interval' not supported")
+                else -> throw IllegalArgumentException("Interval '$interval' not supported")
             })
 
             matches.forEach {
@@ -184,8 +185,16 @@ class Aggs {
                 val bucketAggs = processAggs(agg.aggs, bucketsMap[it.key] ?: emptyList())
                 Bucket(it.key, it.value, it.key.toString(), aggs = bucketAggs)
             }
+
             // todo
             val sortedBuckets = sortBuckets(agg, buckets, Agg.Sort(Agg.Sort.Type.Lexical, Direction.Ascending))
+
+            sortedBuckets.map {
+                Bucket(key = dateFormat.parse(it.key as String).time, count = it.count, label = it.label,
+                        stats = it.stats, from = it.from, to = it.to, aggs = it.aggs)
+            }
+
+
             return AggResult(agg.key, sortedBuckets, null, value)
         }
 
