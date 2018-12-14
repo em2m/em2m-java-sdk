@@ -122,7 +122,6 @@ class MapBackedDaoAggTest : Assert() {
     }
 
     @Test
-    @Ignore
     fun testStats() {
         val request = SearchRequest(0, 0, MatchAllQuery(), aggs = listOf(StatsAgg("properties.mag", key = "magnitude")))
         val sub = TestSubscriber<Any>()
@@ -156,6 +155,23 @@ class MapBackedDaoAggTest : Assert() {
     @Test
     fun testDateHistogram() {
         val request = SearchRequest(0, 0, MatchAllQuery(), aggs = listOf(DateHistogramAgg("properties.time", interval = "hour", key = "time")))
+        val sub = TestSubscriber<Any>()
+        searchDao.search(request).doOnNext { result ->
+            val agg = result.aggs["time"] ?: error("agg should not be null")
+            val buckets = agg.buckets ?: error("buckets should not be null")
+            // ES has 23 since it likely preserves empty buckets
+            assertEquals(22, buckets.size)
+            assertEquals(46, buckets.map { it.count }.sum())
+        }.subscribe(sub)
+        sub.awaitTerminalEvent()
+        sub.assertNoErrors()
+    }
+
+    @Test
+    fun testNestedAggs() {
+        val request = SearchRequest(0, 0, MatchAllQuery(),
+                aggs = listOf(DateHistogramAgg("properties.time", interval = "hour", key = "time",
+                        aggs = listOf(StatsAgg("properties.mag", key = "magnitude")))))
         val sub = TestSubscriber<Any>()
         searchDao.search(request).doOnNext { result ->
             val agg = result.aggs["time"] ?: error("agg should not be null")
@@ -276,7 +292,7 @@ class MapBackedDaoAggTest : Assert() {
         val result = handler.collection;
         Assert.assertEquals(46, result.features.size);
         // loweCase status to tests work same as for ElasticSearch
-        result.features.forEach { it.properties.put("status", (it.properties.get("status") as String).toLowerCase())}
+        result.features.forEach { it.properties.put("status", (it.properties.get("status") as String).toLowerCase()) }
         return result;
     }
 

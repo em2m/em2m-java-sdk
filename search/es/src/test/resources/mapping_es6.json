@@ -1,0 +1,48 @@
+{
+  "properties": {
+    "id": {
+      "type": "keyword",
+      "store": true
+    },
+    "properties": {
+      "type": "object",
+      "properties": {
+        "time": {
+          "type": "date",
+          "store": "true"
+        },
+        "magnitudeType": {
+          "type": "text",
+          "fielddata": true
+        },
+        "alert": {
+          "type": "keyword"
+        },
+        "status": {
+          "type": "text",
+          "fielddata": true
+        },
+        "mag": {
+          "type": "double",
+          "store": true
+        }
+      }
+    },
+    "geometry": {
+      "properties": {
+        "type": {
+          "type": "keyword",
+          "index": false,
+          "store": "false"
+        },
+        "coordinates": {
+          "type": "geo_point"
+        }
+      }
+    },
+    "type": {
+      "type": "keyword",
+      "store": "false"
+    }
+  }
+}

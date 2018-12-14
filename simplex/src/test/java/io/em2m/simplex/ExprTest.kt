@@ -5,15 +5,19 @@ import io.em2m.simplex.model.ConstKeyHandler
 import io.em2m.simplex.model.Key
 import io.em2m.simplex.std.Dates
 import io.em2m.simplex.std.Numbers
-import io.em2m.utils.coerce
 import io.em2m.utils.coerceNonNull
 import org.joda.time.DateTime
-import org.joda.time.format.DateTimeFormat
-import org.joda.time.format.DateTimeFormatter
 import org.junit.Assert
 import org.junit.Test
 import java.text.SimpleDateFormat
+import java.time.Instant
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+import java.time.temporal.ChronoUnit
+import java.time.temporal.TemporalAmount
+import java.time.temporal.TemporalUnit
 import java.util.*
+import java.util.concurrent.TimeUnit
 
 
 class ExprTest : Assert() {
@@ -21,7 +25,7 @@ class ExprTest : Assert() {
     val keyResolver = BasicKeyResolver(mapOf(
             Key("ns", "key1") to ConstKeyHandler("value1"),
             Key("ns", "key2") to ConstKeyHandler("value2"),
-            Key("ns", "dateKey") to ConstKeyHandler("2015-04-21")))
+            Key("ns", "dateKey") to ConstKeyHandler("2015-04-21T17:31:06-07")))
             .delegate(Numbers.keys)
 
     val dateKeyResolver = Dates.keys
@@ -73,7 +77,7 @@ class ExprTest : Assert() {
         val exprString = "\${Date:now}"
         val expr = simplex.parser.parse(exprString)
         val resultingDate: Date = expr.call(emptyMap()).coerceNonNull()
-        assertTrue(Date().time - 1000 < resultingDate.time && resultingDate.time < Date().time + 1000 )
+        assertTrue(Date().time - 1000 < resultingDate.time && resultingDate.time < Date().time + 1000)
     }
 
     @Test
@@ -81,17 +85,34 @@ class ExprTest : Assert() {
         val exprString = "\${ns:dateKey | formatDate:yyyy}"
         val expr = requireNotNull(simplex.parser.parse(exprString))
         val result = expr.call(emptyMap())
-        assertEquals(result, "2015")
+        assertEquals("2015", result)
+    }
+
+    @Test
+    fun testFormatDateWithColon() {
+        val exprString = "\${ns:dateKey | formatDate:yyyy-MM-dd HH\\:mm:America/Los_Angeles}"
+        val expr = requireNotNull(simplex.parser.parse(exprString))
+        val result = expr.call(emptyMap())
+        assertEquals("2015-04-21 17:31", result)
+    }
+
+    @Test
+    fun testFromNow() {
+        val exprString = "\${ns:dateKey | fromNow}"
+        val expr = requireNotNull(simplex.parser.parse(exprString))
+        val result = expr.call(emptyMap())
+        assertTrue(result.toString().endsWith("ago"))
     }
 
     @Test
     fun testDateMath() {
-        var pattern: DateTimeFormatter = DateTimeFormat.forPattern("yyyy-MM-dd")
-        val actual = pattern.print(DateTime(("2015-04-21").coerceNonNull<Date>()).plusDays(30))
+        val pattern: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd").withZone(ZoneId.of("America/New_York"))
+        val expected = "2015-05-21"
         val exprString = "\${ns:dateKey | dateMath:now+30d/d}"
         val expr = requireNotNull(simplex.parser.parse(exprString))
         val result = expr.call(emptyMap())
-        assertEquals(SimpleDateFormat("yyyy-MM-dd").format(result), actual)
+        val actual = SimpleDateFormat("yyyy-MM-dd").format(result)
+        assertEquals(expected, actual)
     }
 
 }

@@ -78,9 +78,10 @@ class DateHistogramAgg(
         val interval: String,
         val offset: String? = null,
         val timeZone: String? = null,
-        key: String? = null,
         val missing: Any? = null,
-        ext: Map<String, Any?>? = null) : Agg(key ?: field, ext = ext)
+        key: String? = null,
+        aggs: List<Agg> = emptyList(),
+        ext: Map<String, Any?>? = null) : Agg(key ?: field, aggs = aggs, ext = ext)
 
 class DateRangeAgg(
         val field: String,
@@ -88,22 +89,26 @@ class DateRangeAgg(
         val timeZone: String? = null,
         val ranges: List<Range>,
         key: String? = null,
+        aggs: List<Agg> = emptyList(),
         ext: Map<String, Any?>? = null) : Agg(key ?: field, ext = ext)
 
 class FiltersAgg(
         val filters: Map<String, Query>,
         key: String,
-        ext: Map<String, Any?>? = null) : Agg(key, ext = ext)
+        aggs: List<Agg> = emptyList(),
+        ext: Map<String, Any?>? = null) : Agg(key, aggs = aggs, ext = ext)
 
 class GeoBoundsAgg(
         val field: String,
         key: String? = null,
-        ext: Map<String, Any?>? = null) : Agg(key ?: field, ext = ext)
+        aggs: List<Agg> = emptyList(),
+        ext: Map<String, Any?>? = null) : Agg(key ?: field, aggs = aggs, ext = ext)
 
 class GeoCentroidAgg(
         val field: String,
         key: String? = null,
-        ext: Map<String, Any?>? = null) : Agg(key ?: field, ext = ext)
+        aggs: List<Agg> = emptyList(),
+        ext: Map<String, Any?>? = null) : Agg(key ?: field, aggs = aggs, ext = ext)
 
 class GeoDistanceAgg(
         val field: String,
@@ -111,14 +116,16 @@ class GeoDistanceAgg(
         val unit: String? = "mi",
         val ranges: List<Range>,
         key: String? = null,
-        ext: Map<String, Any?>? = null) : Agg(key ?: field, ext = ext)
+        aggs: List<Agg> = emptyList(),
+        ext: Map<String, Any?>? = null) : Agg(key ?: field, aggs = aggs, ext = ext)
 
 class GeoHashAgg(
         val field: String,
         val precision: Int? = null,
         val size: Int? = null,
         key: String? = null,
-        ext: Map<String, Any?>? = null) : Agg(key ?: field, ext = ext)
+        aggs: List<Agg> = emptyList(),
+        ext: Map<String, Any?>? = null) : Agg(key ?: field, aggs = aggs, ext = ext)
 
 class HistogramAgg(
         val field: String,
@@ -126,34 +133,40 @@ class HistogramAgg(
         val offset: Double? = 0.0,
         key: String? = null,
         val missing: Any? = null,
-        ext: Map<String, Any?>? = null) : Agg(key ?: field, ext = ext)
+        aggs: List<Agg> = emptyList(),
+        ext: Map<String, Any?>? = null) : Agg(key ?: field, aggs = aggs, ext = ext)
 
 class MissingAgg(
         val field: String,
         key: String? = null,
-        ext: Map<String, Any?>? = null) : Agg(key ?: field, ext = ext)
+        aggs: List<Agg> = emptyList(),
+        ext: Map<String, Any?>? = null) : Agg(key ?: field, aggs = aggs, ext = ext)
 
 class NamedAgg(
         val name: String,
         key: String? = null,
         sort: Sort? = null,
-        ext: Map<String, Any?>? = null) : Agg(key ?: name, sort, ext = ext)
+        aggs: List<Agg> = emptyList(),
+        ext: Map<String, Any?>? = null) : Agg(key ?: name, sort, aggs = aggs, ext = ext)
 
 class NativeAgg(
         val value: Any,
         key: String,
-        ext: Map<String, Any?>? = null) : Agg(key, ext = ext)
+        aggs: List<Agg> = emptyList(),
+        ext: Map<String, Any?>? = null) : Agg(key, aggs = aggs, ext = ext)
 
 class RangeAgg(
         val field: String,
         val ranges: List<Range>,
         key: String? = null,
-        ext: Map<String, Any?>? = null) : Agg(key ?: field, ext = ext)
+        aggs: List<Agg> = emptyList(),
+        ext: Map<String, Any?>? = null) : Agg(key ?: field, aggs = aggs, ext = ext)
 
 class StatsAgg(
         val field: String,
         key: String? = null,
-        ext: Map<String, Any?>? = null) : Agg(key ?: field, ext = ext)
+        aggs: List<Agg> = emptyList(),
+        ext: Map<String, Any?>? = null) : Agg(key ?: field, aggs = aggs, ext = ext)
 
 class TermsAgg(
         val field: String,
@@ -162,7 +175,8 @@ class TermsAgg(
         sort: Sort? = null,
         val format: String? = null,
         val missing: Any? = null,
-        ext: Map<String, Any?>? = null) : Agg(key ?: field, sort, ext = ext)
+        aggs: List<Agg> = emptyList(),
+        ext: Map<String, Any?>? = null) : Agg(key ?: field, sort, aggs = aggs, ext = ext)
 
 class Stats(val count: Long, val sum: Double, val min: Double, val max: Double, val avg: Double)
 

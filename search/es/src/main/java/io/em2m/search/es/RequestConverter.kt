@@ -8,7 +8,7 @@ import io.em2m.simplex.parser.DateMathParser
 import org.joda.time.DateTimeZone
 import java.util.*
 
-class RequestConverter(val objectMapper: ObjectMapper = jacksonObjectMapper()) {
+class RequestConverter(val objectMapper: ObjectMapper = jacksonObjectMapper(), val es6: Boolean = false) {
 
     fun convert(request: SearchRequest): EsSearchRequest {
 
@@ -19,7 +19,12 @@ class RequestConverter(val objectMapper: ObjectMapper = jacksonObjectMapper()) {
         val aggs = convertAggs(request.aggs, request.params)
         val sort = convertSorts(request.sorts)
 
-        return EsSearchRequest(from, size, query, fields, aggs, sort)
+        if (es6) {
+            return EsSearchRequest(from, size, query, aggs = aggs, sort = sort, storedFields = fields)
+        } else {
+            return EsSearchRequest(from, size, query, fields, aggs, sort)
+        }
+
     }
 
     fun convertQuery(query: Query?): EsQuery = when (query) {
@@ -163,12 +168,11 @@ class RequestConverter(val objectMapper: ObjectMapper = jacksonObjectMapper()) {
                     }
                 }
                 is NativeAgg -> {
-                    val value = it.value as? ObjectNode ?:
-                            if (it.value is String) {
-                                objectMapper.readTree(it.value as String) as ObjectNode
-                            } else {
-                                objectMapper.convertValue(it.value, ObjectNode::class.java)
-                            }
+                    val value = it.value as? ObjectNode ?: if (it.value is String) {
+                        objectMapper.readTree(it.value as String) as ObjectNode
+                    } else {
+                        objectMapper.convertValue(it.value, ObjectNode::class.java)
+                    }
                     result.agg(it.key, value)
                 }
                 is FiltersAgg -> {
