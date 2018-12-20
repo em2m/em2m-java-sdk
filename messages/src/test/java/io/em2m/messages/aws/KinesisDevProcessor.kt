@@ -6,9 +6,11 @@ import io.em2m.messages.model.MessageContext
 import io.em2m.messages.model.MessageProcessorBuilder
 import io.em2m.messages.model.TypedMessageFlow
 import io.em2m.messages.xforms.JacksonMessageTransformer
+import org.junit.Ignore
 import org.slf4j.LoggerFactory
 
 
+@Ignore
 class KinesisDevProcessor {
 
     companion object {
