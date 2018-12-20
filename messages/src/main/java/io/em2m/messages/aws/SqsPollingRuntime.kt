@@ -22,7 +22,7 @@ class SqsPollingRuntime @Inject constructor(
 
     private val log: Logger = LoggerFactory.getLogger(javaClass)
     private var running: Boolean = false
-    val executor: ExecutorService = Executors.newCachedThreadPool()
+    private val executor: ExecutorService = Executors.newCachedThreadPool()
 
     fun getOrCreateQueue(name: String): String {
         try {
@@ -46,8 +46,8 @@ class SqsPollingRuntime @Inject constructor(
         executor.shutdownNow()
     }
 
-    fun subscribe(flow: String, queueUrl: String): SqsPollingRuntime {
-        executor.submit(Job(flow, queueUrl))
+    fun subscribe(queueUrl: String): SqsPollingRuntime {
+        executor.submit(Job(queueUrl))
         return this
     }
 
@@ -59,7 +59,7 @@ class SqsPollingRuntime @Inject constructor(
         System.out.println("MessageId - " + sendResult.messageId)
     }
 
-    inner class Job(val flow: String, val queueUrl: String) : Runnable {
+    inner class Job(private val queueUrl: String) : Runnable {
 
         override fun run() {
             while (running) {
@@ -70,18 +70,18 @@ class SqsPollingRuntime @Inject constructor(
                         log.info("Received ${receiveMessageResult.messages.size} messages")
                         receiveMessageResult.messages.forEach { sqsMessage ->
                             val ctx = convert(sqsMessage)
-                            processor.process(flow, ctx).doOnCompleted {
+                            processor.process(ctx).doOnCompleted {
                                 sqs.deleteMessage(DeleteMessageRequest(queueUrl, sqsMessage.receiptHandle))
-                                }.subscribe()
-                            }
+                            }.subscribe()
                         }
+                    }
                 } catch (error: Exception) {
                     log.error("Error receiving messages from SQS", error)
                 }
             }
         }
 
-        fun convert(sqsMessage: SqsMessage): MessageContext {
+        private fun convert(sqsMessage: SqsMessage): MessageContext {
             val ctx = MessageContext(environment = createEnvironment(sqsMessage))
             ctx.inputStream = sqsMessage.body.byteInputStream()
             /*
@@ -99,7 +99,8 @@ class SqsPollingRuntime @Inject constructor(
             val currentTime = Date()
             return mapOf(
                     "QueueUrl" to queueUrl,
-                    "CurrentTime" to currentTime
+                    "CurrentTime" to currentTime,
+                    "Channel" to queueUrl
             ).toMutableMap()
         }
 

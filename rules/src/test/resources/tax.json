@@ -1,0 +1,37 @@
+{
+  "do": [
+    {
+      "match": {
+        "NumberLessThan": {
+          "grossSalary": 50000
+        }
+      },
+      "assert": {
+        "taxRate": 0
+      }
+    },
+    {
+      "match": [{
+        "NumberGreaterThanEquals": {
+          "grossSalary": 50000
+        },
+        "NumberLessThan": {
+          "grossSalary": 80000
+        }
+      }],
+      "assert": {
+        "taxRate": 0.2
+      }
+    },
+    {
+      "match": {
+        "NumberGreaterThan": {
+          "grossSalary": 80000
+        }
+      },
+      "assert": {
+        "taxRate": 0.3
+      } 
+    }
+  ]
+}
