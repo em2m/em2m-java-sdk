@@ -4,12 +4,12 @@ import com.google.inject.Binder
 import com.google.inject.Module
 import com.google.inject.name.Names
 import io.em2m.actions.model.ActionContext
+import io.em2m.actions.model.ActionProcessorBuilder
 import io.em2m.actions.model.TypedActionFlow
 import io.em2m.actions.servlet.ServletRuntime
 import io.em2m.actions.xforms.JacksonRequestTransformer
 import io.em2m.actions.xforms.JacksonResponseTransformer
 import io.em2m.actions.xforms.LoggingTransformer
-import io.em2m.flows.BasicProcessor
 import io.em2m.flows.Flow
 import io.em2m.flows.Priorities.Companion.MAIN
 import org.eclipse.jetty.server.Server
@@ -56,13 +56,13 @@ class ExampleServer {
         }
     }
 
-    class LoggingFlow : Flow<ActionContext> {
+    class Log : Flow<ActionContext> {
         override val transformers = listOf(
                 LoggingTransformer(LoggerFactory.getLogger(javaClass), { it.toString() }, MAIN)
         )
     }
 
-    class EchoFlow : TypedActionFlow<Any, Any>(Any::class.java, Any::class.java) {
+    class Echo : TypedActionFlow<Any, Any>(Any::class.java, Any::class.java) {
         override fun main(obs: Observable<ActionContext>): Observable<ActionContext> {
             return obs.doOnNext {
                 response(it, it.request)
@@ -72,7 +72,7 @@ class ExampleServer {
 
     data class UploadRequest(val foo: String, val hasHeaders: Boolean)
 
-    class UploadFlow : TypedActionFlow<Any, Any>(UploadRequest::class.java, Any::class.java) {
+    class Upload : TypedActionFlow<Any, Any>(UploadRequest::class.java, Any::class.java) {
         override fun main(obs: Observable<ActionContext>): Observable<ActionContext> {
             return obs.doOnNext { context ->
                 val filePart = context.multipart?.files?.get("file")
@@ -83,13 +83,14 @@ class ExampleServer {
 
     class ActionServlet : HttpServlet() {
 
-        private val processor = BasicProcessor.Builder<ActionContext>()
+        private val processor = ActionProcessorBuilder()
+                .prefix("demo")
+                .flow(Log::class)
+                .flow(Echo::class)
+                .flow(Upload::class)
                 .module(TestModule())
                 .transformer(JacksonRequestTransformer())
                 .transformer(JacksonResponseTransformer())
-                .flow("Log", LoggingFlow::class)
-                .flow("Echo", EchoFlow::class)
-                .flow("Upload", UploadFlow::class)
                 .build()
 
         private val runtime = ServletRuntime("demo", processor)

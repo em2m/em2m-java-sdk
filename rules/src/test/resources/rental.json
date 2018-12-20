@@ -1,0 +1,67 @@
+{
+  "if": {
+    "resource": "em2m:entity:entity:*"
+  },
+  "and": [
+    {
+      "if": {
+        "claims.orgType": "dealer"
+      },
+      "filter": {
+        "op": "term",
+        "field": "dealer.orgPath",
+        "value": "${claims:org}"
+      }
+    },
+    {
+      "if": {
+        "claims:orgType": "recovery"
+      },
+      "filter": {
+        "op": "term",
+        "field": "recovery.orgPath",
+        "value": "${claims:org}"
+      }
+    },
+    {
+      "if": {
+        "claims:orgType": "consumer"
+      },
+      "filters": [
+        {
+          "op": "term",
+          "field": "svr.orgPath",
+          "value": "${claims:org}"
+        }
+      ],
+      "features": [
+        "vehicle.reportStolen"
+      ],
+      "components": [
+        "svr",
+        "organization",
+        "device"
+      ],
+      "commands": "-svr:ReportStolen",
+      "actions": "entity:GetView",
+      "views": [
+        "RentalAgreement"
+      ],
+      "and": [
+        {
+          "if": {
+            "${org:entitlements}": [
+              "maintenance"
+            ]
+          },
+          "features": "alerts.maintenance"
+        }
+      ],
+      "else": [
+        {
+        }
+      ]
+    }
+    // rule types: "filter", "feature", "components", "commands"
+  ]
+}

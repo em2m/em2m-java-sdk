@@ -1,0 +1,33 @@
+{
+  "match": {
+    "resource": "em2m:ident:account:*"
+  },
+  "do": [
+    {
+      "match": {
+        "${organization.orgType | lowerCase}": "dealer"
+      },
+      "assert": {
+        "role": [
+          "sales",
+          "admin",
+          "fimanager"
+        ]
+      }
+    },
+    {
+      "match": {
+        "ForAllValues:StringEqualsIgnoreCase": {
+          "req:role": "${role}"
+        }
+      },
+      "assert": {
+        "allow": [
+          "ident:AddRoleToAccount",
+          "ident:PutAccountRoles",
+          "ident:RemoveRoleFromAccount"
+        ]
+      }
+    }
+  ]
+}

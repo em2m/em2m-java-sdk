@@ -13,9 +13,12 @@ data class MessageContext(var inputStream: InputStream? = null,
                           val scope: MutableMap<String, Any?> = HashMap(),
                           var eventId: String? = null) : FlowAware {
 
+    override var flow: Flow<*>? = null
+
     val keyHandlers = HashMap<Key, KeyHandler>()
     val keyResolver = BasicKeyResolver(keyHandlers)
 
-    override var flow: Flow<*>? = null
+    val channel: String?
+        get() = environment["Channel"] as? String
 
 }

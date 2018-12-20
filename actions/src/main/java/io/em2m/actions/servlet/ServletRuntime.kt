@@ -14,7 +14,7 @@ import javax.servlet.http.HttpServletResponse
 import javax.servlet.http.Part
 
 
-open class ServletRuntime(private val actionPrefix: String, private val processor: Processor<ActionContext>, val mapper: ObjectMapper = jacksonObjectMapper()) {
+open class ServletRuntime(private val actionPrefix: String, private val processor: Processor<ActionContext>, private val mapper: ObjectMapper = jacksonObjectMapper()) {
 
     fun process(actionName: String, request: HttpServletRequest, response: HttpServletResponse) {
 
@@ -29,16 +29,16 @@ open class ServletRuntime(private val actionPrefix: String, private val processo
                 response = ServletResponse(response))
         context.scope["servletContext"] = request
         try {
-            processor.process(actionName, context).toBlocking().subscribe(
+            processor.process(context).toBlocking().subscribe(
                     {
 
                     },
                     { error ->
-                        handleError(response, actionName, context, error)
+                        handleError(response, context, error)
                     }
             )
         } catch (error: FlowNotFound) {
-            handleError(response, actionName, context, error)
+            handleError(response, context, error)
         }
     }
 
@@ -46,7 +46,7 @@ open class ServletRuntime(private val actionPrefix: String, private val processo
         return Problem.convert(error)
     }
 
-    private fun handleError(response: HttpServletResponse, actionName: String, context: ActionContext, error: Throwable) {
+    private fun handleError(response: HttpServletResponse, context: ActionContext, error: Throwable) {
         val problem = mapError(error)
         context.error = error
         if (context.debug) {
@@ -56,7 +56,7 @@ open class ServletRuntime(private val actionPrefix: String, private val processo
         context.response.statusCode = problem.status
         context.response.contentType = "application/json"
 
-        processor.handleError(actionName, context).subscribe()
+        processor.handleError(context).subscribe()
 
         response.contentType = "application/json"
         response.status = problem.status
@@ -100,12 +100,12 @@ open class ServletRuntime(private val actionPrefix: String, private val processo
             val filename = extractFileName(part)
             if (filename?.isNotEmpty() == true) {
                 val headers = HashMap<String, List<String>>()
-                files.put(part.name, MultipartData.File(filename, headers, part.inputStream))
+                files[part.name] = MultipartData.File(filename, headers, part.inputStream)
             } else {
                 try {
                     val name = part.name
                     val text = part.inputStream.reader().readText()
-                    form.put(name, text)
+                    form[name] = text
                 } catch (ex: Exception) {
                     MultipartData.log.error("Error parsing part ${part.name}", ex)
                 }
@@ -115,13 +115,13 @@ open class ServletRuntime(private val actionPrefix: String, private val processo
     }
 
     private fun extractFileName(part: Part): String? {
-        val contentDisp = part.getHeader("content-disposition");
-        val items = contentDisp.split(";");
+        val contentDisp = part.getHeader("content-disposition")
+        val items = contentDisp.split(";")
         for (s in items) {
             if (s.trim().startsWith("filename")) {
-                return s.substring(s.indexOf("=") + 2, s.length - 1);
+                return s.substring(s.indexOf("=") + 2, s.length - 1)
             }
         }
-        return null;
+        return null
     }
 }

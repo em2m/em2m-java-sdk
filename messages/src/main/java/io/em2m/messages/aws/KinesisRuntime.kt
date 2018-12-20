@@ -18,7 +18,7 @@ import org.slf4j.LoggerFactory
 import java.net.InetAddress
 import java.util.*
 
-class KinesisRuntime(config: KinesisRuntime.Config, val processor: Processor<MessageContext>, val flow: String) : Runnable {
+class KinesisRuntime(config: KinesisRuntime.Config, val processor: Processor<MessageContext>) : Runnable {
 
     val log: Logger = LoggerFactory.getLogger(javaClass)
 
@@ -64,7 +64,7 @@ class KinesisRuntime(config: KinesisRuntime.Config, val processor: Processor<Mes
                        "ArrivalTimestamp" to record.approximateArrivalTimestamp
                )
                val ctx = MessageContext(stream, environment = env )
-               processor.process(flow, ctx).subscribe()
+               processor.process(ctx).subscribe()
            }
 
             log.info("Batch complete")

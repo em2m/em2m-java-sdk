@@ -30,15 +30,15 @@ open class LambdaRuntime(
                 response = response)
         context.scope["servletContext"] = request
         try {
-            processor.process(actionName, context).toBlocking().subscribe(
+            processor.process(context).toBlocking().subscribe(
                     {
                     },
                     { error ->
-                        handleError(actionName, context, error)
+                        handleError(context, error)
                     }
             )
         } catch (error: FlowNotFound) {
-            handleError(actionName, context, error)
+            handleError(context, error)
         }
         return response
     }
@@ -47,7 +47,7 @@ open class LambdaRuntime(
         return Problem.convert(error)
     }
 
-    private fun handleError(actionName: String, context: ActionContext, error: Throwable) {
+    private fun handleError(context: ActionContext, error: Throwable) {
         val problem = mapError(error)
         context.error = error
         if (context.debug) {
@@ -56,7 +56,7 @@ open class LambdaRuntime(
         context.response.entity = problem
         context.response.statusCode = problem.status
         context.response.contentType = "application/json"
-        processor.handleError(actionName, context).subscribe()
+        processor.handleError(context).subscribe()
     }
 
     private fun createEnvironment(request: LambdaRequest): Map<String, Any?> {
