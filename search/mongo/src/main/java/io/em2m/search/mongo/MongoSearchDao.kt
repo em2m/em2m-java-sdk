@@ -208,6 +208,7 @@ class MongoSearchDao<T>(idMapper: IdMapper<T>, val documentMapper: DocumentMappe
 
         keyIndex.keys.forEach { key ->
             val buckets = ArrayList<Bucket>()
+            var op: String? = null
             keyIndex[key]?.forEach { mongoKey ->
                 val altKey = if (mongoKey.contains(":")) mongoKey.split(":")[1] else mongoKey
                 val values = document[mongoKey] as List<*>
@@ -219,7 +220,8 @@ class MongoSearchDao<T>(idMapper: IdMapper<T>, val documentMapper: DocumentMappe
                     }
                 }
             }
-            result.put(key, AggResult(key, buckets))
+            // TODO: Determine correct value for op
+            result[key] = AggResult(key, buckets, op = op)
         }
         return result
     }
