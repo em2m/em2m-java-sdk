@@ -12,7 +12,7 @@ open class AggResultTransformer {
         val stats = transformStats(aggResult.stats)
         val value = transformValue(aggResult.value)
 
-        return AggResult(aggResult.key, buckets, stats, value)
+        return AggResult(aggResult.key, buckets, stats, value, aggResult.op)
         return aggResult
     }
 

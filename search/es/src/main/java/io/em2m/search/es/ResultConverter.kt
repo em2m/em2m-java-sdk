@@ -6,6 +6,7 @@ import com.scaleset.geo.geojson.GeoJsonModule
 import com.vividsolutions.jts.geom.Coordinate
 import com.vividsolutions.jts.geom.Envelope
 import io.em2m.search.core.model.*
+import io.em2m.utils.Coerce.objectMapper
 import java.util.*
 import kotlin.collections.HashMap
 
@@ -16,7 +17,7 @@ class ResultConverter<T>(val mapper: DocMapper<T>) {
         val rows = if (request.fields.isNotEmpty()) convertRows(result.hits, request) else null
         val items = if (request.fields.isEmpty()) convertItems(result.hits) else null
         val totalItems = hits.total
-        val aggs = convertAggs(result.aggregations)
+        val aggs = convertAggs(request, result.aggregations)
 
         val headers = mapOf("took" to result.took, "scrollId" to result.scrollId)
 
@@ -80,53 +81,58 @@ class ResultConverter<T>(val mapper: DocMapper<T>) {
         return results
     }
 
-    fun convertAggs(esAggResults: Map<String, EsAggResult>): Map<String, AggResult> {
-        return esAggResults.mapValues { result ->
-            val esValue = result.value
-            var buckets = esValue.buckets?.map {
-                val subAggs = convertSubAggs(it.other)
-                val key = it.keyAsString ?: it.key
-                Bucket(key, it.docCount?.toLong()  ?: 0, from = it.from, to = it.to, aggs = subAggs)
-            }
-            var value: Any? = null
-            val docCount = esValue.docCount
-            if (buckets == null && docCount != null) {
-                buckets = listOf(Bucket(key = result.key, count = docCount.toLong()))
-            }
-            // stats
-            if (buckets == null && esValue.count != null) {
-                val count = esValue.count.toLong()
-                val sum = esValue.sum ?: 0.0
-                val min = esValue.min ?: 0.0
-                val max = esValue.max ?: 0.0
-                val avg = esValue.avg ?: 0.0
-                val stats = Stats(count, sum, min, max, avg)
-                buckets = listOf(Bucket(key = result.key, count = count, stats = stats))
-            }
-            if (esValue.other.containsKey("location")) {
-                val location = esValue.other["location"] as Map<*, *>
-                val lat = location["lat"] as Double
-                val lon = location["lon"] as Double
-                value = Coordinate(lon, lat)
-            }
-            if (buckets == null && esValue.other.containsKey("bounds")) {
-                val bounds = esValue.other["bounds"] as Map<*, *>
-                val topLeft = bounds["top_left"] as Map<*, *>
-                val bottomRight = bounds["bottom_right"] as Map<*, *>
-                val x1 = topLeft["lon"] as Double
-                val x2 = bottomRight["lon"] as Double
-                val y1 = topLeft["lat"] as Double
-                val y2 = bottomRight["lat"] as Double
-                value = Envelope(x1, x2, y1, y2)
-            }
-            if (buckets == null && value == null) {
-                value = esValue.other
-            }
-            AggResult(result.key, buckets, value = value)
-        }
+    fun convertAggs(request: SearchRequest, esAggResults: Map<String, EsAggResult>): Map<String, AggResult> {
+        return request.aggs.map { agg ->
+            val key = agg.key
+            val esValue = esAggResults[agg.key]
+            if (esValue != null) {
+                val op: String? = agg.op()
+                var buckets = esValue.buckets?.map {
+                    val subAggs = convertSubAggs(request, it.other)
+                    val key = it.keyAsString ?: it.key
+                    Bucket(key, it.docCount?.toLong() ?: 0, from = it.from, to = it.to, aggs = subAggs)
+                }
+                var value: Any? = null
+                val docCount = esValue.docCount
+                if (buckets == null && docCount != null) {
+                    buckets = listOf(Bucket(key = key, count = docCount.toLong()))
+                }
+                // stats
+                if (buckets == null && esValue.count != null) {
+                    val count = esValue.count.toLong()
+                    val sum = esValue.sum ?: 0.0
+                    val min = esValue.min ?: 0.0
+                    val max = esValue.max ?: 0.0
+                    val avg = esValue.avg ?: 0.0
+                    val stats = Stats(count, sum, min, max, avg)
+                    buckets = listOf(Bucket(key = key, count = count, stats = stats))
+                }
+                if (esValue.other.containsKey("location")) {
+                    val location = esValue.other["location"] as Map<*, *>
+                    val lat = location["lat"] as Double
+                    val lon = location["lon"] as Double
+                    value = Coordinate(lon, lat)
+                }
+                if (buckets == null && esValue.other.containsKey("bounds")) {
+                    val bounds = esValue.other["bounds"] as Map<*, *>
+                    val topLeft = bounds["top_left"] as Map<*, *>
+                    val bottomRight = bounds["bottom_right"] as Map<*, *>
+                    val x1 = topLeft["lon"] as Double
+                    val x2 = bottomRight["lon"] as Double
+                    val y1 = topLeft["lat"] as Double
+                    val y2 = bottomRight["lat"] as Double
+                    value = Envelope(x1, x2, y1, y2)
+                }
+                if (buckets == null && value == null) {
+                    value = esValue.other
+                }
+                // TODO: Find correct op value
+                AggResult(key, buckets, value = value, op = op)
+            } else null
+        }.filterNotNull().associateBy { it.key }
     }
 
-    fun convertSubAggs(other: Map<String, Any?>): Map<String, AggResult> {
+    fun convertSubAggs(request: SearchRequest, other: Map<String, Any?>): Map<String, AggResult> {
         return try {
             val esAggs: MutableMap<String, EsAggResult> = HashMap()
             other.forEach { key, value ->
@@ -135,7 +141,7 @@ class ResultConverter<T>(val mapper: DocMapper<T>) {
                     esAggs.put(key, aggResult)
                 }
             }
-            convertAggs(esAggs)
+            convertAggs(request, esAggs)
         } catch (ex: Throwable) {
             emptyMap()
         }
