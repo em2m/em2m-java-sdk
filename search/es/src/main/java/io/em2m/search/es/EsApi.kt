@@ -161,8 +161,9 @@ class EsAggs() {
         return agg
     }
 
-    fun agg(name: String, value: ObjectNode) {
+    fun agg(name: String, value: ObjectNode) : ObjectNode {
         aggs[name] = value
+        return value
     }
 
     fun agg(name: String, type: String): ObjectNode {
