@@ -91,7 +91,7 @@ class Aggs {
                 Bucket(it.key, it.value, it.key.toString())
             }
             // todo
-            val sortedBuckets = sortBuckets(agg, buckets).page(0, agg.size)
+            val sortedBuckets = sortAndFilter(agg, buckets).page(0, agg.size)
             return AggResult(agg.key, sortedBuckets, null, value, op = agg.op())
         }
 
@@ -177,7 +177,7 @@ class Aggs {
             }
 
             // todo
-            val sortedBuckets = sortBuckets(agg, buckets, Agg.Sort(Agg.Sort.Type.Lexical, Direction.Ascending))
+            val sortedBuckets = sortAndFilter(agg, buckets, Agg.Sort(Agg.Sort.Type.Lexical, Direction.Ascending))
 
             sortedBuckets.map {
                 Bucket(key = dateFormat.parse(it.key as String).time, count = it.count, label = it.label,
@@ -217,7 +217,7 @@ class Aggs {
                 Bucket(it.key, it.value, it.key.toString())
             }
             // todo
-            val sortedBuckets = sortBuckets(agg, buckets)
+            val sortedBuckets = sortAndFilter(agg, buckets)
             return AggResult(agg.key, sortedBuckets, null, value, op = agg.op())
         }
 
@@ -278,25 +278,27 @@ class Aggs {
             throw NotImplementedError("Aggregation GeoDistance not yet supported")
         }
 
-        private fun sortBuckets(agg: Agg, buckets: Collection<Bucket>, defaultSort: Agg.Sort = Agg.Sort(Agg.Sort.Type.Count, Direction.Descending)): List<Bucket> {
+        private fun sortAndFilter(agg: Agg, buckets: Collection<Bucket>, defaultSort: Agg.Sort = Agg.Sort(Agg.Sort.Type.Count, Direction.Descending)): List<Bucket> {
             val sort = agg.sort ?: defaultSort
+            val minDocCount = agg.minDocCount ?: 1
+            val filtered = buckets.filter { it.count >= minDocCount }
             return when (sort.type) {
                 Agg.Sort.Type.Count -> {
                     if (sort.direction == Direction.Descending) {
-                        buckets.sortedByDescending { it.count }
+                        filtered.sortedByDescending { it.count }
                     } else {
-                        buckets.sortedBy { it.count }
+                        filtered.sortedBy { it.count }
                     }
                 }
                 Agg.Sort.Type.Lexical -> {
                     if (sort.direction == Direction.Descending) {
-                        buckets.sortedByDescending { it.key.toString() }
+                        filtered.sortedByDescending { it.key.toString() }
                     } else {
-                        buckets.sortedBy { it.key.toString() }
+                        filtered.sortedBy { it.key.toString() }
                     }
                 }
                 Agg.Sort.Type.None -> {
-                    buckets.toList()
+                    filtered.toList()
                 }
             }
         }

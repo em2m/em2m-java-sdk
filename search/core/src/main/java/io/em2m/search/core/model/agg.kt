@@ -22,7 +22,13 @@ import com.vividsolutions.jts.geom.Coordinate
         JsonSubTypes.Type(value = StatsAgg::class, name = "stats"),
         JsonSubTypes.Type(value = TermsAgg::class, name = "terms")
 )
-abstract class Agg(val key: String, val sort: Sort? = null, val label: String? = null, val aggs: List<Agg> = emptyList(), ext: Map<String, Any?>?) {
+abstract class Agg(
+        val key: String,
+        val sort: Sort? = null,
+        val label: String? = null,
+        val aggs: List<Agg> = emptyList(),
+        ext: Map<String, Any?>?,
+        val minDocCount: Int?) {
 
     @JsonIgnore
     val extensions: MutableMap<String, Any?> = HashMap()
@@ -83,7 +89,8 @@ class DateHistogramAgg(
         val missing: Any? = null,
         key: String? = null,
         aggs: List<Agg> = emptyList(),
-        ext: Map<String, Any?>? = null) : Agg(key ?: field, aggs = aggs, ext = ext) {
+        ext: Map<String, Any?>? = null,
+        minDocCount: Int? = null) : Agg(key ?: field, aggs = aggs, ext = ext, minDocCount = minDocCount) {
     override fun op() = "date_histogram"
 }
 
@@ -94,7 +101,8 @@ class DateRangeAgg(
         val ranges: List<Range>,
         key: String? = null,
         aggs: List<Agg> = emptyList(),
-        ext: Map<String, Any?>? = null) : Agg(key ?: field, ext = ext) {
+        ext: Map<String, Any?>? = null,
+        minDocCount: Int? = null) : Agg(key ?: field, aggs = aggs, ext = ext, minDocCount = minDocCount) {
     override fun op() = "date_range"
 }
 
@@ -102,7 +110,8 @@ class FiltersAgg(
         val filters: Map<String, Query>,
         key: String,
         aggs: List<Agg> = emptyList(),
-        ext: Map<String, Any?>? = null) : Agg(key, aggs = aggs, ext = ext) {
+        ext: Map<String, Any?>? = null,
+        minDocCount: Int? = null) : Agg(key, aggs = aggs, ext = ext, minDocCount = minDocCount) {
     override fun op() = "filters"
 }
 
@@ -110,7 +119,8 @@ class GeoBoundsAgg(
         val field: String,
         key: String? = null,
         aggs: List<Agg> = emptyList(),
-        ext: Map<String, Any?>? = null) : Agg(key ?: field, aggs = aggs, ext = ext) {
+        ext: Map<String, Any?>? = null,
+        minDocCount: Int? = null) : Agg(key ?: field, aggs = aggs, ext = ext, minDocCount = minDocCount) {
     override fun op() = "geo_bounds"
 }
 
@@ -118,7 +128,8 @@ class GeoCentroidAgg(
         val field: String,
         key: String? = null,
         aggs: List<Agg> = emptyList(),
-        ext: Map<String, Any?>? = null) : Agg(key ?: field, aggs = aggs, ext = ext) {
+        ext: Map<String, Any?>? = null,
+        minDocCount: Int? = null) : Agg(key ?: field, aggs = aggs, ext = ext, minDocCount = minDocCount) {
     override fun op() = "geo_centroid"
 }
 
@@ -129,7 +140,8 @@ class GeoDistanceAgg(
         val ranges: List<Range>,
         key: String? = null,
         aggs: List<Agg> = emptyList(),
-        ext: Map<String, Any?>? = null) : Agg(key ?: field, aggs = aggs, ext = ext) {
+        ext: Map<String, Any?>? = null,
+        minDocCount: Int? = null) : Agg(key ?: field, aggs = aggs, ext = ext, minDocCount = minDocCount) {
     override fun op() = "geo_distance"
 }
 
@@ -139,7 +151,8 @@ class GeoHashAgg(
         val size: Int? = null,
         key: String? = null,
         aggs: List<Agg> = emptyList(),
-        ext: Map<String, Any?>? = null) : Agg(key ?: field, aggs = aggs, ext = ext) {
+        ext: Map<String, Any?>? = null,
+        minDocCount: Int? = null) : Agg(key ?: field, aggs = aggs, ext = ext, minDocCount = minDocCount) {
     override fun op() = "geohash"
 }
 
@@ -150,7 +163,8 @@ class HistogramAgg(
         key: String? = null,
         val missing: Any? = null,
         aggs: List<Agg> = emptyList(),
-        ext: Map<String, Any?>? = null) : Agg(key ?: field, aggs = aggs, ext = ext) {
+        ext: Map<String, Any?>? = null,
+        minDocCount: Int? = null) : Agg(key ?: field, aggs = aggs, ext = ext, minDocCount = minDocCount) {
     override fun op() = "histogram"
 }
 
@@ -158,7 +172,8 @@ class MissingAgg(
         val field: String,
         key: String? = null,
         aggs: List<Agg> = emptyList(),
-        ext: Map<String, Any?>? = null) : Agg(key ?: field, aggs = aggs, ext = ext) {
+        ext: Map<String, Any?>? = null,
+        minDocCount: Int? = null) : Agg(key ?: field, aggs = aggs, ext = ext, minDocCount = minDocCount) {
     override fun op() = "missing"
 }
 
@@ -167,7 +182,8 @@ class NamedAgg(
         key: String? = null,
         sort: Sort? = null,
         aggs: List<Agg> = emptyList(),
-        ext: Map<String, Any?>? = null) : Agg(key ?: name, sort, aggs = aggs, ext = ext) {
+        ext: Map<String, Any?>? = null,
+        minDocCount: Int? = null) : Agg(key ?: name, sort, aggs = aggs, ext = ext, minDocCount = minDocCount) {
     override fun op() = "named"
 }
 
@@ -175,7 +191,8 @@ class NativeAgg(
         val value: Any,
         key: String,
         aggs: List<Agg> = emptyList(),
-        ext: Map<String, Any?>? = null) : Agg(key, aggs = aggs, ext = ext) {
+        ext: Map<String, Any?>? = null,
+        minDocCount: Int? = null) : Agg(key, aggs = aggs, ext = ext, minDocCount = minDocCount) {
     override fun op() = "native"
 }
 
@@ -184,7 +201,8 @@ class RangeAgg(
         val ranges: List<Range>,
         key: String? = null,
         aggs: List<Agg> = emptyList(),
-        ext: Map<String, Any?>? = null) : Agg(key ?: field, aggs = aggs, ext = ext) {
+        ext: Map<String, Any?>? = null,
+        minDocCount: Int? = null) : Agg(key ?: field, aggs = aggs, ext = ext, minDocCount = minDocCount) {
     override fun op() = "range"
 }
 
@@ -192,7 +210,8 @@ class StatsAgg(
         val field: String,
         key: String? = null,
         aggs: List<Agg> = emptyList(),
-        ext: Map<String, Any?>? = null) : Agg(key ?: field, aggs = aggs, ext = ext) {
+        ext: Map<String, Any?>? = null,
+        minDocCount: Int? = null) : Agg(key ?: field, aggs = aggs, ext = ext, minDocCount = minDocCount) {
     override fun op() = "stats"
 }
 
@@ -204,7 +223,8 @@ class TermsAgg(
         val format: String? = null,
         val missing: Any? = null,
         aggs: List<Agg> = emptyList(),
-        ext: Map<String, Any?>? = null) : Agg(key ?: field, sort, aggs = aggs, ext = ext) {
+        ext: Map<String, Any?>? = null,
+        minDocCount: Int? = null) : Agg(key ?: field, sort, aggs = aggs, ext = ext, minDocCount = minDocCount) {
     override fun op() = "terms"
 }
 
