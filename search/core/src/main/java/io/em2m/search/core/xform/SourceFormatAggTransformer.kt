@@ -11,8 +11,8 @@ class SourceFormatAggTransformer : AggTransformer() {
         } else format
     }
 
-    override fun transformDateHistogramAgg(agg: DateHistogramAgg) = DateHistogramAgg(agg.field, sourceFormat(agg.format, agg), agg.interval, agg.offset, agg.timeZone, agg.missing, agg.key, agg.aggs, agg.extensions.minus("sourceFormat"))
-    override fun transformDateRangeAgg(agg: DateRangeAgg) = DateRangeAgg(agg.field, sourceFormat(agg.format, agg), agg.timeZone, agg.ranges, agg.key, agg.aggs, agg.extensions.minus("sourceFormat"))
-    override fun transformTermsAgg(agg: TermsAgg) = TermsAgg(agg.field, agg.size, agg.key, agg.sort, sourceFormat(agg.format, agg), agg.missing, agg.aggs, agg.extensions.minus("sourceFormat"))
+    override fun transformDateHistogramAgg(agg: DateHistogramAgg) = DateHistogramAgg(agg.field, sourceFormat(agg.format, agg), agg.interval, agg.offset, agg.timeZone, agg.missing, agg.key, agg.aggs, agg.extensions.minus("sourceFormat"), agg.minDocCount)
+    override fun transformDateRangeAgg(agg: DateRangeAgg) = DateRangeAgg(agg.field, sourceFormat(agg.format, agg), agg.timeZone, agg.ranges, agg.key, agg.aggs, agg.extensions.minus("sourceFormat"), agg.minDocCount)
+    override fun transformTermsAgg(agg: TermsAgg) = TermsAgg(agg.field, agg.size, agg.key, agg.sort, sourceFormat(agg.format, agg), agg.missing, agg.aggs, agg.extensions.minus("sourceFormat"), agg.minDocCount)
 
 }

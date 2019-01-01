@@ -38,6 +38,22 @@ class EsSearchDaoAggTest : FeatureTestBase() {
     }
 
     @Test
+    fun testMinDocCount() {
+        val request = SearchRequest(0, 0, MatchAllQuery(), aggs = listOf(TermsAgg("properties.status", key = "statuses", missing = "Missing", minDocCount = 4)))
+        val sub = TestSubscriber<Any>()
+        searchDao.search(request).doOnNext { result ->
+            assertEquals(46, result.totalItems)
+            assertEquals(0, result.items?.size)
+            val statuses = result.aggs["statuses"] ?: error("statuses should not be null")
+            val buckets = statuses.buckets ?: error("buckets should not be null")
+            assertEquals(1, buckets.size)
+            assertEquals("reviewed", buckets[0].key)
+        }.subscribe(sub)
+        sub.awaitTerminalEvent()
+        sub.assertNoErrors()
+    }
+
+    @Test
     fun testMissingTerms() {
         val request = SearchRequest(0, 0, MatchAllQuery(), aggs = listOf(TermsAgg("properties.alert", key = "alerts", missing = "No Alert")))
         val sub = TestSubscriber<Any>()
