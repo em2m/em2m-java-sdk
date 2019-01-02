@@ -1,6 +1,7 @@
 package io.em2m.simplex.std
 
 import io.em2m.simplex.model.*
+import io.em2m.utils.coerce
 import java.lang.Exception
 import java.math.BigDecimal
 import java.math.RoundingMode
@@ -58,7 +59,7 @@ class MultiplyPipe : PipeTransform {
 
     override fun transform(value: Any?, context: ExprContext): Any? {
         return try {
-            value.toString().toDouble() * multiplier
+            value.coerce<Double>()?.times(multiplier)
         } catch (ex: Exception) {
             null
         }
@@ -77,7 +78,7 @@ class AddPipe : PipeTransform {
 
     override fun transform(value: Any?, context: ExprContext): Any? {
         return try {
-            value.toString().toDouble() + addend
+            value.coerce<Double>()?.plus(addend)
         } catch (ex: Exception) {
             null
         }
