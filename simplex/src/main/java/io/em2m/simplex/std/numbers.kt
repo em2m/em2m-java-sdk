@@ -1,6 +1,8 @@
 package io.em2m.simplex.std
 
 import io.em2m.simplex.model.*
+import io.em2m.utils.coerce
+import java.lang.Exception
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.text.DecimalFormat
@@ -43,6 +45,47 @@ class RoundPipe : PipeTransform {
     }
 
 }
+
+
+class MultiplyPipe : PipeTransform {
+
+    private var multiplier: Double = 0.0
+
+    override fun args(args: List<String>) {
+        if (args.isNotEmpty()) {
+            multiplier = args[0].toDouble()
+        }
+    }
+
+    override fun transform(value: Any?, context: ExprContext): Any? {
+        return try {
+            value.coerce<Double>()?.times(multiplier)
+        } catch (ex: Exception) {
+            null
+        }
+    }
+}
+
+class AddPipe : PipeTransform {
+
+    private var addend: Double = 0.0
+
+    override fun args(args: List<String>) {
+        if (args.isNotEmpty()) {
+            addend = args[0].toDouble()
+        }
+    }
+
+    override fun transform(value: Any?, context: ExprContext): Any? {
+        return try {
+            value.coerce<Double>()?.plus(addend)
+        } catch (ex: Exception) {
+            null
+        }
+
+    }
+}
+
 
 class RandomKey : KeyHandler {
 
@@ -106,6 +149,8 @@ object Numbers {
     val pipes = BasicPipeTransformResolver()
             .transform("number") { _ -> NumberPipe() }
             .transform("round") { _ -> RoundPipe() }
+            .transform("multiply") { _ -> MultiplyPipe() }
+            .transform("add") { _ -> AddPipe() }
 
     val keys = BasicKeyResolver()
             .key(Key("Math", "PI")) { _ -> ConstKeyHandler(Math.PI) }
