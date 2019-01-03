@@ -13,10 +13,10 @@ class ExprTransformingSearchDao<T>(simplex: Simplex, delegate: SearchDao<T>) : S
 
     override fun search(request: SearchRequest): Observable<SearchResult<T>> {
 
-        val rowExprs = request.fields.map { it.expr?.let { parser.parse(it) } }
-        val rowNames = request.fields.map {
-            if (it.expr == null && it.name != null) {
-                it.name
+        val rowExprs = request.fields.map { field -> field.expr?.let { parser.parse(it) } }
+        val rowNames = request.fields.map { field ->
+            if (field.expr == null && field.name != null) {
+                field.name
             } else null
         }
         val exprFields = rowExprs.filterNotNull().flatMap { FieldKeyHandler.fields(it) }
@@ -44,11 +44,11 @@ class ExprTransformingSearchDao<T>(simplex: Simplex, delegate: SearchDao<T>) : S
                     val name = it.value.name
                     val expr = exprs[index]
                     val settings = it.value.settings
-                    if (expr != null) {
-                        expr.call(exprContext.map.plus(settings))
-                    } else if (name != null) {
-                        values[name]
-                    } else null
+                    when {
+                        expr != null -> expr.call(exprContext.map.plus(settings))
+                        name != null -> values[name]
+                        else -> null
+                    }
                 }
             }
         } else rows
@@ -60,12 +60,12 @@ class ExprTransformingSearchDao<T>(simplex: Simplex, delegate: SearchDao<T>) : S
         val aggMap = HashMap<String, Agg>()
         val missings = HashMap<String, Any?>()
         request.aggs.forEach {
-            aggMap.put(it.key, it)
+            aggMap[it.key] = it
             val termsAgg = it as? TermsAgg
             if (termsAgg?.format != null) {
-                aggExprs.put(termsAgg.key, parser.parse(termsAgg.format))
+                aggExprs[termsAgg.key] = parser.parse(termsAgg.format)
                 if (termsAgg.missing != null) {
-                    missings.put(termsAgg.key, termsAgg.missing)
+                    missings[termsAgg.key] = termsAgg.missing
                 }
             }
         }

@@ -1,16 +1,16 @@
 package io.em2m.search.es
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.JsonNodeFactory
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.scaleset.geo.geojson.GeoJsonModule
 import com.vividsolutions.jts.geom.Coordinate
 import com.vividsolutions.jts.geom.Envelope
 import io.em2m.search.core.model.*
-import io.em2m.utils.Coerce.objectMapper
 import java.util.*
 import kotlin.collections.HashMap
 
-class ResultConverter<T>(val mapper: DocMapper<T>) {
+class ResultConverter<T>(private val mapper: DocMapper<T>) {
 
     fun convert(request: SearchRequest, result: EsSearchResult): SearchResult<T> {
         val hits = result.hits
@@ -38,7 +38,7 @@ class ResultConverter<T>(val mapper: DocMapper<T>) {
 
     }
 
-    fun convertItems(hits: EsHits): List<T> {
+    private fun convertItems(hits: EsHits): List<T> {
         val results = ArrayList<T>()
         for (hit in hits.hits) {
             val item = convertItem(hit)
@@ -49,7 +49,7 @@ class ResultConverter<T>(val mapper: DocMapper<T>) {
         return results
     }
 
-    fun convertItem(hit: EsHit): T? {
+    private fun convertItem(hit: EsHit): T? {
         return try {
             hit.source?.let { mapper.fromDoc(it) }
         } catch (e: Exception) {
@@ -58,20 +58,18 @@ class ResultConverter<T>(val mapper: DocMapper<T>) {
         }
     }
 
-    fun convertRows(hits: EsHits, request: SearchRequest): List<List<Any?>> {
+    private fun convertRows(hits: EsHits, request: SearchRequest): List<List<Any?>> {
         val results = ArrayList<List<Any?>>()
         for (hit in hits.hits) {
             if (hit.fields != null) {
                 val row = request.fields.map { field ->
                     val values = hit.fields[field.name] ?: emptyList()
                     // TODO: Deal with field aliases
-                    val value = if (values.isEmpty()) {
-                        null
-                    } else if (values.size == 1) {
-                        mapper.toObject(values[0])
-                    } else {
-                        // definitely a hack!
-                        mapper.toObject(JsonNodeFactory.instance.arrayNode().addAll(values))
+                    val value = when {
+                        values.isEmpty() -> null
+                        values.size == 1 -> mapper.toObject(values[0])
+                        else -> // definitely a hack!
+                            mapper.toObject(JsonNodeFactory.instance.arrayNode().addAll(values))
                     }
                     value
                 }
@@ -81,16 +79,22 @@ class ResultConverter<T>(val mapper: DocMapper<T>) {
         return results
     }
 
-    fun convertAggs(request: SearchRequest, esAggResults: Map<String, EsAggResult>): Map<String, AggResult> {
-        return request.aggs.map { agg ->
+    private fun convertAggs(request: SearchRequest, esAggResults: Map<String, EsAggResult>): Map<String, AggResult> {
+        return request.aggs.mapNotNull { agg ->
             val key = agg.key
             val esValue = esAggResults[agg.key]
             if (esValue != null) {
                 val op: String? = agg.op()
                 var buckets = esValue.buckets?.map {
                     val subAggs = convertSubAggs(request, it.other)
-                    val key = it.keyAsString ?: it.key
-                    Bucket(key, it.docCount?.toLong() ?: 0, from = it.from, to = it.to, aggs = subAggs)
+                    val buckeyKey = it.keyAsString ?: it.key
+                    Bucket(buckeyKey, it.docCount?.toLong() ?: 0, from = it.from, to = it.to, aggs = subAggs)
+                }
+                if (buckets != null && agg is DateRangeAgg) {
+                    buckets = sortDateRangeBuckets(agg, buckets)
+                }
+                if (buckets != null && agg is RangeAgg) {
+                    buckets = sortRangeBuckets(agg, buckets)
                 }
                 var value: Any? = null
                 val docCount = esValue.docCount
@@ -126,19 +130,28 @@ class ResultConverter<T>(val mapper: DocMapper<T>) {
                 if (buckets == null && value == null) {
                     value = esValue.other
                 }
-                // TODO: Find correct op value
                 AggResult(key, buckets, value = value, op = op)
             } else null
-        }.filterNotNull().associateBy { it.key }
+        }.associateBy { it.key }
     }
 
-    fun convertSubAggs(request: SearchRequest, other: Map<String, Any?>): Map<String, AggResult> {
+    private fun sortDateRangeBuckets(agg: DateRangeAgg, buckets: List<Bucket>) : List<Bucket> {
+        val order = agg.ranges.mapIndexed { index, range -> range.key to index}.toMap()
+        return buckets.sortedBy { order[it.key] ?: 0 }
+    }
+
+    private fun sortRangeBuckets(agg: RangeAgg, buckets: List<Bucket>) : List<Bucket> {
+        val order = agg.ranges.mapIndexed { index, range -> range.key to index}.toMap()
+        return buckets.sortedBy { order[it.key] ?: 0 }
+    }
+
+    private fun convertSubAggs(request: SearchRequest, other: Map<String, Any?>): Map<String, AggResult> {
         return try {
             val esAggs: MutableMap<String, EsAggResult> = HashMap()
             other.forEach { key, value ->
                 val aggResult = objectMapper.convertValue(value, EsAggResult::class.java)
                 if (aggResult != null) {
-                    esAggs.put(key, aggResult)
+                    esAggs[key] = aggResult
                 }
             }
             convertAggs(request, esAggs)
@@ -148,6 +161,7 @@ class ResultConverter<T>(val mapper: DocMapper<T>) {
     }
 
     companion object {
-        val objectMapper = jacksonObjectMapper().registerModule(GeoJsonModule())
+        // TODO: Make this configurable
+        val objectMapper: ObjectMapper = jacksonObjectMapper().registerModule(GeoJsonModule())
     }
 }

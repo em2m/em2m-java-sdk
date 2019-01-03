@@ -146,7 +146,6 @@ class EsSearchDaoAggTest : FeatureTestBase() {
         sub.assertNoErrors()
     }
 
-
     @Test
     fun testDateRange() {
         val request = SearchRequest(0, 0, MatchAllQuery(), aggs = listOf(DateRangeAgg("properties.time", key = "magnitude",
