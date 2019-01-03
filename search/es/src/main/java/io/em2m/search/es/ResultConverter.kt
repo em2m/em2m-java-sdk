@@ -91,10 +91,10 @@ class ResultConverter<T>(private val mapper: DocMapper<T>) {
                     Bucket(buckeyKey, it.docCount?.toLong() ?: 0, from = it.from, to = it.to, aggs = subAggs)
                 }
                 if (buckets != null && agg is DateRangeAgg) {
-                    buckets = sortDateRangeBuckets(agg, buckets)
+                    buckets = sortRangeBuckets(agg.ranges, buckets)
                 }
                 if (buckets != null && agg is RangeAgg) {
-                    buckets = sortRangeBuckets(agg, buckets)
+                    buckets = sortRangeBuckets(agg.ranges, buckets)
                 }
                 var value: Any? = null
                 val docCount = esValue.docCount
@@ -135,14 +135,12 @@ class ResultConverter<T>(private val mapper: DocMapper<T>) {
         }.associateBy { it.key }
     }
 
-    private fun sortDateRangeBuckets(agg: DateRangeAgg, buckets: List<Bucket>) : List<Bucket> {
-        val order = agg.ranges.mapIndexed { index, range -> range.key to index}.toMap()
-        return buckets.sortedBy { order[it.key] ?: 0 }
-    }
-
-    private fun sortRangeBuckets(agg: RangeAgg, buckets: List<Bucket>) : List<Bucket> {
-        val order = agg.ranges.mapIndexed { index, range -> range.key to index}.toMap()
-        return buckets.sortedBy { order[it.key] ?: 0 }
+    private fun sortRangeBuckets(ranges: List<Range>, buckets: List<Bucket>): List<Bucket> {
+        // sort keyed buckets first in their original, then preserve resulting order for non-keyed buckets
+        val order = ranges.mapIndexed { index, range -> range.key to index }.toMap()
+        return buckets.mapIndexed { index, bucket -> index to bucket }.sortedBy {
+            order[it.second.key] ?: buckets.size+it.first
+        }.map { it.second }
     }
 
     private fun convertSubAggs(request: SearchRequest, other: Map<String, Any?>): Map<String, AggResult> {
