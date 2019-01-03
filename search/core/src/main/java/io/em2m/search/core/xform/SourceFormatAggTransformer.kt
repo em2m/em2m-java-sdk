@@ -2,6 +2,9 @@ package io.em2m.search.core.xform
 
 import io.em2m.search.core.model.*
 
+/**
+ * Provide an additional format option that is passed through to a source
+ */
 class SourceFormatAggTransformer : AggTransformer() {
 
     fun sourceFormat(format: String?, agg: Agg): String? {

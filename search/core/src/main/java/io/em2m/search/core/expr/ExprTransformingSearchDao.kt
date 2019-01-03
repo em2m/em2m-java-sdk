@@ -3,6 +3,7 @@ package io.em2m.search.core.expr
 import io.em2m.search.core.daos.SearchDaoWrapper
 import io.em2m.search.core.model.*
 import io.em2m.search.core.xform.AggResultTransformer
+import io.em2m.search.core.xform.SourceFormatAggTransformer
 import io.em2m.simplex.Simplex
 import io.em2m.simplex.model.Expr
 import rx.Observable
@@ -21,10 +22,28 @@ class ExprTransformingSearchDao<T>(simplex: Simplex, delegate: SearchDao<T>) : S
         }
         val exprFields = rowExprs.filterNotNull().flatMap { FieldKeyHandler.fields(it) }
         val delegateFields = exprFields.plus(rowNames).filterNotNull().map { Field(name = it) }
-        return delegate.search(request.copy(fields = delegateFields)).map { results ->
+        val req = request.copy(fields = delegateFields, aggs = transformAggs(request.aggs), sorts = transformSorts(request.sorts))
+        return delegate.search(req).map { results ->
             val rows = transformRows(request, results.rows, delegateFields, rowExprs)
             val aggs = transformAggResults(request, results.aggs)
             results.copy(fields = request.fields, rows = rows, aggs = aggs)
+        }
+    }
+
+    private fun transformSorts(sorts: List<DocSort>): List<DocSort> {
+        return sorts.flatMap { sort ->
+            val expr = parser.parse(sort.field)
+            val fields = FieldKeyHandler.fields(expr)
+            fields.map { field ->
+                DocSort(field, sort.direction)
+            }
+        }
+    }
+
+    private fun transformAggs(aggs: List<Agg>): List<Agg> {
+        val sourceFormatXform = SourceFormatAggTransformer()
+        return aggs.map {
+            sourceFormatXform.transform((it))
         }
     }
 

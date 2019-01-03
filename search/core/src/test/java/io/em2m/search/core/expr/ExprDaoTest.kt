@@ -19,7 +19,8 @@ class ExprDaoTest : Assert() {
             Key("ns", "key1") to ConstKeyHandler("value1"),
             Key("ns", "key2") to ConstKeyHandler("value2"),
             Key("bucket", "key") to BucketKeyKeyHandler(),
-            Key("f", "*") to FieldKeyHandler()))
+            Key("f", "*") to FieldKeyHandler(),
+            Key("field", "*") to FieldKeyHandler()))
 
     val request = SearchRequest()
 
@@ -82,6 +83,14 @@ class ExprDaoTest : Assert() {
 
         val buckets = requireNotNull(aggs["lastName"]?.buckets)
         assertEquals("FLINSTONE", buckets[0].label)
+    }
+
+    @Test
+    fun testTransformSorts() {
+        val sorts = listOf(DocSort(field = "\${lastName}, \${firstName}"))
+        val request = SearchRequest(sorts = sorts)
+        val result = dao.search(request)
+        assertNotNull(result)
     }
 
 }
