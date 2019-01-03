@@ -11,7 +11,7 @@ import kotlin.properties.Delegates
 
 class EsSearchDaoAggTest : FeatureTestBase() {
 
-   var searchDao: SearchDao<Feature> by Delegates.notNull()
+    var searchDao: SearchDao<Feature> by Delegates.notNull()
 
     @Before
     override fun before() {
@@ -117,13 +117,13 @@ class EsSearchDaoAggTest : FeatureTestBase() {
     @Test
     fun testRange() {
         val request = SearchRequest(0, 0, MatchAllQuery(), aggs = listOf(RangeAgg("properties.mag", key = "magnitude",
-                ranges = listOf(Range(from = 4.0, key = "4+")))))
+                ranges = listOf(Range(from = 4.0, key = "4+"), Range(from = 0, to = 4.0, key = "0-4")))))
         val sub = TestSubscriber<Any>()
         searchDao.search(request).doOnNext { result ->
             val agg = result.aggs["magnitude"] ?: error("agg should not be null")
             val buckets = agg.buckets ?: error("buckets should not be null")
-            assertEquals(1, buckets.size)
-            assertEquals(16, buckets.map { it.count }.sum())
+            assertEquals(2, buckets.size)
+            assertEquals(46, buckets.map { it.count }.sum())
             assertEquals("4+", buckets[0].key)
             assertEquals(4.0, buckets[0].from)
         }.subscribe(sub)
