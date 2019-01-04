@@ -42,6 +42,13 @@ class QueryTransformingSyncDao<T>(
                 }
     }
 
+    fun transformSorts(sorts: List<DocSort>): List<DocSort> {
+        return sorts.map {
+            val alias = aliases[it.field]
+            DocSort(alias?.expr ?: alias?.name ?: it.field, it.direction)
+        }
+    }
+
     fun transformRequest(request: SearchRequest): SearchRequest {
         val fields = request.fields
                 .plus(fieldSets[request.fieldSet] ?: emptyList())
@@ -56,7 +63,7 @@ class QueryTransformingSyncDao<T>(
                         } else it
                     } else it
                 }
-        val sorts = request.sorts.map { DocSort(aliases.get(it.field)?.name ?: it.field, it.direction) }
+        val sorts = transformSorts(request.sorts)
         val query = request.query?.let { transformQuery(it) }
         val aggs = transformAggs(request.aggs)
         val fieldSet = if (fieldSets.containsKey(request.fieldSet)) null else request.fieldSet

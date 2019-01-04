@@ -31,10 +31,14 @@ class ExprTransformingSyncDao<T>(simplex: Simplex, delegate: SyncDao<T>) : SyncD
 
     private fun transformSorts(sorts: List<DocSort>): List<DocSort> {
         return sorts.flatMap { sort ->
-            val expr = parser.parse(sort.field)
-            val fields = FieldKeyHandler.fields(expr)
-            fields.map { field ->
-                DocSort(field, sort.direction)
+            if (sort.field.contains("\${")) {
+                val expr = parser.parse(sort.field)
+                val fields = FieldKeyHandler.fields(expr)
+                fields.map { field ->
+                    DocSort(field, sort.direction)
+                }
+            } else {
+                listOf(sort)
             }
         }
     }
