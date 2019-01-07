@@ -4,7 +4,10 @@ import io.em2m.search.core.model.*
 
 class FieldAliasQueryTransformer(val aliases: Map<String, Field>) : QueryTransformer() {
 
-    fun applyAlias(field: String): String = aliases.getOrElse(field, { null })?.name ?: field
+    fun applyAlias(field: String): String {
+        val alias = aliases[field]
+        return alias?.expr ?: alias?.name ?: field
+    }
 
     override fun transformTermQuery(query: TermQuery) = TermQuery(applyAlias(query.field), query.value)
     override fun transformMatchQuery(query: MatchQuery) = MatchQuery(applyAlias(query.field), query.value, query.operator)
