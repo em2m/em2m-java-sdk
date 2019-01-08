@@ -170,13 +170,16 @@ class EsAggs() {
         return agg(name).with(type)
     }
 
-    fun term(name: String, field: String, size: Int, sortType: EsSortType, sortDirection: EsSortDirection, missing: Any? = null): ObjectNode {
+    fun term(name: String, field: String, size: Int, sortType: EsSortType, sortDirection: EsSortDirection, missing: Any? = null, subAggs: EsAggs? = null): ObjectNode {
         val body = agg(name, "terms")
         body.put("field", field)
         body.put("size", size)
         body.set("order", toOrder(sortType, sortDirection))
         if (missing != null) {
             body.putPOJO("missing", missing)
+        }
+        if (subAggs != null) {
+            body.putPOJO("aggs", subAggs.aggs)
         }
         return body
     }
@@ -187,7 +190,7 @@ class EsAggs() {
         return body
     }
 
-    fun dateHistogram(name: String, field: String, format: String? = null, interval: String, offset: String?, timeZone: String?): ObjectNode {
+    fun dateHistogram(name: String, field: String, format: String? = null, interval: String, offset: String?, timeZone: String?, subAggs: EsAggs? = null): ObjectNode {
         val body = agg(name, "date_histogram")
         body.put("field", field)
         if (format != null) {
@@ -200,15 +203,21 @@ class EsAggs() {
         if (timeZone != null) {
             body.put("time_zone", timeZone)
         }
+        if (subAggs != null) {
+            body.putPOJO("aggs", subAggs.aggs)
+        }
         return body
     }
 
-    fun histogram(name: String, field: String, interval: Double, offset: Double?): ObjectNode {
+    fun histogram(name: String, field: String, interval: Double, offset: Double?, subAggs: EsAggs? = null): ObjectNode {
         val body = agg(name, "histogram")
         body.put("field", field)
         body.put("interval", interval)
         if (offset != null) {
             body.put("offset", offset)
+        }
+        if (subAggs != null) {
+            body.putPOJO("aggs", subAggs.aggs)
         }
         return body
     }
@@ -219,12 +228,15 @@ class EsAggs() {
         return stats
     }
 
-    fun filter(name: String, filter: EsQuery, sortType: EsSortType, sortDirection: EsSortDirection): ObjectNode {
+    fun filter(name: String, filter: EsQuery, sortType: EsSortType, sortDirection: EsSortDirection, subAggs: EsAggs? = null): ObjectNode {
         val agg = instance.objectNode()
         aggs[name] = agg
         val filterAgg = agg.with("filter")
         filterAgg.putPOJO("query", filter)
         filterAgg.set("order", toOrder(sortType, sortDirection))
+        if (subAggs != null) {
+            filterAgg.putPOJO("aggs", subAggs.aggs)
+        }
         return filterAgg
     }
 

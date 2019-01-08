@@ -96,9 +96,14 @@ class RequestConverter(val objectMapper: ObjectMapper = jacksonObjectMapper(), v
         val result = EsAggs()
         val timeZone = DateTimeZone.forID(params["timeZone"] as? String ?: "America/Los_Angeles")
         aggs.forEach {
+            val subAggs = if (it.aggs?.isNotEmpty()) {
+                convertAggs(it.aggs, params)
+            } else {
+                null
+            }
             when (it) {
                 is TermsAgg -> {
-                    result.term(it.key, it.field, it.size, sortType(it.sort), sortDirection(it.sort), it.missing).minDocCount(it.minDocCount)
+                    result.term(it.key, it.field, it.size, sortType(it.sort), sortDirection(it.sort), it.missing, subAggs = subAggs).minDocCount(it.minDocCount)
                 }
                 is MissingAgg -> {
                     result.missing(it.key, it.field).minDocCount(it.minDocCount)
