@@ -13,6 +13,7 @@ import com.vividsolutions.jts.geom.Envelope
 import feign.Headers
 import feign.Param
 import feign.RequestLine
+import io.em2m.utils.coerce
 import java.util.*
 
 
@@ -158,6 +159,7 @@ class EsAggs() {
     fun agg(name: String): ObjectNode {
         val agg = instance.objectNode()
         aggs[name] = agg
+
         return agg
     }
 
@@ -166,12 +168,19 @@ class EsAggs() {
         return value
     }
 
-    fun agg(name: String, type: String): ObjectNode {
-        return agg(name).with(type)
+    fun agg(name: String, type: String, subAggs: EsAggs? = null): ObjectNode {
+        val agg =  agg(name)
+        if (subAggs != null) {
+            val node: ObjectNode? = subAggs.aggs.coerce()
+            if (node != null) {
+                agg.set("aggs", node)
+            }
+        }
+        return agg.with(type)
     }
 
-    fun term(name: String, field: String, size: Int, sortType: EsSortType, sortDirection: EsSortDirection, missing: Any? = null): ObjectNode {
-        val body = agg(name, "terms")
+    fun term(name: String, field: String, size: Int, sortType: EsSortType, sortDirection: EsSortDirection, missing: Any? = null, subAggs: EsAggs? = null): ObjectNode {
+        val body = agg(name, "terms", subAggs)
         body.put("field", field)
         body.put("size", size)
         body.set("order", toOrder(sortType, sortDirection))
@@ -181,14 +190,14 @@ class EsAggs() {
         return body
     }
 
-    fun missing(name: String, field: String): ObjectNode {
-        val body = agg(name, "missing")
+    fun missing(name: String, field: String, subAggs: EsAggs? = null): ObjectNode {
+        val body = agg(name, "missing", subAggs)
         body.put("field", field)
         return body
     }
 
-    fun dateHistogram(name: String, field: String, format: String? = null, interval: String, offset: String?, timeZone: String?): ObjectNode {
-        val body = agg(name, "date_histogram")
+    fun dateHistogram(name: String, field: String, format: String? = null, interval: String, offset: String?, timeZone: String?, subAggs: EsAggs? = null): ObjectNode {
+        val body = agg(name, "date_histogram", subAggs)
         body.put("field", field)
         if (format != null) {
             body.put("format", format)
@@ -200,15 +209,21 @@ class EsAggs() {
         if (timeZone != null) {
             body.put("time_zone", timeZone)
         }
+        if (subAggs != null) {
+            body.putPOJO("aggs", subAggs.aggs)
+        }
         return body
     }
 
-    fun histogram(name: String, field: String, interval: Double, offset: Double?): ObjectNode {
-        val body = agg(name, "histogram")
+    fun histogram(name: String, field: String, interval: Double, offset: Double?, subAggs: EsAggs? = null): ObjectNode {
+        val body = agg(name, "histogram", subAggs)
         body.put("field", field)
         body.put("interval", interval)
         if (offset != null) {
             body.put("offset", offset)
+        }
+        if (subAggs != null) {
+            body.putPOJO("aggs", subAggs.aggs)
         }
         return body
     }
@@ -219,12 +234,15 @@ class EsAggs() {
         return stats
     }
 
-    fun filter(name: String, filter: EsQuery, sortType: EsSortType, sortDirection: EsSortDirection): ObjectNode {
+    fun filter(name: String, filter: EsQuery, sortType: EsSortType, sortDirection: EsSortDirection, subAggs: EsAggs? = null): ObjectNode {
         val agg = instance.objectNode()
         aggs[name] = agg
         val filterAgg = agg.with("filter")
         filterAgg.putPOJO("query", filter)
         filterAgg.set("order", toOrder(sortType, sortDirection))
+        if (subAggs != null) {
+            filterAgg.putPOJO("aggs", subAggs.aggs)
+        }
         return filterAgg
     }
 
@@ -289,7 +307,7 @@ class EsAggResult(@JsonDeserialize(using = EsBucketListDeserializer::class) val 
 
     @JsonAnySetter
     fun set(name: String, value: Object) {
-        other.put(name, value)
+        other[name] = value
     }
 }
 
@@ -310,7 +328,7 @@ class EsHit(
     @JsonAnySetter
     fun set(name: String, value: Any?) {
         if (value != null) {
-            other.put(name, value)
+            other[name] = value
         }
 
     }
@@ -329,7 +347,7 @@ class EsSearchResult(
     @JsonAnySetter
     fun set(name: String, value: Any?) {
         if (value != null) {
-            other.put(name, value)
+            other[name] = value
         }
     }
 }
@@ -459,7 +477,7 @@ class EsBucketListDeserializer : JsonDeserializer<List<EsBucket>>() {
     override fun deserialize(parser: JsonParser, context: DeserializationContext): List<EsBucket> {
         val buckets = ArrayList<EsBucket>()
 
-        var current = parser.currentToken
+        val current = parser.currentToken
 
         if (current == JsonToken.START_ARRAY) {
             while (parser.nextToken() != JsonToken.END_ARRAY) {

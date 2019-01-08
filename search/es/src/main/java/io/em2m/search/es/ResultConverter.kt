@@ -17,7 +17,7 @@ class ResultConverter<T>(private val mapper: DocMapper<T>) {
         val rows = if (request.fields.isNotEmpty()) convertRows(result.hits, request) else null
         val items = if (request.fields.isEmpty()) convertItems(result.hits) else null
         val totalItems = hits.total
-        val aggs = convertAggs(request, result.aggregations)
+        val aggs = convertAggs(request.aggs, result.aggregations)
 
         val headers = mapOf("took" to result.took, "scrollId" to result.scrollId)
 
@@ -79,14 +79,14 @@ class ResultConverter<T>(private val mapper: DocMapper<T>) {
         return results
     }
 
-    private fun convertAggs(request: SearchRequest, esAggResults: Map<String, EsAggResult>): Map<String, AggResult> {
-        return request.aggs.mapNotNull { agg ->
+    private fun convertAggs(aggs: List<Agg>, esAggResults: Map<String, EsAggResult>): Map<String, AggResult> {
+        return aggs.mapNotNull { agg ->
             val key = agg.key
             val esValue = esAggResults[agg.key]
             if (esValue != null) {
                 val op: String? = agg.op()
                 var buckets = esValue.buckets?.map {
-                    val subAggs = convertSubAggs(request, it.other)
+                    val subAggs = convertSubAggs(agg.aggs, it.other)
                     val buckeyKey = it.keyAsString ?: it.key
                     Bucket(buckeyKey, it.docCount?.toLong() ?: 0, from = it.from, to = it.to, aggs = subAggs)
                 }
@@ -143,7 +143,7 @@ class ResultConverter<T>(private val mapper: DocMapper<T>) {
         }.map { it.second }
     }
 
-    private fun convertSubAggs(request: SearchRequest, other: Map<String, Any?>): Map<String, AggResult> {
+    private fun convertSubAggs(aggs: List<Agg>, other: Map<String, Any?>): Map<String, AggResult> {
         return try {
             val esAggs: MutableMap<String, EsAggResult> = HashMap()
             other.forEach { key, value ->
@@ -152,7 +152,7 @@ class ResultConverter<T>(private val mapper: DocMapper<T>) {
                     esAggs[key] = aggResult
                 }
             }
-            convertAggs(request, esAggs)
+            convertAggs(aggs, esAggs)
         } catch (ex: Throwable) {
             emptyMap()
         }
