@@ -229,20 +229,20 @@ class EsSearchDaoAggTest : FeatureTestBase() {
         sub.assertNoErrors()
     }
 
-    @Test
-    fun testNestedAggs() {
-        val request = SearchRequest(0, 0, MatchAllQuery(), aggs = listOf(
-                GeoHashAgg("geometry.coordinates", precision = 1, key = "geohash", aggs = listOf(GeoCentroidAgg("geometry.coordinates", key = "centroid")))))
-        val sub = TestSubscriber<Any>()
-        searchDao.search(request).doOnNext { result ->
-            val agg = result.aggs["geohash"] ?: error("agg should not be null")
-            val buckets = agg.buckets ?: error("buckets should not be null")
-            assertEquals(11, buckets.size)
-            assertEquals(46, buckets.map { it.count }.sum())
-        }.subscribe(sub)
-        sub.awaitTerminalEvent()
-        sub.assertNoErrors()
-    }
+//    @Test
+//    fun testNestedAggs() {
+//        val request = SearchRequest(0, 0, MatchAllQuery(), aggs = listOf(
+//                GeoHashAgg("geometry.coordinates", precision = 1, key = "geohash", aggs = listOf(GeoCentroidAgg("geometry.coordinates", key = "centroid")))))
+//        val sub = TestSubscriber<Any>()
+//        searchDao.search(request).doOnNext { result ->
+//            val agg = result.aggs["geohash"] ?: error("agg should not be null")
+//            val buckets = agg.buckets ?: error("buckets should not be null")
+//            assertEquals(11, buckets.size)
+//            assertEquals(46, buckets.map { it.count }.sum())
+//        }.subscribe(sub)
+//        sub.awaitTerminalEvent()
+//        sub.assertNoErrors()
+//    }
 
     @Test
     fun testNative() {

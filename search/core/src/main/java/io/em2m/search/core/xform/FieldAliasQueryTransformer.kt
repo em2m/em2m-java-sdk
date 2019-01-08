@@ -6,7 +6,7 @@ class FieldAliasQueryTransformer(val aliases: Map<String, Field>) : QueryTransfo
 
     fun applyAlias(field: String): String {
         val alias = aliases[field]
-        return alias?.expr ?: alias?.name ?: field
+        return /*alias?.expr ?:*/ alias?.name ?: field
     }
 
     override fun transformTermQuery(query: TermQuery) = TermQuery(applyAlias(query.field), query.value)
