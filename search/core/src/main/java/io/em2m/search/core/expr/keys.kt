@@ -19,11 +19,17 @@ interface Fielded {
 class FieldKeyHandler : KeyHandler, Fielded {
 
     override fun fields(key: Key): List<String> {
-        return listOf(key.name)
+        return key.name.split(",").map { it.trim()}
     }
 
     override fun call(key: Key, context: ExprContext): Any? {
-        return RowContext(context).fieldValues[key.name]
+        val rowContext = RowContext(context)
+        val values = fields(key).map {field ->
+            rowContext.fieldValues[field]
+        }
+        return if (values.size == 1) {
+            values.first()
+        } else values
     }
 
     companion object {

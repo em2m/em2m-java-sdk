@@ -24,6 +24,25 @@ class CapitalizePipe : PipeTransform {
     }
 }
 
+class JoinPipe : PipeTransform {
+
+    var separator = ", "
+
+    override fun args(args: List<String>) {
+        if (args.isNotEmpty()) {
+            separator = args[0]
+        }
+    }
+
+    override fun transform(value: Any?, context: ExprContext): Any? {
+        return when (value) {
+            is List<*> -> value.joinToString(separator)
+            is Array<*> -> value.joinToString(separator)
+            else -> value
+        }
+    }
+}
+
 
 open class SingleStringHandler(private val op: (String?, String?) -> Boolean) : ConditionHandler {
 
@@ -129,7 +148,7 @@ val StandardStringConditions = mapOf(
 
 object Strings {
 
-    val pipes = BasicPipeTransformResolver(mapOf("upperCase" to UpperCasePipe(), "capitalize" to CapitalizePipe()))
+    val pipes = BasicPipeTransformResolver(mapOf("upperCase" to UpperCasePipe(), "capitalize" to CapitalizePipe(), "join" to JoinPipe()))
     val keys = BasicKeyResolver()
     val conditions = BasicConditionResolver(StandardStringConditions)
 
