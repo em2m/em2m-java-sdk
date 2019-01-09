@@ -2,7 +2,6 @@ package io.em2m.simplex.std
 
 import io.em2m.simplex.model.*
 import io.em2m.utils.coerce
-import sun.jvm.hotspot.oops.CellTypeState.value
 import java.util.regex.Matcher
 
 
