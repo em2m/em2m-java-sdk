@@ -19,6 +19,7 @@ class Simplex {
             .delegate(Strings.pipes)
             .delegate(I18n.pipes)
             .delegate(Dates.pipes)
+            .delegate(Arrays.pipes)
 
     private val conditions = BasicConditionResolver()
             .delegate(Strings.conditions)
