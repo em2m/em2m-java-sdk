@@ -2,25 +2,43 @@ package io.em2m.simplex.std
 
 import io.em2m.simplex.model.*
 import io.em2m.utils.coerce
+import sun.jvm.hotspot.oops.CellTypeState.value
 import java.util.regex.Matcher
 
 
 class UpperCasePipe : PipeTransform {
     override fun transform(value: Any?, context: ExprContext): Any? {
-        return if (value is String) {
-            value.toUpperCase()
-        } else
+        return if (value is List<*>) {
+            value.map { it?.toString()?.toUpperCase() }
+        } else if (value is Array<*>) {
+            value.map { it?.toString()?.toUpperCase() }
+        } else {
             value?.toString()?.toUpperCase()
+        }
     }
-
 }
 
 class CapitalizePipe : PipeTransform {
     override fun transform(value: Any?, context: ExprContext): Any? {
-        return if (value is String) {
-            value.capitalize()
-        } else
+        return if (value is List<*>) {
+            value.map { it?.toString()?.capitalize() }
+        } else if (value is Array<*>) {
+            value.map { it?.toString()?.capitalize() }
+        } else {
             value?.toString()?.capitalize()
+        }
+    }
+}
+
+class TrimPipe : PipeTransform {
+    override fun transform(value: Any?, context: ExprContext): Any? {
+        return if (value is List<*>) {
+            value.map { it?.toString()?.trim() }
+        } else if (value is Array<*>) {
+            value.map { it?.toString()?.trim() }
+        } else {
+            value?.toString()?.trim()
+        }
     }
 }
 
@@ -148,7 +166,11 @@ val StandardStringConditions = mapOf(
 
 object Strings {
 
-    val pipes = BasicPipeTransformResolver(mapOf("upperCase" to UpperCasePipe(), "capitalize" to CapitalizePipe(), "join" to JoinPipe()))
+    val pipes = BasicPipeTransformResolver(mapOf(
+            "upperCase" to UpperCasePipe(),
+            "capitalize" to CapitalizePipe(),
+            "trim" to TrimPipe(),
+            "join" to JoinPipe()))
     val keys = BasicKeyResolver()
     val conditions = BasicConditionResolver(StandardStringConditions)
 
