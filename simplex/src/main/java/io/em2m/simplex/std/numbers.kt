@@ -130,7 +130,7 @@ open class SingleNumberHandler(private val op: (Number?, Number?) -> Boolean) : 
     }
 }
 
-class NumberEquals : SingleNumberHandler({ k, v -> k == v })
+class NumberEquals : SingleNumberHandler({ k, v -> compareNumbers(k, v) == 0 })
 class NumberGreaterThan : SingleNumberHandler({ k, v -> compareNumbers(k, v) > 0 })
 class NumberGreaterThanEquals : SingleNumberHandler({ k, v -> compareNumbers(k, v) >= 0 })
 class NumberLessThan : SingleNumberHandler({ k, v -> compareNumbers(k, v) < 0 })
@@ -147,14 +147,14 @@ val StandardNumberConditions = mapOf(
 object Numbers {
 
     val pipes = BasicPipeTransformResolver()
-            .transform("number") { _ -> NumberPipe() }
-            .transform("round") { _ -> RoundPipe() }
-            .transform("multiply") { _ -> MultiplyPipe() }
-            .transform("add") { _ -> AddPipe() }
+            .transform("number") { NumberPipe() }
+            .transform("round") { RoundPipe() }
+            .transform("multiply") { MultiplyPipe() }
+            .transform("add") { AddPipe() }
 
     val keys = BasicKeyResolver()
-            .key(Key("Math", "PI")) { _ -> ConstKeyHandler(Math.PI) }
-            .key(Key("Math", "random")) { _ -> RandomKey() }
+            .key(Key("Math", "PI")) { ConstKeyHandler(Math.PI) }
+            .key(Key("Math", "random")) { RandomKey() }
 
     val conditions = BasicConditionResolver(StandardNumberConditions)
 
