@@ -39,6 +39,18 @@ class FormatDatePipe : PipeTransform {
     }
 }
 
+class FormatDurationPipe : PipeTransform {
+
+    override fun transform(value: Any?, context: ExprContext): Any? {
+        val longValue: Long? = value?.coerce()
+        return if (longValue != null) {
+            val duration = Duration.ofMillis(longValue)
+            duration.fromNow(true)
+        } else value
+    }
+
+}
+
 class FromNowPipe : PipeTransform {
 
     override fun transform(value: Any?, context: ExprContext): Any? {
@@ -120,9 +132,10 @@ val StandardDateConditions = mapOf(
 object Dates {
 
     val pipes = BasicPipeTransformResolver()
-            .transform("formatDate") { _ -> FormatDatePipe() }
-            .transform("dateMath") { _ -> DateMathPipe() }
-            .transform("fromNow") { _ -> FromNowPipe() }
+            .transform("formatDate") { FormatDatePipe() }
+            .transform("formatDuration") { FormatDurationPipe() }
+            .transform("dateMath") { DateMathPipe() }
+            .transform("fromNow") { FromNowPipe() }
 
     val keys = BasicKeyResolver()
             .key(Key("Date", "now")) { _ -> DateNowHandler() }
