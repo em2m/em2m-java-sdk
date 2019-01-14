@@ -27,6 +27,7 @@ class ExprTest : Assert() {
             Key("ns", "key2") to ConstKeyHandler("value2"),
             Key("ns", "dateKey") to ConstKeyHandler("2015-04-21T17:31:06-07"),
             Key("ns", "pie") to ConstKeyHandler(3.14),
+            Key("ns", "duration") to ConstKeyHandler(210_000),
             Key("ns", "five") to ConstKeyHandler(5)))
             .delegate(Numbers.keys)
 
@@ -88,6 +89,14 @@ class ExprTest : Assert() {
         val expr = requireNotNull(simplex.parser.parse(exprString))
         val result = expr.call(emptyMap())
         assertEquals("2015", result)
+    }
+
+    @Test
+    fun testFormatDuration() {
+        val exprString = "\${ns:duration | formatDuration}"
+        val expr = requireNotNull(simplex.parser.parse(exprString))
+        val result = expr.call(emptyMap())
+        assertEquals("3 minutes", result)
     }
 
     @Test
