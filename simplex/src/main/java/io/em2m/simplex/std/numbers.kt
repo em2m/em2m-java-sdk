@@ -47,7 +47,7 @@ class RoundPipe : PipeTransform {
 }
 
 
-class MultiplyPipe : PipeTransform {
+class TimesPIpe : PipeTransform {
 
     private var multiplier: Double = 0.0
 
@@ -66,7 +66,26 @@ class MultiplyPipe : PipeTransform {
     }
 }
 
-class AddPipe : PipeTransform {
+class DivPipe : PipeTransform {
+
+    private var divisor: Double = 0.0
+
+    override fun args(args: List<String>) {
+        if (args.isNotEmpty()) {
+            divisor = args[0].toDouble()
+        }
+    }
+
+    override fun transform(value: Any?, context: ExprContext): Any? {
+        return try {
+            value.coerce<Double>()?.div(divisor)
+        } catch (ex: Exception) {
+            null
+        }
+    }
+}
+
+class PlusPipe : PipeTransform {
 
     private var addend: Double = 0.0
 
@@ -79,6 +98,26 @@ class AddPipe : PipeTransform {
     override fun transform(value: Any?, context: ExprContext): Any? {
         return try {
             value.coerce<Double>()?.plus(addend)
+        } catch (ex: Exception) {
+            null
+        }
+
+    }
+}
+
+class MinusPipe : PipeTransform {
+
+    private var addend: Double = 0.0
+
+    override fun args(args: List<String>) {
+        if (args.isNotEmpty()) {
+            addend = args[0].toDouble()
+        }
+    }
+
+    override fun transform(value: Any?, context: ExprContext): Any? {
+        return try {
+            value.coerce<Double>()?.minus(addend)
         } catch (ex: Exception) {
             null
         }
@@ -149,8 +188,13 @@ object Numbers {
     val pipes = BasicPipeTransformResolver()
             .transform("number") { NumberPipe() }
             .transform("round") { RoundPipe() }
-            .transform("multiply") { MultiplyPipe() }
-            .transform("add") { AddPipe() }
+            .transform("times") { TimesPIpe() }
+            .transform("div") { DivPipe() }
+            .transform("plus") { PlusPipe() }
+            .transform("minus") { MinusPipe() }
+            // deprecated?
+            .transform("multiply") { TimesPIpe() }
+            .transform("add") { PlusPipe() }
 
     val keys = BasicKeyResolver()
             .key(Key("Math", "PI")) { ConstKeyHandler(Math.PI) }
