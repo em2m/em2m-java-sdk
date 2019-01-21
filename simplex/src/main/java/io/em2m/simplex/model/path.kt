@@ -107,11 +107,16 @@ class PathExpr(val path: String) {
 
 }
 
-class PathKeyHandler(val simplex: Simplex) : KeyHandler {
+class PathKeyHandler(val simplex: Simplex, val prefix: String? = null, val addSeparator: Boolean = true) : KeyHandler {
 
     override fun call(key: Key, context: ExprContext): Any? {
-        return simplex.getPath(key.name, context)
+        return if (prefix == null) {
+            simplex.getPath(key.name, context)
+        } else if (addSeparator) {
+            simplex.getPath(prefix + "." + key.name, context)
+        } else {
+            simplex.getPath(prefix + key.name, context)
+        }
     }
-
 }
 
