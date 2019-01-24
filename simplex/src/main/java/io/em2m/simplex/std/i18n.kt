@@ -25,6 +25,6 @@ class SelectPipe : PipeTransform {
 
 object I18n {
 
-    val pipes = BasicPipeTransformResolver(mapOf("select" to SelectPipe()))
-
+    val pipes = BasicPipeTransformResolver()
+            .transform("select") { SelectPipe() }
 }

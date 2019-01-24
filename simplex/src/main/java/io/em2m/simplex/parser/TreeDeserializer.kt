@@ -10,7 +10,7 @@ import io.em2m.simplex.Simplex
 import io.em2m.simplex.model.*
 
 
-class TreeDeserializer(simplex: Simplex = Simplex()) : JsonDeserializer<Expr>() {
+class TreeDeserializer(val simplex: Simplex = Simplex()) : JsonDeserializer<Expr>() {
 
     val parser = simplex.parser
 
@@ -19,7 +19,7 @@ class TreeDeserializer(simplex: Simplex = Simplex()) : JsonDeserializer<Expr>() 
         return parse(node as JsonNode)
     }
 
-    private fun parse(node: JsonNode): Expr {
+    private fun parse(node: JsonNode, field: String? = null): Expr {
         return when (node) {
             is BinaryNode -> SinglePartExpr(ConstPart(node.binaryValue()))
             is BooleanNode -> SinglePartExpr(ConstPart(node.booleanValue()))
@@ -39,8 +39,11 @@ class TreeDeserializer(simplex: Simplex = Simplex()) : JsonDeserializer<Expr>() 
     }
 
     private fun parseObject(node: ObjectNode): ObjectExpr {
-        val fields = node.fieldNames().asSequence()
-        return ObjectExpr(fields.map { it to parse(node[it]) }.toMap())
+        val fields = node.fieldNames().asSequence().map { f ->
+            val fieldNode = node[f]
+            FieldExpr(f, parse(fieldNode))
+        }.toList()
+        return ObjectExpr(fields)
     }
 
 }

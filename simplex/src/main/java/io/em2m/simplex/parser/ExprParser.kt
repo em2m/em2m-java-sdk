@@ -28,7 +28,7 @@ class ExprParser(private val keyResolver: KeyResolver, private val pipeTransform
         return results
     }
 
-    private fun parsePipe(text: String): Part {
+     private fun parsePipe(text: String): Part {
         val splits = text.split('|')
         val key = Key.parse(splits.first().trim())
         val handler = keyResolver.find(key)
