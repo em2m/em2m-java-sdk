@@ -1,11 +1,9 @@
 package io.em2m.simplex
 
+import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import io.em2m.simplex.model.BasicKeyResolver
-import io.em2m.simplex.model.ConstKeyHandler
-import io.em2m.simplex.model.Expr
-import io.em2m.simplex.model.Key
+import io.em2m.simplex.model.*
 import io.em2m.simplex.parser.SimplexModule
 import io.em2m.simplex.std.Numbers
 import org.junit.Assert.assertEquals
@@ -15,14 +13,18 @@ import org.junit.Test
 
 class TreeTest {
 
+    val people = listOf(mapOf("name" to "Fred"), mapOf("name" to "Barney"), mapOf("name" to "Wilma"), mapOf("name" to "Betty"))
+
     val keyResolver = BasicKeyResolver(mapOf(
             Key("ns", "key1") to ConstKeyHandler("value1"),
-            Key("ns", "key2") to ConstKeyHandler("value2")))
+            Key("ns", "key2") to ConstKeyHandler("value2"),
+            Key("ns", "people") to ConstKeyHandler(people)
+    ))
             .delegate(Numbers.keys)
 
     val simplex = Simplex().keys(keyResolver)
 
-    val mapper = jacksonObjectMapper().registerModule(SimplexModule(simplex))
+    val mapper = jacksonObjectMapper().registerModule(SimplexModule(simplex)).enable(SerializationFeature.INDENT_OUTPUT)
 
     @Test
     fun testParseValue() {
@@ -54,5 +56,47 @@ class TreeTest {
     }
 
     data class Rule(val obj: Expr, val value: Expr)
+
+    @Test
+    fun testTags() {
+        val json = """
+        {
+          "Hello": {
+            "@if": "#{ns:key1 | cond:StringEquals:value1}",
+            "@repeat": "#{ns:people}",
+            "name": "#{repeat:item.name}",
+            "index": "#{repeat:index}",
+            "@container second": {
+              "@if": "#{repeat:index | plus:1 | cond:NumberEquals:2}",
+              "second": "This is the second item"
+            },
+            "@container odd": {
+              "@if": "#{repeat:odd}",
+              "label": "This item is odd!"
+             },
+            "@container even": {
+              "@if": "#{repeat:even}",
+              "label": "This item is even!"
+             },
+             "@container last": {
+               "@if": "#{repeat:last}",
+               "last": "This is the last item!"
+             },
+             "@container first": {
+               "@if": "#{repeat:first}",
+               "first": "This is the first item!"
+             }
+          },
+          "Goodbye": {
+            "@if": "#{ns:key1 | cond:StringEquals:value1}",
+            "@value": "Space"
+          }
+        }
+        """.trimIndent().replace("#", "$")
+        val tree: Expr = mapper.readValue(json)
+         val obj = tree.call(emptyMap())
+        println(mapper.writeValueAsString(obj))
+        assertNotNull(obj)
+    }
 
 }
