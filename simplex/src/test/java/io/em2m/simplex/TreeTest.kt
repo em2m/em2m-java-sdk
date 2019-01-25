@@ -88,11 +88,16 @@ class TreeTest {
              }
           },
           "Goodbye": {
-            "@if": "#{ns:key1 | cond:StringEquals:value1}",
+            "@if": {
+              "StringEquals": {
+                "ns:key1" : "value1"
+              }
+            },
             "@value": "Space"
           }
         }
         """.trimIndent().replace("#", "$")
+        println(json)
         val tree: Expr = mapper.readValue(json)
          val obj = tree.call(emptyMap())
         println(mapper.writeValueAsString(obj))
