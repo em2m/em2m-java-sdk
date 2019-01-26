@@ -77,15 +77,15 @@ class TreeTest {
             "@container even": {
               "@if": "#{repeat:even}",
               "label": "This item is even!"
-             },
-             "@container last": {
-               "@if": "#{repeat:last}",
-               "last": "This is the last item!"
-             },
-             "@container first": {
-               "@if": "#{repeat:first}",
-               "first": "This is the first item!"
-             }
+            },
+            "@container last": {
+              "@if": "#{repeat:last}",
+              "last": "This is the last item!"
+            },
+            "@container first": {
+              "@if": "#{repeat:first}",
+              "first": "This is the first item!"
+            }
           },
           "Goodbye": {
             "@if": {
