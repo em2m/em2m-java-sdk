@@ -77,22 +77,27 @@ class TreeTest {
             "@container even": {
               "@if": "#{repeat:even}",
               "label": "This item is even!"
-             },
-             "@container last": {
-               "@if": "#{repeat:last}",
-               "last": "This is the last item!"
-             },
-             "@container first": {
-               "@if": "#{repeat:first}",
-               "first": "This is the first item!"
-             }
+            },
+            "@container last": {
+              "@if": "#{repeat:last}",
+              "last": "This is the last item!"
+            },
+            "@container first": {
+              "@if": "#{repeat:first}",
+              "first": "This is the first item!"
+            }
           },
           "Goodbye": {
-            "@if": "#{ns:key1 | cond:StringEquals:value1}",
+            "@if": {
+              "StringEquals": {
+                "ns:key1" : "value1"
+              }
+            },
             "@value": "Space"
           }
         }
         """.trimIndent().replace("#", "$")
+        println(json)
         val tree: Expr = mapper.readValue(json)
          val obj = tree.call(emptyMap())
         println(mapper.writeValueAsString(obj))
