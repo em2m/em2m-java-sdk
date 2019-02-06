@@ -33,9 +33,9 @@ open class BasicProcessor<T>(private val flowResolver: FlowResolver<T>, private 
 
     override fun errorTransformer(value: T): Observable.Transformer<T, T> {
 
-        val flow = flowResolver.findFlow(value) ?: throw FlowNotFound("")
+        val flow = flowResolver.findFlow(value)
 
-        val transformers = flow.transformers
+        val transformers = (flow?.transformers ?: emptyList())
                 .plus(standardXforms)
                 .filter { it.priority >= Priorities.ERROR }
                 .sortedBy { it.priority }
