@@ -1,6 +1,8 @@
 package io.em2m.simplex.std
 
 import io.em2m.simplex.model.*
+import io.em2m.utils.coerce
+import java.lang.Exception
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.text.DecimalFormat
@@ -43,6 +45,86 @@ class RoundPipe : PipeTransform {
     }
 
 }
+
+
+class TimesPIpe : PipeTransform {
+
+    private var multiplier: Double = 0.0
+
+    override fun args(args: List<String>) {
+        if (args.isNotEmpty()) {
+            multiplier = args[0].toDouble()
+        }
+    }
+
+    override fun transform(value: Any?, context: ExprContext): Any? {
+        return try {
+            value.coerce<Double>()?.times(multiplier)
+        } catch (ex: Exception) {
+            null
+        }
+    }
+}
+
+class DivPipe : PipeTransform {
+
+    private var divisor: Double = 0.0
+
+    override fun args(args: List<String>) {
+        if (args.isNotEmpty()) {
+            divisor = args[0].toDouble()
+        }
+    }
+
+    override fun transform(value: Any?, context: ExprContext): Any? {
+        return try {
+            value.coerce<Double>()?.div(divisor)
+        } catch (ex: Exception) {
+            null
+        }
+    }
+}
+
+class PlusPipe : PipeTransform {
+
+    private var addend: Double = 0.0
+
+    override fun args(args: List<String>) {
+        if (args.isNotEmpty()) {
+            addend = args[0].toDouble()
+        }
+    }
+
+    override fun transform(value: Any?, context: ExprContext): Any? {
+        return try {
+            value.coerce<Double>()?.plus(addend)
+        } catch (ex: Exception) {
+            null
+        }
+
+    }
+}
+
+class MinusPipe : PipeTransform {
+
+    private var addend: Double = 0.0
+
+    override fun args(args: List<String>) {
+        if (args.isNotEmpty()) {
+            addend = args[0].toDouble()
+        }
+    }
+
+    override fun transform(value: Any?, context: ExprContext): Any? {
+        return try {
+            value.coerce<Double>()?.minus(addend)
+        } catch (ex: Exception) {
+            null
+        }
+
+    }
+}
+
 
 class RandomKey : KeyHandler {
 
@@ -87,7 +169,7 @@ open class SingleNumberHandler(private val op: (Number?, Number?) -> Boolean) : 
     }
 }
 
-class NumberEquals : SingleNumberHandler({ k, v -> k == v })
+class NumberEquals : SingleNumberHandler({ k, v -> compareNumbers(k, v) == 0 })
 class NumberGreaterThan : SingleNumberHandler({ k, v -> compareNumbers(k, v) > 0 })
 class NumberGreaterThanEquals : SingleNumberHandler({ k, v -> compareNumbers(k, v) >= 0 })
 class NumberLessThan : SingleNumberHandler({ k, v -> compareNumbers(k, v) < 0 })
@@ -104,12 +186,19 @@ val StandardNumberConditions = mapOf(
 object Numbers {
 
     val pipes = BasicPipeTransformResolver()
-            .transform("number") { _ -> NumberPipe() }
-            .transform("round") { _ -> RoundPipe() }
+            .transform("number") { NumberPipe() }
+            .transform("round") { RoundPipe() }
+            .transform("times") { TimesPIpe() }
+            .transform("div") { DivPipe() }
+            .transform("plus") { PlusPipe() }
+            .transform("minus") { MinusPipe() }
+            // deprecated?
+            .transform("multiply") { TimesPIpe() }
+            .transform("add") { PlusPipe() }
 
     val keys = BasicKeyResolver()
-            .key(Key("Math", "PI")) { _ -> ConstKeyHandler(Math.PI) }
-            .key(Key("Math", "random")) { _ -> RandomKey() }
+            .key(Key("Math", "PI")) { ConstKeyHandler(Math.PI) }
+            .key(Key("Math", "random")) { RandomKey() }
 
     val conditions = BasicConditionResolver(StandardNumberConditions)
 

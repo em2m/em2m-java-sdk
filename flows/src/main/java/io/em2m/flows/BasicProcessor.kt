@@ -1,33 +1,23 @@
 package io.em2m.flows
 
-import com.google.inject.Guice
-import com.google.inject.Injector
-import com.google.inject.Module
 import rx.Observable
-import kotlin.reflect.KClass
+import rx.Observable.just
 
 @Suppress("unused")
-class BasicProcessor<T>(private val flowResolver: FlowResolver<T>, private val standardXforms: List<Transformer<T>> = emptyList()) : Processor<T> {
+open class BasicProcessor<T>(private val flowResolver: FlowResolver<T>, private val standardXforms: List<Transformer<T>> = emptyList()) : Processor<T> {
 
-    override fun process(key: String, value: T): Observable<T> {
-        return process(key, Observable.just(value))
+
+    override fun process(value: T): Observable<T> {
+        return just(value).compose(transformer(value))
     }
 
-    override fun process(key: String, obs: Observable<T>): Observable<T> {
-        return obs.compose(transformer(key))
+    override fun handleError(value: T): Observable<T> {
+        return just(value).compose(errorTransformer(value))
     }
 
-    override fun handleError(key: String, value: T): Observable<T> {
-        return handleError(key, Observable.just(value))
-    }
+    override fun transformer(value: T): Observable.Transformer<T, T> {
 
-    override fun handleError(key: String, obs: Observable<T>): Observable<T> {
-        return obs.compose(errorTransformer(key))
-    }
-
-    override fun transformer(key: String): Observable.Transformer<T, T> {
-
-        val flow = flowResolver.findFlow(key) ?: throw FlowNotFound(key)
+        val flow = flowResolver.findFlow(value) ?: throw FlowNotFound("")
 
         val transformers = flow.transformers
                 .plus(standardXforms)
@@ -41,11 +31,11 @@ class BasicProcessor<T>(private val flowResolver: FlowResolver<T>, private val s
         }
     }
 
-    override fun errorTransformer(key: String): Observable.Transformer<T, T> {
+    override fun errorTransformer(value: T): Observable.Transformer<T, T> {
 
-        val flow = flowResolver.findFlow(key) ?: throw FlowNotFound(key)
+        val flow = flowResolver.findFlow(value)
 
-        val transformers = flow.transformers
+        val transformers = (flow?.transformers ?: emptyList())
                 .plus(standardXforms)
                 .filter { it.priority >= Priorities.ERROR }
                 .sortedBy { it.priority }
@@ -75,52 +65,6 @@ class BasicProcessor<T>(private val flowResolver: FlowResolver<T>, private val s
         override fun call(obs: Observable<T>): Observable<T> {
             return flow.main(obs)
         }
-    }
-
-    class Builder<T> {
-
-        private val classes = HashMap<String, KClass<out Flow<T>>>()
-        private val instances = HashMap<String, Flow<T>>()
-        private val modules = ArrayList<Module>()
-        private var injector: Injector? = null
-        private val xforms = ArrayList<Transformer<T>>()
-
-        fun injector(injector: Injector): Builder<T> {
-            this.injector = injector
-            return this
-        }
-
-        fun module(module: Module): Builder<T> {
-            modules.add(module)
-            return this
-        }
-
-        fun transformer(transformer: Transformer<T>): Builder<T> {
-            xforms.add(transformer)
-            return this
-        }
-
-        fun flow(key: String, flow: Flow<T>): Builder<T> {
-            instances[key] = flow
-            return this
-        }
-
-        fun flow(key: String, flowClass: KClass<out Flow<T>>): Builder<T> {
-            classes[key] = flowClass
-            return this
-        }
-
-        fun flow(flowClass: KClass<out Flow<T>>): Builder<T> {
-            classes[requireNotNull(flowClass.simpleName)] = flowClass
-            return this
-        }
-
-        fun build(): Processor<T> {
-            val injector = injector?.createChildInjector(modules) ?: Guice.createInjector(modules)
-            val resolver = LookupFlowResolver(injector, classes, instances)
-            return BasicProcessor(resolver, xforms)
-        }
-
     }
 
 }

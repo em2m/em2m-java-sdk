@@ -18,7 +18,7 @@ class QueryTransformerTest {
     @Test
     fun testSimplifyBool() {
         val tq = TermQuery("field", "value")
-        val q1 = AndQuery(tq)
+        val q1 = AndQuery(tq, MatchAllQuery())
         val q2 = q1.simplify()
         assertEquals(tq, q2)
     }

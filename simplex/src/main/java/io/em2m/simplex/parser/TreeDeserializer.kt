@@ -9,10 +9,11 @@ import com.fasterxml.jackson.databind.node.*
 import io.em2m.simplex.Simplex
 import io.em2m.simplex.model.*
 
-
-class TreeDeserializer(simplex: Simplex = Simplex()) : JsonDeserializer<Expr>() {
+class TreeDeserializer(val simplex: Simplex = Simplex()) : JsonDeserializer<Expr>() {
 
     val parser = simplex.parser
+
+    val conditionsDeserializer = ConditionsDeserializer(simplex)
 
     override fun deserialize(jsonParser: JsonParser, context: DeserializationContext): Expr {
         val node = jsonParser.readValueAsTree<TreeNode>()
@@ -38,9 +39,22 @@ class TreeDeserializer(simplex: Simplex = Simplex()) : JsonDeserializer<Expr>() 
         return ArrayExpr(node.map { parse(it) })
     }
 
+    private fun parseIf(node: TreeNode): Expr {
+        return conditionsDeserializer.parseCondition(node)
+    }
+
     private fun parseObject(node: ObjectNode): ObjectExpr {
-        val fields = node.fieldNames().asSequence()
-        return ObjectExpr(fields.map { it to parse(node[it]) }.toMap())
+        val fields = node.fieldNames().asSequence().map { f ->
+            val fieldNode = node[f]
+            val expr = if (f == "@if" && (
+                            fieldNode is ObjectNode || fieldNode is ArrayNode)) {
+                parseIf(fieldNode)
+            } else {
+                parse(fieldNode)
+            }
+            FieldExpr(f, expr)
+        }.toList()
+        return ObjectExpr(fields)
     }
 
 }

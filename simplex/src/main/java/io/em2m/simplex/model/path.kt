@@ -52,11 +52,22 @@ interface PathPart {
 
 class PropertyPathPart(val property: String) : PathPart {
 
+    val index = property.toIntOrNull()
+
     override fun call(obj: Any?): Any? {
+
         val result = when (obj) {
             is Map<*, *> -> obj[property]
             is ObjectNode -> obj.get(property)
-            else -> BeanHelper.getPropertyValue(obj, property)
+            else -> {
+                if (obj is List<*> && index != null) {
+                    obj[index]
+                } else if (obj is Array<*> && index != null) {
+                    obj[index]
+                } else {
+                    BeanHelper.getPropertyValue(obj, property)
+                }
+            }
         }
         return if (result is JsonNode) {
             unwrapNode(result)
@@ -72,7 +83,7 @@ class PropertyPathPart(val property: String) : PathPart {
             is POJONode -> node.pojo
             is TextNode -> node.textValue()
             is NumericNode -> node.numberValue()
-        // TODO - Unwrap arrays
+            // TODO - Unwrap arrays
             else -> node
         }
     }
@@ -96,11 +107,16 @@ class PathExpr(val path: String) {
 
 }
 
-class PathKeyHandler(val simplex: Simplex) : KeyHandler {
+class PathKeyHandler(val simplex: Simplex, val prefix: String? = null, val addSeparator: Boolean = true) : KeyHandler {
 
     override fun call(key: Key, context: ExprContext): Any? {
-        return simplex.getPath(key.name, context)
+        return if (prefix == null) {
+            simplex.getPath(key.name, context)
+        } else if (addSeparator) {
+            simplex.getPath(prefix + "." + key.name, context)
+        } else {
+            simplex.getPath(prefix + key.name, context)
+        }
     }
-
 }
 

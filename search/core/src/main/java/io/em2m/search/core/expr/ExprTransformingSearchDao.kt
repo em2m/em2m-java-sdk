@@ -3,6 +3,7 @@ package io.em2m.search.core.expr
 import io.em2m.search.core.daos.SearchDaoWrapper
 import io.em2m.search.core.model.*
 import io.em2m.search.core.xform.AggResultTransformer
+import io.em2m.search.core.xform.SourceFormatAggTransformer
 import io.em2m.simplex.Simplex
 import io.em2m.simplex.model.Expr
 import rx.Observable
@@ -13,18 +14,40 @@ class ExprTransformingSearchDao<T>(simplex: Simplex, delegate: SearchDao<T>) : S
 
     override fun search(request: SearchRequest): Observable<SearchResult<T>> {
 
-        val rowExprs = request.fields.map { it.expr?.let { parser.parse(it) } }
-        val rowNames = request.fields.map {
-            if (it.expr == null && it.name != null) {
-                it.name
+        val rowExprs = request.fields.map { field -> field.expr?.let { parser.parse(it) } }
+        val rowNames = request.fields.map { field ->
+            if (field.expr == null && field.name != null) {
+                field.name
             } else null
         }
         val exprFields = rowExprs.filterNotNull().flatMap { FieldKeyHandler.fields(it) }
         val delegateFields = exprFields.plus(rowNames).filterNotNull().map { Field(name = it) }
-        return delegate.search(request.copy(fields = delegateFields)).map { results ->
+        val req = request.copy(fields = delegateFields, aggs = transformAggs(request.aggs), sorts = transformSorts(request.sorts))
+        return delegate.search(req).map { results ->
             val rows = transformRows(request, results.rows, delegateFields, rowExprs)
             val aggs = transformAggResults(request, results.aggs)
             results.copy(fields = request.fields, rows = rows, aggs = aggs)
+        }
+    }
+
+    private fun transformSorts(sorts: List<DocSort>): List<DocSort> {
+        return sorts.flatMap { sort ->
+            if (sort.field.contains("\${")) {
+                val expr = parser.parse(sort.field)
+                val fields = FieldKeyHandler.fields(expr)
+                fields.map { field ->
+                    DocSort(field, sort.direction)
+                }
+            } else {
+                listOf(sort)
+            }
+        }
+    }
+
+    private fun transformAggs(aggs: List<Agg>): List<Agg> {
+        val sourceFormatXform = SourceFormatAggTransformer()
+        return aggs.map {
+            sourceFormatXform.transform((it))
         }
     }
 
@@ -44,11 +67,11 @@ class ExprTransformingSearchDao<T>(simplex: Simplex, delegate: SearchDao<T>) : S
                     val name = it.value.name
                     val expr = exprs[index]
                     val settings = it.value.settings
-                    if (expr != null) {
-                        expr.call(exprContext.map.plus(settings))
-                    } else if (name != null) {
-                        values[name]
-                    } else null
+                    when {
+                        expr != null -> expr.call(exprContext.map.plus(settings))
+                        name != null -> values[name]
+                        else -> null
+                    }
                 }
             }
         } else rows
@@ -60,12 +83,12 @@ class ExprTransformingSearchDao<T>(simplex: Simplex, delegate: SearchDao<T>) : S
         val aggMap = HashMap<String, Agg>()
         val missings = HashMap<String, Any?>()
         request.aggs.forEach {
-            aggMap.put(it.key, it)
+            aggMap[it.key] = it
             val termsAgg = it as? TermsAgg
             if (termsAgg?.format != null) {
-                aggExprs.put(termsAgg.key, parser.parse(termsAgg.format))
+                aggExprs[termsAgg.key] = parser.parse(termsAgg.format)
                 if (termsAgg.missing != null) {
-                    missings.put(termsAgg.key, termsAgg.missing)
+                    missings[termsAgg.key] = termsAgg.missing
                 }
             }
         }

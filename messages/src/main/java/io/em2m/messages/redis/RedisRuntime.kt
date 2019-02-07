@@ -1,9 +1,8 @@
 package io.em2m.messages.redis
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.em2m.flows.Processor
 import io.em2m.messages.model.MessageContext
+import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import redis.clients.jedis.JedisPool
 import redis.clients.jedis.JedisPubSub
@@ -12,17 +11,17 @@ import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import javax.inject.Inject
 
-class RedisRuntime @Inject constructor(private val jedisPool: JedisPool, private val processor: Processor<MessageContext>, private val mapper: ObjectMapper = jacksonObjectMapper()) {
+class RedisRuntime @Inject constructor(private val jedisPool: JedisPool, private val processor: Processor<MessageContext>) {
 
-    val log = LoggerFactory.getLogger(javaClass)
-    val executor: ExecutorService = Executors.newCachedThreadPool()
-    var shutdown: Boolean = false
+    private val log: Logger = LoggerFactory.getLogger(javaClass)
+    private val executor: ExecutorService = Executors.newCachedThreadPool()
+    private var shutdown: Boolean = false
 
-    fun process(key: String, channel: String, message: String) {
+    fun process(channel: String, message: String) {
         try {
             val ctx = MessageContext(environment = createEnvironment(channel))
             ctx.inputStream = message.byteInputStream()
-            processor.process(key, ctx).subscribe()
+            processor.process(ctx).subscribe()
         } catch (err: Throwable) {
             log.error("Error processing message", err)
         }
@@ -48,8 +47,8 @@ class RedisRuntime @Inject constructor(private val jedisPool: JedisPool, private
         executor.shutdownNow()
     }
 
-    fun subscribe(key: String, vararg channels: String): RedisRuntime {
-        val sub = Subscriber(key)
+    fun subscribe(vararg channels: String): RedisRuntime {
+        val sub = Subscriber()
         executor.submit {
             do {
                 try {
@@ -71,10 +70,10 @@ class RedisRuntime @Inject constructor(private val jedisPool: JedisPool, private
         ).toMutableMap()
     }
 
-    private inner class Subscriber(val key: String) : JedisPubSub() {
+    private inner class Subscriber : JedisPubSub() {
 
         override fun onMessage(channel: String, message: String) {
-            process(key, channel, message)
+            process(channel, message)
         }
 
         override fun onPMessage(pattern: String, channel: String, message: String) {

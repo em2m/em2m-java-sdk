@@ -10,7 +10,7 @@ import kotlin.properties.Delegates
 
 class EsSearchDaoTest : FeatureTestBase() {
 
-    var searchDao: SearchDao<Feature> by Delegates.notNull()
+    private var searchDao: SearchDao<Feature> by Delegates.notNull()
 
     @Before
     override fun before() {
@@ -162,7 +162,7 @@ class EsSearchDaoTest : FeatureTestBase() {
     @Test
     fun testSort() {
         val sub = TestSubscriber<Any>()
-        var request = SearchRequest(0, 10, MatchAllQuery(), sorts = mutableListOf(DocSort("properties.mag", Ascending)))
+        val request = SearchRequest(0, 10, MatchAllQuery(), sorts = mutableListOf(DocSort("properties.mag", Ascending)))
         searchDao.search(request)
                 .doOnNext { result ->
                     val mag = result.items?.getOrNull(0)?.properties?.get("mag") as Double

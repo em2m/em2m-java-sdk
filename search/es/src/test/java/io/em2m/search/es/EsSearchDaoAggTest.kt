@@ -11,7 +11,7 @@ import kotlin.properties.Delegates
 
 class EsSearchDaoAggTest : FeatureTestBase() {
 
-   var searchDao: SearchDao<Feature> by Delegates.notNull()
+    var searchDao: SearchDao<Feature> by Delegates.notNull()
 
     @Before
     override fun before() {
@@ -32,6 +32,22 @@ class EsSearchDaoAggTest : FeatureTestBase() {
             assertEquals("reviewed", buckets[0].key)
             assertEquals("automatic", buckets[1].key)
             assertEquals(46, buckets[0].count + buckets[1].count)
+        }.subscribe(sub)
+        sub.awaitTerminalEvent()
+        sub.assertNoErrors()
+    }
+
+    @Test
+    fun testMinDocCount() {
+        val request = SearchRequest(0, 0, MatchAllQuery(), aggs = listOf(TermsAgg("properties.status", key = "statuses", missing = "Missing", minDocCount = 4)))
+        val sub = TestSubscriber<Any>()
+        searchDao.search(request).doOnNext { result ->
+            assertEquals(46, result.totalItems)
+            assertEquals(0, result.items?.size)
+            val statuses = result.aggs["statuses"] ?: error("statuses should not be null")
+            val buckets = statuses.buckets ?: error("buckets should not be null")
+            assertEquals(1, buckets.size)
+            assertEquals("reviewed", buckets[0].key)
         }.subscribe(sub)
         sub.awaitTerminalEvent()
         sub.assertNoErrors()
@@ -101,13 +117,13 @@ class EsSearchDaoAggTest : FeatureTestBase() {
     @Test
     fun testRange() {
         val request = SearchRequest(0, 0, MatchAllQuery(), aggs = listOf(RangeAgg("properties.mag", key = "magnitude",
-                ranges = listOf(Range(from = 4.0, key = "4+")))))
+                ranges = listOf(Range(from = 4.0, key = "4+"), Range(from = 0, to = 4.0, key = "0-4")))))
         val sub = TestSubscriber<Any>()
         searchDao.search(request).doOnNext { result ->
             val agg = result.aggs["magnitude"] ?: error("agg should not be null")
             val buckets = agg.buckets ?: error("buckets should not be null")
-            assertEquals(1, buckets.size)
-            assertEquals(16, buckets.map { it.count }.sum())
+            assertEquals(2, buckets.size)
+            assertEquals(46, buckets.map { it.count }.sum())
             assertEquals("4+", buckets[0].key)
             assertEquals(4.0, buckets[0].from)
         }.subscribe(sub)
@@ -129,7 +145,6 @@ class EsSearchDaoAggTest : FeatureTestBase() {
         sub.awaitTerminalEvent()
         sub.assertNoErrors()
     }
-
 
     @Test
     fun testDateRange() {
@@ -209,6 +224,21 @@ class EsSearchDaoAggTest : FeatureTestBase() {
         searchDao.search(request).doOnNext { result ->
             val agg = result.aggs["centroid"] ?: error("agg should not be null")
             agg.value as Coordinate? ?: error("Coordinate should not be null")
+        }.subscribe(sub)
+        sub.awaitTerminalEvent()
+        sub.assertNoErrors()
+    }
+
+    @Test
+    fun testNestedAggs() {
+        val request = SearchRequest(0, 0, MatchAllQuery(), aggs = listOf(
+                GeoHashAgg("geometry.coordinates", precision = 1, key = "geohash", aggs = listOf(GeoCentroidAgg("geometry.coordinates", key = "centroid")))))
+        val sub = TestSubscriber<Any>()
+        searchDao.search(request).doOnNext { result ->
+            val agg = result.aggs["geohash"] ?: error("agg should not be null")
+            val buckets = agg.buckets ?: error("buckets should not be null")
+            assertEquals(11, buckets.size)
+            assertEquals(46, buckets.map { it.count }.sum())
         }.subscribe(sub)
         sub.awaitTerminalEvent()
         sub.assertNoErrors()

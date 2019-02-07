@@ -25,7 +25,10 @@ class ExprTest : Assert() {
     val keyResolver = BasicKeyResolver(mapOf(
             Key("ns", "key1") to ConstKeyHandler("value1"),
             Key("ns", "key2") to ConstKeyHandler("value2"),
-            Key("ns", "dateKey") to ConstKeyHandler("2015-04-21T17:31:06-07")))
+            Key("ns", "dateKey") to ConstKeyHandler("2015-04-21T17:31:06-07"),
+            Key("ns", "pie") to ConstKeyHandler(3.14),
+            Key("ns", "duration") to ConstKeyHandler(210_000),
+            Key("ns", "five") to ConstKeyHandler(5)))
             .delegate(Numbers.keys)
 
     val dateKeyResolver = Dates.keys
@@ -89,6 +92,14 @@ class ExprTest : Assert() {
     }
 
     @Test
+    fun testFormatDuration() {
+        val exprString = "\${ns:duration | formatDuration}"
+        val expr = requireNotNull(simplex.parser.parse(exprString))
+        val result = expr.call(emptyMap())
+        assertEquals("3 minutes", result)
+    }
+
+    @Test
     fun testFormatDateWithColon() {
         val exprString = "\${ns:dateKey | formatDate:yyyy-MM-dd HH\\:mm:America/Los_Angeles}"
         val expr = requireNotNull(simplex.parser.parse(exprString))
@@ -112,6 +123,42 @@ class ExprTest : Assert() {
         val expr = requireNotNull(simplex.parser.parse(exprString))
         val result = expr.call(emptyMap())
         val actual = SimpleDateFormat("yyyy-MM-dd").format(result)
+        assertEquals(expected, actual)
+    }
+
+    @Test
+    fun testMultiplication() {
+        val exprString = "\${ns:pie | multiply:2}"
+        val expected = 6.28
+        val expr = requireNotNull(simplex.parser.parse(exprString))
+        val actual = expr.call(emptyMap())
+        assertEquals(expected, actual)
+    }
+
+    @Test
+    fun testMultiplicationError() {
+        val exprString = "\${ns:key1 | multiply:2}"
+        val expected = null
+        val expr = requireNotNull(simplex.parser.parse(exprString))
+        val actual = expr.call(emptyMap())
+        assertEquals(expected, actual)
+    }
+
+    @Test
+    fun testAddition() {
+        val exprString = "\${ns:five | add:2}"
+        val expected = 7.0
+        val expr = requireNotNull(simplex.parser.parse(exprString))
+        val actual = expr.call(emptyMap())
+        assertEquals(expected, actual)
+    }
+
+    @Test
+    fun testAdditionError() {
+        val exprString = "\${ns:key1 | add:2}"
+        val expected = null
+        val expr = requireNotNull(simplex.parser.parse(exprString))
+        val actual = expr.call(emptyMap())
         assertEquals(expected, actual)
     }
 

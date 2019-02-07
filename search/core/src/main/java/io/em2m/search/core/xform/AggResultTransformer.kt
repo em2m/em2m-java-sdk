@@ -8,12 +8,10 @@ import io.em2m.search.core.model.Stats
 open class AggResultTransformer {
 
     open fun transform(aggResult: AggResult): AggResult {
-        val buckets = aggResult.buckets?.map({ transformBucket(it) })
+        val buckets = aggResult.buckets?.map { transformBucket(it) }
         val stats = transformStats(aggResult.stats)
         val value = transformValue(aggResult.value)
-
-        return AggResult(aggResult.key, buckets, stats, value)
-        return aggResult
+        return AggResult(aggResult.key, buckets, stats, value, aggResult.op)
     }
 
     open fun transformBucket(bucket: Bucket): Bucket {

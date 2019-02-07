@@ -68,12 +68,12 @@ abstract class FeatureTestBase : Assert() {
             "src/test/resources/mapping_es2.json"
         }
 
-        val type = "doc"
-        val index = "features"
+        const val type = "doc"
+        const val index = "features"
 
         val mapping = mapper.readTree(File(mappingPath)) as ObjectNode
 
-        val esClient = Feign.builder()
+        val esClient: EsApi = Feign.builder()
                 .encoder(TextPlainEncoder(JacksonEncoder(mapper)))
                 .decoder(JacksonDecoder(mapper))
                 .logger(Slf4jLogger())

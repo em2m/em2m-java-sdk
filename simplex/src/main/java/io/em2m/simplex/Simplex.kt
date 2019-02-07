@@ -1,7 +1,9 @@
 package io.em2m.simplex
 
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.em2m.simplex.model.*
 import io.em2m.simplex.parser.ExprParser
+import io.em2m.simplex.parser.SimplexModule
 import io.em2m.simplex.std.*
 import io.em2m.utils.coerce
 import java.util.concurrent.ConcurrentHashMap
@@ -13,12 +15,16 @@ class Simplex {
     private val keys = BasicKeyResolver()
             .delegate(Numbers.keys)
             .delegate(Dates.keys)
+            .delegate(Bools.keys)
+            .key(Key("repeat", "*"), PathKeyHandler(this, "repeat"))
 
     private val pipes = BasicPipeTransformResolver()
             .delegate(Numbers.pipes)
             .delegate(Strings.pipes)
             .delegate(I18n.pipes)
             .delegate(Dates.pipes)
+            .delegate(Arrays.pipes)
+            .delegate(Bools.pipes(this))
 
     private val conditions = BasicConditionResolver()
             .delegate(Strings.conditions)
@@ -26,14 +32,16 @@ class Simplex {
             .delegate(Bools.conditions)
             .delegate(Dates.conditions)
 
+
     private val execs = BasicExecResolver()
 
-    // TODO - Make threadsafe
-    val cache: ConcurrentMap<String, Expr> = ConcurrentHashMap()
+    private val cache: ConcurrentMap<String, Expr> = ConcurrentHashMap()
 
-    val pathExprCache = ConcurrentHashMap<String, PathExpr>()
+    private val pathExprCache = ConcurrentHashMap<String, PathExpr>()
 
     val parser = ExprParser(keys, pipes)
+
+    val objectMapper = jacksonObjectMapper().registerModule(SimplexModule(this))
 
     fun keys(delegate: KeyResolver): Simplex {
         keys.delegate(delegate)
@@ -87,6 +95,10 @@ class Simplex {
         }
     }
 
+    fun findConditionHandler(name: String): ConditionHandler? {
+        return conditions.getCondition(name)
+    }
+
     private fun getConditionExpr(condition: Condition): SingleConditionExpr {
         val op = condition.op
         val keyExpr = parser.parse("$" + "{" + condition.key + "}")
@@ -113,8 +125,8 @@ class Simplex {
 
     companion object {
         val simplex = Simplex()
+        val objectMapper = jacksonObjectMapper().registerModule(SimplexModule(simplex))
     }
-
 
 }
 

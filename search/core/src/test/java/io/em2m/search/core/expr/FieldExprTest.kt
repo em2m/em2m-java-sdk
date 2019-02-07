@@ -8,6 +8,7 @@ import io.em2m.simplex.model.BasicKeyResolver
 import io.em2m.simplex.model.BasicPipeTransformResolver
 import io.em2m.simplex.model.Key
 import io.em2m.simplex.parser.ExprParser
+import io.em2m.simplex.std.Arrays
 import io.em2m.simplex.std.Numbers
 import io.em2m.simplex.std.Strings
 import org.junit.Assert
@@ -25,6 +26,7 @@ class FieldExprTest : Assert() {
     val pipeResolver = BasicPipeTransformResolver()
             .delegate(Numbers.pipes)
             .delegate(Strings.pipes)
+            .delegate(Arrays.pipes)
 
     val request = SearchRequest()
 
@@ -65,6 +67,22 @@ class FieldExprTest : Assert() {
         val result = expr.call(BucketContext(request, emptyMap(), bucket).map)
         assertNotNull(result)
         assertEquals("Ford", result)
+    }
+
+    @Test
+    fun testMultipleFields() {
+        val exprStr = "\${field:key1,key2 | notNull | join:, }"
+        val expr = parser.parse(exprStr)
+        val fields = FieldKeyHandler.fields(expr)
+        assertEquals(listOf("key1", "key2"), fields)
+        assertNotNull(expr)
+        val result = expr.call(RowContext(
+                mapOf(
+                        "fieldValues" to mapOf("key1" to "value1", "key2" to "value2"),
+                        "request" to request,
+                        "scope" to emptyMap<String, Any?>())).map)
+        assertNotNull(result)
+        assertEquals("value1, value2", result)
     }
 
 }

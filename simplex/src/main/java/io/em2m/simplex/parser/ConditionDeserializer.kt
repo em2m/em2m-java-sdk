@@ -5,6 +5,7 @@ import com.fasterxml.jackson.core.JsonParser
 import com.fasterxml.jackson.core.TreeNode
 import com.fasterxml.jackson.databind.DeserializationContext
 import com.fasterxml.jackson.databind.JsonDeserializer
+import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.*
 import io.em2m.simplex.Simplex
 import io.em2m.simplex.model.Condition
@@ -45,22 +46,26 @@ class ConditionsDeserializer(val simplex: Simplex) : JsonDeserializer<ConditionE
         }.toList()
     }
 
-    override fun deserialize(parser: JsonParser, context: DeserializationContext): ConditionExpr {
-
-        return try {
-            val conditions = ArrayList<Condition>()
-            val tree = parser.readValueAsTree<TreeNode>()
-            if (tree is ArrayNode) {
-                tree.forEach {
-                    conditions.addAll(parseConditionObject(it as ObjectNode))
-                }
-            } else if (tree is ObjectNode) {
-                conditions.addAll(parseConditionObject(tree))
+    fun parseCondition(tree: TreeNode): ConditionExpr {
+        val conditions = ArrayList<Condition>()
+        if (tree is ArrayNode) {
+            tree.forEach {
+                conditions.addAll(parseConditionObject(it as ObjectNode))
             }
-            simplex.compileCondition(conditions)
+        } else if (tree is ObjectNode) {
+            conditions.addAll(parseConditionObject(tree))
+        }
+        return simplex.compileCondition(conditions)
+    }
+
+    override fun deserialize(parser: JsonParser, context: DeserializationContext): ConditionExpr {
+        return try {
+            val tree = parser.readValueAsTree<TreeNode>()
+            parseCondition(tree)
         } catch (e: RuntimeException) {
             throw JsonParseException(parser, e.message)
         }
     }
+
 
 }

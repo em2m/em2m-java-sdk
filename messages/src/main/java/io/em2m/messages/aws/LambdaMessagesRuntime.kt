@@ -39,7 +39,7 @@ import java.io.InputStream
 import java.io.OutputStream
 
 @Suppress("Unused")
-class LambdaRuntime (val processor: Processor<MessageContext>, val flow: String) : RequestStreamHandler {
+class LambdaMessagesRuntime(val processor: Processor<MessageContext>) : RequestStreamHandler {
 
     private val mapper: ObjectMapper = jacksonObjectMapper().registerModule(SnsDateModule())
             .configure(MapperFeature.ACCEPT_CASE_INSENSITIVE_PROPERTIES, true)
@@ -75,11 +75,12 @@ class LambdaRuntime (val processor: Processor<MessageContext>, val flow: String)
                     "EventSourceArn" to record.eventSourceARN,
                     "EventName" to record.eventName,
                     "AwsRegion" to record.awsRegion,
-                    "InvokeIdentityArn" to record.invokeIdentityArn
+                    "InvokeIdentityArn" to record.invokeIdentityArn,
+                    "Channel" to record.eventSourceARN
             )
             val eventId = record.eventID
-            val ctx = MessageContext(stream, environment = env, eventId = eventId )
-            processor.process(flow, ctx)
+            val ctx = MessageContext(stream, environment = env, eventId = eventId)
+            processor.process(ctx)
         }
     }
 
@@ -88,7 +89,7 @@ class LambdaRuntime (val processor: Processor<MessageContext>, val flow: String)
             val event = record.body
             if (record != null) {
                 val context = MessageContext(event.byteInputStream())
-                processor.process(flow, context)
+                processor.process(context)
             }
         }
     }
@@ -98,7 +99,7 @@ class LambdaRuntime (val processor: Processor<MessageContext>, val flow: String)
             val event = record.sns.message
             if (event != null) {
                 val context = MessageContext(event.byteInputStream())
-                processor.process(flow, context)
+                processor.process(context)
             }
         }
     }

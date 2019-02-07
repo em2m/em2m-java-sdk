@@ -19,10 +19,9 @@ class RequestConverter(val objectMapper: ObjectMapper = jacksonObjectMapper(), v
         val aggs = convertAggs(request.aggs, request.params)
         val sort = convertSorts(request.sorts)
 
-        if (es6) {
-            return EsSearchRequest(from, size, query, aggs = aggs, sort = sort, storedFields = fields)
-        } else {
-            return EsSearchRequest(from, size, query, fields, aggs, sort)
+        return when {
+            es6 -> EsSearchRequest(from, size, query, aggs = aggs, sort = sort, storedFields = fields)
+            else -> EsSearchRequest(from, size, query, fields, aggs, sort)
         }
 
     }
@@ -96,31 +95,36 @@ class RequestConverter(val objectMapper: ObjectMapper = jacksonObjectMapper(), v
         val result = EsAggs()
         val timeZone = DateTimeZone.forID(params["timeZone"] as? String ?: "America/Los_Angeles")
         aggs.forEach {
+            val subAggs = if (it.aggs?.isNotEmpty()) {
+                convertAggs(it.aggs, params)
+            } else {
+                null
+            }
             when (it) {
                 is TermsAgg -> {
-                    result.term(it.key, it.field, it.size, sortType(it.sort), sortDirection(it.sort), it.missing)
+                    result.term(it.key, it.field, it.size, sortType(it.sort), sortDirection(it.sort), it.missing, subAggs).minDocCount(it.minDocCount)
                 }
                 is MissingAgg -> {
-                    result.missing(it.key, it.field)
+                    result.missing(it.key, it.field, subAggs).minDocCount(it.minDocCount)
                 }
                 is HistogramAgg -> {
-                    result.histogram(it.key, it.field, it.interval, it.offset)
+                    result.histogram(it.key, it.field, it.interval, it.offset, subAggs).minDocCount(it.minDocCount)
                 }
                 is StatsAgg -> {
-                    result.stats(it.key, it.field)
+                    result.stats(it.key, it.field).minDocCount(it.minDocCount)
                 }
                 is DateHistogramAgg -> {
-                    result.dateHistogram(it.key, it.field, it.format, it.interval, it.offset, timeZone.id)
+                    result.dateHistogram(it.key, it.field, it.format, it.interval, it.offset, timeZone.id, subAggs).minDocCount(it.minDocCount)
                 }
                 is RangeAgg -> {
-                    val esRanges = result.agg(it.key, "range").put("field", it.field)
+                    val esRanges = result.agg(it.key, "range", subAggs).put("field", it.field).minDocCount(it.minDocCount)
                             .withArray("ranges")
                     it.ranges.forEach {
                         esRanges.addPOJO(it)
                     }
                 }
                 is DateRangeAgg -> {
-                    val esAgg = result.agg(it.key, "date_range").put("field", it.field)
+                    val esAgg = result.agg(it.key, "date_range", subAggs).put("field", it.field).minDocCount(it.minDocCount)
                     if (it.format != null) esAgg.put("format", it.format)
                     //if (it.timeZone != null) esAgg.put("time_zone", timeZone.id)
                     val esRanges = esAgg.withArray("ranges")
@@ -146,20 +150,20 @@ class RequestConverter(val objectMapper: ObjectMapper = jacksonObjectMapper(), v
                     }
                 }
                 is GeoHashAgg -> {
-                    val esAgg = result.agg(it.key, "geohash_grid").put("field", it.field)
+                    val esAgg = result.agg(it.key, "geohash_grid", subAggs).put("field", it.field).minDocCount(it.minDocCount)
                     val precision = it.precision
                     val size = it.size
                     if (precision != null) esAgg.put("precision", precision)
                     if (size != null) esAgg.put("size", size)
                 }
                 is GeoCentroidAgg -> {
-                    result.agg(it.key, "geo_centroid").put("field", it.field)
+                    result.agg(it.key, "geo_centroid", subAggs).put("field", it.field).minDocCount(it.minDocCount)
                 }
                 is GeoBoundsAgg -> {
-                    result.agg(it.key, "geo_bounds").put("field", it.field)
+                    result.agg(it.key, "geo_bounds", subAggs).put("field", it.field).minDocCount(it.minDocCount)
                 }
                 is GeoDistanceAgg -> {
-                    val esAgg = result.agg(it.key, "geo_distance").put("field", it.field)
+                    val esAgg = result.agg(it.key, "geo_distance", subAggs).put("field", it.field).minDocCount(it.minDocCount)
                     esAgg.putPOJO("origin", it.origin)
                     if (it.unit != null) esAgg.put("unit", it.unit)
                     val esRanges = esAgg.withArray("ranges")
@@ -173,11 +177,11 @@ class RequestConverter(val objectMapper: ObjectMapper = jacksonObjectMapper(), v
                     } else {
                         objectMapper.convertValue(it.value, ObjectNode::class.java)
                     }
-                    result.agg(it.key, value)
+                    result.agg(it.key, value).minDocCount(it.minDocCount)
                 }
                 is FiltersAgg -> {
-                    val esAgg = result.agg(it.key, "filters")
-                    val esFilters = esAgg.with("filters")
+                    val esAgg = result.agg(it.key, "filters", subAggs)
+                    val esFilters = esAgg.with("filters").minDocCount(it.minDocCount)
                     it.filters.forEach {
                         esFilters.putPOJO(it.key, convertQuery(it.value))
                     }
@@ -196,6 +200,13 @@ class RequestConverter(val objectMapper: ObjectMapper = jacksonObjectMapper(), v
 
     fun convertSorts(sorts: List<DocSort>): List<Map<String, String>> {
         return sorts.map { sort -> mapOf(sort.field to if (sort.direction == Direction.Ascending) "asc" else "desc") }
+    }
+
+    private fun ObjectNode.minDocCount(minDocCount: Int?): ObjectNode {
+        if (minDocCount != null) {
+            this.put("min_doc_count", minDocCount)
+        }
+        return this
     }
 
 }

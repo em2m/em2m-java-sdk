@@ -7,20 +7,56 @@ import java.util.regex.Matcher
 
 class UpperCasePipe : PipeTransform {
     override fun transform(value: Any?, context: ExprContext): Any? {
-        return if (value is String) {
-            value.toUpperCase()
-        } else
+        return if (value is List<*>) {
+            value.map { it?.toString()?.toUpperCase() }
+        } else if (value is Array<*>) {
+            value.map { it?.toString()?.toUpperCase() }
+        } else {
             value?.toString()?.toUpperCase()
+        }
     }
-
 }
 
 class CapitalizePipe : PipeTransform {
     override fun transform(value: Any?, context: ExprContext): Any? {
-        return if (value is String) {
-            value.capitalize()
-        } else
+        return if (value is List<*>) {
+            value.map { it?.toString()?.capitalize() }
+        } else if (value is Array<*>) {
+            value.map { it?.toString()?.capitalize() }
+        } else {
             value?.toString()?.capitalize()
+        }
+    }
+}
+
+class TrimPipe : PipeTransform {
+    override fun transform(value: Any?, context: ExprContext): Any? {
+        return if (value is List<*>) {
+            value.map { it?.toString()?.trim() }
+        } else if (value is Array<*>) {
+            value.map { it?.toString()?.trim() }
+        } else {
+            value?.toString()?.trim()
+        }
+    }
+}
+
+class JoinPipe : PipeTransform {
+
+    var separator = ", "
+
+    override fun args(args: List<String>) {
+        if (args.isNotEmpty()) {
+            separator = args[0]
+        }
+    }
+
+    override fun transform(value: Any?, context: ExprContext): Any? {
+        return when (value) {
+            is List<*> -> value.joinToString(separator)
+            is Array<*> -> value.joinToString(separator)
+            else -> value
+        }
     }
 }
 
@@ -129,7 +165,11 @@ val StandardStringConditions = mapOf(
 
 object Strings {
 
-    val pipes = BasicPipeTransformResolver(mapOf("upperCase" to UpperCasePipe(), "capitalize" to CapitalizePipe()))
+    val pipes = BasicPipeTransformResolver(mapOf(
+            "upperCase" to UpperCasePipe(),
+            "capitalize" to CapitalizePipe(),
+            "trim" to TrimPipe(),
+            "join" to JoinPipe()))
     val keys = BasicKeyResolver()
     val conditions = BasicConditionResolver(StandardStringConditions)
 

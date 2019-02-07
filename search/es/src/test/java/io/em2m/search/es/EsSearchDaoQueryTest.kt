@@ -10,7 +10,7 @@ import kotlin.properties.Delegates
 
 class EsSearchDaoQueryTest : FeatureTestBase() {
 
-    var searchDao: SearchDao<Feature> by Delegates.notNull()
+    private var searchDao: SearchDao<Feature> by Delegates.notNull()
 
     @Before
     override fun before() {
