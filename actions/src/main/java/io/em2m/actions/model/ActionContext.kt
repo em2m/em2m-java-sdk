@@ -13,17 +13,30 @@ import java.util.*
 import kotlin.collections.HashMap
 
 data class ActionContext(val actionName: String,
-                         var inputStream: InputStream? = null,
-                         var claims: Map<String, Any?> = emptyMap(),
+                         var claims: Claims = Claims(emptyMap()),
                          var environment: MutableMap<String, Any?> = HashMap(),
-                         var resource: String? = null,
-                         val scope: MutableMap<String, Any?> = HashMap(),
-                         var debug: Boolean = false,
                          var requestId: String = UUID.randomUUID().toString(),
+                         var resource: String? = null,
+                         var inputStream: InputStream? = null,
                          var request: Any? = null,
                          var multipart: MultipartData? = null,
+                         val scope: MutableMap<String, Any?> = HashMap(),
+                         var debug: Boolean = false,
                          var error: Throwable? = null,
                          val response: Response) : FlowAware {
+
+    constructor(actionName: String,
+                inputStream: InputStream? = null,
+                claims: Map<String, Any?> = emptyMap(),
+                environment: MutableMap<String, Any?> = HashMap(),
+                resource: String? = null,
+                scope: MutableMap<String, Any?> = HashMap(),
+                debug: Boolean = false,
+                requestId: String = UUID.randomUUID().toString(),
+                request: Any? = null,
+                multipart: MultipartData? = null,
+                error: Throwable? = null,
+                response: Response) : this(actionName, Claims(claims), environment, requestId, resource, inputStream, request, multipart, scope, debug, error, response)
 
     val keyHandlers = HashMap<Key, KeyHandler>()
     private val keyResolver = BasicKeyResolver(keyHandlers)
@@ -32,7 +45,7 @@ data class ActionContext(val actionName: String,
 
     fun toPolicyContext(): PolicyContext {
 
-        return PolicyContext(mapOf("actionContext" to this), Claims(claims), Environment(environment), resource, keyResolver)
+        return PolicyContext(mapOf("actionContext" to this), claims, Environment(environment), resource, keyResolver)
     }
 
 }
