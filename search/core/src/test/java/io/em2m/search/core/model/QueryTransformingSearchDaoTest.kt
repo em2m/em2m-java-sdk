@@ -112,8 +112,8 @@ class QueryTransformingSearchDaoTest : Assert() {
     fun testNamedAgg() {
         val format = "#{bucket:key | upperCase}".replace("#", "$")
         val status = TermsAgg("status", format = format, ext = mapOf("icon" to "fa-key"))
-        val xformDao = QueryTransformingSearchDao   (namedAggs = mapOf("status" to status), delegate = mock)
-        xformDao.search(SearchRequest(aggs = listOf(NamedAgg(name = "status", key = "key").setAny("size", 5))))
+        val xformDao = QueryTransformingSearchDao   (namedAggs = mapOf("statusAgg" to status), delegate = mock)
+        xformDao.search(SearchRequest(aggs = listOf(NamedAgg(name = "statusAgg", key = "key").setAny("size", 5))))
 
         argumentCaptor <SearchRequest>().apply {
             verify(mock, times(1)).search(capture())

@@ -39,6 +39,14 @@ class Problem(val type: String? = null,
 
     companion object {
 
+        fun notAuthorized(title: () -> Any? = { "Not Authorized" }, detail: () -> Any? = {}, ext: Map<String, Any?> = emptyMap()): Nothing {
+            return Problem(title = title().toString(), status = Status.NOT_AUTHORIZED, detail = detail().toString(), ext = ext).throwException()
+        }
+
+        fun badRequest(title: () -> Any? = { "Bad Request" }, detail: () -> Any? = {}, ext: Map<String, Any?> = emptyMap()): Nothing {
+            return Problem(title = title().toString(), status = Status.BAD_REQUEST, detail = detail().toString(), ext = ext).throwException()
+        }
+
         fun notFound(title: () -> Any? = { "Not Found" }, detail: () -> Any? = {}, ext: Map<String, Any?> = emptyMap()): Nothing {
             return Problem(title = title().toString(), status = Status.NOT_FOUND, detail = detail().toString(), ext = ext).throwException()
         }

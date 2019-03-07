@@ -7,6 +7,7 @@ import io.em2m.actions.model.MultipartData
 import io.em2m.actions.model.Problem
 import io.em2m.flows.FlowNotFound
 import io.em2m.flows.Processor
+import io.em2m.policy.model.Claims
 import java.io.InputStream
 import java.util.*
 import javax.servlet.http.HttpServletRequest
@@ -22,9 +23,11 @@ open class ServletRuntime(private val actionPrefix: String, private val processo
         val contentType: String? = request.contentType
         val parts = if (contentType?.startsWith("multipart") == true) request.parts.toList() else emptyList()
         val multipart = fromParts(parts)
-        val context = ActionContext("$actionPrefix:$actionName",
+        val context = ActionContext(
+                actionName = "$actionPrefix:$actionName",
                 inputStream = request.inputStream as InputStream,
                 environment = env.toMutableMap(),
+                claims = Claims(),
                 multipart = multipart,
                 response = ServletResponse(response))
         context.scope["servletContext"] = request

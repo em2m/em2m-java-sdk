@@ -32,7 +32,7 @@ class ExprDaoTest : Assert() {
                 listOf("betty", "rubble")
         )
         val aggResults = mapOf(
-                "lastName" to AggResult(key = "lastName", op = "terms", buckets = listOf(
+                "lastName" to AggResult(key = "lastName", op = "terms", field = "lastName", buckets = listOf(
                         Bucket(key = "flinstone", count = 2),
                         Bucket(key = "rubble", count = 2)
                 )))

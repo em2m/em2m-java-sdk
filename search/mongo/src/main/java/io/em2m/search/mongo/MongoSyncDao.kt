@@ -191,8 +191,6 @@ class MongoSyncDao<T>(idMapper: IdMapper<T>, val documentMapper: DocumentMapper<
         }
 
         request.aggs.map { agg ->
-            val key = agg.key
-            val op = agg.op()
             keyIndex.keys.forEach { key ->
                 val buckets = ArrayList<Bucket>()
                 keyIndex[key]?.forEach { mongoKey ->

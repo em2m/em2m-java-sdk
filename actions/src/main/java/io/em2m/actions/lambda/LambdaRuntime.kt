@@ -7,6 +7,7 @@ import io.em2m.actions.model.MultipartData
 import io.em2m.actions.model.Problem
 import io.em2m.flows.FlowNotFound
 import io.em2m.flows.Processor
+import io.em2m.policy.model.Claims
 import java.util.*
 
 open class LambdaRuntime(
@@ -23,7 +24,9 @@ open class LambdaRuntime(
         val contentType: String? = request.contentType
         val multipart: MultipartData? = null
 
-        val context = ActionContext("$actionPrefix:$actionName",
+        val context = ActionContext(
+                actionName = "$actionPrefix:$actionName",
+                claims = Claims(),
                 inputStream = request.body?.toByteArray()?.inputStream() ?: byteArrayOf().inputStream(),
                 environment = env.toMutableMap(),
                 multipart = multipart,
