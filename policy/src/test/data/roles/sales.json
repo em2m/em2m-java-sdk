@@ -2,5 +2,14 @@
   "label": "Sales",
   "policies": [
     "AccountPersonalAccess"
+  ],
+  "statements": [
+    {
+      "effect": "Allow",
+      "actions": [
+        "feature:SalesRoleFeature"
+      ],
+      "resource": "em2m:ident:account:*"
+    }
   ]
 }
