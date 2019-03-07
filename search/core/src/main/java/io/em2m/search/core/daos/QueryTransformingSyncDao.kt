@@ -7,9 +7,9 @@ import io.em2m.search.core.xform.LuceneQueryTransformer
 import io.em2m.search.core.xform.NamedAggTransformer
 
 class QueryTransformingSyncDao<T>(
-        val aliases: Map<String, Field> = emptyMap(),
-        val fieldSets: Map<String, List<Field>> = emptyMap<String, List<Field>>(),
-        val namedAggs: Map<String, Agg> = emptyMap(),
+        private val aliases: Map<String, Field> = emptyMap(),
+        private val fieldSets: Map<String, List<Field>> = emptyMap(),
+        private val namedAggs: Map<String, Agg> = emptyMap(),
         delegate: SyncDao<T>) : SyncDaoWrapper<T>(delegate) {
 
     override fun search(request: SearchRequest): SearchResult<T> {
@@ -25,13 +25,13 @@ class QueryTransformingSyncDao<T>(
         return super.findOne(transformQuery(query))
     }
 
-    fun transformQuery(query: Query): Query {
+    private fun transformQuery(query: Query): Query {
         return query
                 .let { LuceneQueryTransformer().transform(it) }
                 .let { FieldAliasQueryTransformer(aliases).transform(it) }
     }
 
-    fun transformAggs(aggs: List<Agg>): List<Agg> {
+    private fun transformAggs(aggs: List<Agg>): List<Agg> {
         val aliasXform = FieldAliasAggTransformer(aliases)
         val namedXform = NamedAggTransformer(namedAggs)
         return aggs
@@ -43,14 +43,14 @@ class QueryTransformingSyncDao<T>(
                 }
     }
 
-    fun transformSorts(sorts: List<DocSort>): List<DocSort> {
+    private fun transformSorts(sorts: List<DocSort>): List<DocSort> {
         return sorts.map {
             val alias = aliases[it.field]
             DocSort(alias?.expr ?: alias?.name ?: it.field, it.direction)
         }
     }
 
-    fun transformRequest(request: SearchRequest): SearchRequest {
+    private fun transformRequest(request: SearchRequest): SearchRequest {
         val fields = request.fields
                 .plus(fieldSets[request.fieldSet] ?: emptyList())
                 .map {
@@ -81,10 +81,22 @@ class QueryTransformingSyncDao<T>(
             val aggResult = aggResults[agg.key]
             if (agg is NamedAgg) {
                 val named = namedAggs[agg.name]
-                aggResult?.copy(field = (named as? Fielded)?.field)
+                when (named) {
+                    is Fielded -> aggResult?.copy(field = named.field)
+                    is FiltersAgg -> aggResult?.copy(buckets = transformFilterBuckets(named, aggResult.buckets))
+                    else -> aggResult
+                }
             } else aggResult
         }.associateBy { it.key }
     }
 
+    private fun transformFilterBuckets(agg: FiltersAgg, buckets: List<Bucket>?): List<Bucket>? {
+        if (buckets == null) return null
+        return buckets.map { bucket ->
+            val key = bucket.key
+            val query = agg.filters[key]
+            bucket.copy(query = query)
+        }
+    }
 
 }

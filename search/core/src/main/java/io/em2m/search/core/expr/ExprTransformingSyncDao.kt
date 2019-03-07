@@ -104,7 +104,7 @@ class ExprTransformingSyncDao<T>(simplex: Simplex, delegate: SyncDao<T>) : SyncD
                         val context = BucketContext(request, scope, bucket)
                         // temporarily move scope up a level until we have a better fix
                         val label = expr.call(context.map.plus(scope)).toString()
-                        return Bucket(key = bucket.key, count = bucket.count, stats = bucket.stats, label = label)
+                        return bucket.copy(label = label)
                     }
                 }
                 xformer.transform(aggResult)
