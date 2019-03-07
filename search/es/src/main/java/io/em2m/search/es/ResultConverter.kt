@@ -85,6 +85,7 @@ class ResultConverter<T>(private val mapper: DocMapper<T>) {
             val esValue = esAggResults[agg.key]
             if (esValue != null) {
                 val op: String? = agg.op()
+                val field: String? = (agg as? Fielded)?.field
                 var buckets = esValue.buckets?.map {
                     val subAggs = convertSubAggs(agg.aggs, it.other)
                     val buckeyKey = it.keyAsString ?: it.key
@@ -130,7 +131,7 @@ class ResultConverter<T>(private val mapper: DocMapper<T>) {
                 if (buckets == null && value == null) {
                     value = esValue.other
                 }
-                AggResult(key, buckets, value = value, op = op)
+                AggResult(key, buckets, value = value, op = op, field = field)
             } else null
         }.associateBy { it.key }
     }

@@ -184,11 +184,11 @@ class MongoSearchDao<T>(idMapper: IdMapper<T>, val documentMapper: DocumentMappe
     }
 
     fun getFieldValue(field: String, doc: Document): Any? {
-        return field.split(".").fold(doc as Any?, { value, property ->
+        return field.split(".").fold(doc as Any?) { value, property ->
             if (value is Map<*, *>) {
                 value.get(property)
             } else value
-        })
+        }
     }
 
     fun decodeRow(fields: List<Field>, doc: Document): List<Any?> {
@@ -208,8 +208,6 @@ class MongoSearchDao<T>(idMapper: IdMapper<T>, val documentMapper: DocumentMappe
         }
 
         request.aggs.map { agg ->
-            val key = agg.key
-            val op = agg.op()
             keyIndex.keys.forEach { key ->
                 val buckets = ArrayList<Bucket>()
                 keyIndex[key]?.forEach { mongoKey ->
