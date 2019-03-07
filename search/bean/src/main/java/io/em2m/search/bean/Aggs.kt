@@ -92,7 +92,7 @@ class Aggs {
             }
             // todo
             val sortedBuckets = sortAndFilter(agg, buckets).page(0, agg.size)
-            return AggResult(agg.key, sortedBuckets, null, value, op = agg.op())
+            return AggResult(agg.key, sortedBuckets, null, value, op = agg.op(), field = agg.field)
         }
 
         private fun <T> processDateRangeAgg(agg: DateRangeAgg, matches: List<T>): AggResult {
@@ -109,7 +109,7 @@ class Aggs {
                 val bucketAggs = processAggs(agg.aggs, bucketMatches)
                 Bucket(range.key, count, from = fromVal, to = toVal, aggs = bucketAggs)
             }
-            return AggResult(agg.key, buckets, op = agg.op())
+            return AggResult(agg.key, buckets, op = agg.op(), field = agg.field)
         }
 
         private fun <T> processRangeAgg(agg: RangeAgg, matches: List<T>): AggResult {
@@ -119,14 +119,14 @@ class Aggs {
                 val count = matches.filter { predicate(it as Any) }.size.toLong()
                 Bucket(key, count, from = range.from, to = range.to)
             }
-            return AggResult(agg.key, buckets, op = agg.op())
+            return AggResult(agg.key, buckets, op = agg.op(), field = agg.field)
         }
 
         private fun <T> processFiltersAgg(agg: FiltersAgg, matches: List<T>): AggResult {
             val buckets = agg.filters.map { (key, value) ->
                 val predicate = Functions.toPredicate(value)
                 val count = matches.filter { predicate.invoke(it as Any) }.size.toLong()
-                Bucket(key, count)
+                Bucket(key, count, query = value)
             }
             return AggResult(agg.key, buckets, op = agg.op())
         }
@@ -181,11 +181,11 @@ class Aggs {
 
             sortedBuckets.map {
                 Bucket(key = dateFormat.parse(it.key as String).time, count = it.count, label = it.label,
-                        stats = it.stats, from = it.from, to = it.to, aggs = it.aggs)
+                        stats = it.stats, from = it.from, to = it.to, query = it.query, aggs = it.aggs)
             }
 
 
-            return AggResult(agg.key, sortedBuckets, null, value, op = agg.op())
+            return AggResult(agg.key, sortedBuckets, null, value, op = agg.op(), field = agg.field)
         }
 
         private fun <T> processHistogramAgg(agg: HistogramAgg, matches: List<T>): AggResult {
@@ -218,7 +218,7 @@ class Aggs {
             }
             // todo
             val sortedBuckets = sortAndFilter(agg, buckets)
-            return AggResult(agg.key, sortedBuckets, null, value, op = agg.op())
+            return AggResult(agg.key, sortedBuckets, null, value, op = agg.op(), field = agg.field)
         }
 
         private fun <T> processStatsAgg(agg: StatsAgg, matches: List<T>): AggResult {
@@ -246,7 +246,7 @@ class Aggs {
 
             val avg = if (count == 0L) 0.0 else sum / count
             val bucket = Bucket(stats = Stats(count = count, sum = sum, min = min, max = max, avg = avg), count = count)
-            return AggResult(key = agg.key, buckets = listOf(bucket), op = agg.op())
+            return AggResult(key = agg.key, buckets = listOf(bucket), op = agg.op(), field = agg.field)
         }
 
         private fun <T> processMissingAgg(agg: MissingAgg, matches: List<T>): AggResult {
@@ -259,7 +259,7 @@ class Aggs {
                 }
             }
             val buckets = listOf(Bucket("missing", missingCount))
-            return AggResult(agg.key, buckets, op = agg.op())
+            return AggResult(agg.key, buckets, op = agg.op(), field = agg.field)
         }
 
         private fun <T> processGeoHashAgg(agg: GeoHashAgg, matches: List<T>): AggResult {

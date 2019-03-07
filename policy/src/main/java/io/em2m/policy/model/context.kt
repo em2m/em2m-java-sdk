@@ -4,24 +4,9 @@ import io.em2m.simplex.model.KeyResolver
 import java.util.*
 
 
-class Claims(initial: Map<String, Any?>) {
+class Claims(initial: Map<String, Any?> = emptyMap()) {
 
     val map = HashMap(initial)
-
-    init {
-        map.putIfAbsent("sub", null)
-        map.putIfAbsent("exp", null)
-        map.putIfAbsent("iss", null)
-        map.putIfAbsent("aud", null)
-        map.putIfAbsent("nbf", null)
-        map.putIfAbsent("iat", null)
-        map.putIfAbsent("jti", null)
-        map.putIfAbsent("tid", null)
-        map.putIfAbsent("did", null)
-        map.putIfAbsent("bid", null)
-        map.putIfAbsent("org", null)
-        map.putIfAbsent("orgPath", null)
-    }
 
     fun get(key: String): Any? {
         return map[key]
@@ -35,21 +20,80 @@ class Claims(initial: Map<String, Any?>) {
         return map.contains(key)
     }
 
-    var sub: String? by map
-    var exp: Date? by map
-    var iss: String? by map
-    var aud: String? by map
-    var nbf: Date? by map
-    var iat: Date? by map
-    var jti: String? by map
-    var tid: String? by map
-    var did: String? by map
-    var bid: String? by map
-    var org: String? by map
-    var orgPath: List<String>? by map
+    var sub: String?
+        get() = map["sub"] as String?
+        set(value) {
+            map["sub"] = value
+        }
+
+    var exp: Date?
+        get() = map["expr"] as? Date
+        set(value) {
+            map["date"] = value
+        }
+
+    var iss: String?
+        get() = map["iss"] as String?
+        set(value) {
+            map["iss"] = value
+        }
+
+    var aud: String?
+        get() = map["aud"] as String?
+        set(value) {
+            map["aud"] = value
+        }
+
+    var nbf: Date?
+        get() = map["nbf"] as? Date
+        set(value) {
+            map["nbf"] = value
+        }
+
+    var iat: Date?
+        get() = map["iat"] as? Date
+        set(value) {
+            map["iat"] = value
+        }
+
+    var jti: String?
+        get() = map["jti"] as String?
+        set(value) {
+            map["jti"] = value
+        }
+
+    var tid: String?
+        get() = map["tid"] as String?
+        set(value) {
+            map["tid"] = value
+        }
+
+    var did: String?
+        get() = map["did"] as String?
+        set(value) {
+            map["did"] = value
+        }
+
+    var bid: String?
+        get() = map["bid"] as String?
+        set(value) {
+            map["bid"] = value
+        }
+
+    var org: String?
+        get() = map["org"] as String?
+        set(value) {
+            map["org"] = value
+        }
+
+    var orgPath: List<String>?
+        get() = map["orgPath"] as? List<String>
+        set(value) {
+            map["orgPath"] = value
+        }
 
     var roles: List<String>
-        get() = map["roles"] as? List<String>? ?: emptyList()
+        get() = map["roles"] as? List<String> ?: emptyList()
         set(value) {
             map["roles"] = value
         }
