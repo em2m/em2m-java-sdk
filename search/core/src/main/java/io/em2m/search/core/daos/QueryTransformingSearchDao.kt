@@ -9,12 +9,14 @@ import rx.Observable
 
 class QueryTransformingSearchDao<T>(
         val aliases: Map<String, Field> = emptyMap(),
-        val fieldSets: Map<String, List<Field>> = emptyMap<String, List<Field>>(),
+        val fieldSets: Map<String, List<Field>> = emptyMap(),
         val namedAggs: Map<String, Agg> = emptyMap(),
         delegate: SearchDao<T>) : SearchDaoWrapper<T>(delegate) {
 
     override fun search(request: SearchRequest): Observable<SearchResult<T>> {
-        return super.search(transformRequest(request)).map { it.copy(fields = request.fields) }
+        return super.search(transformRequest(request))
+                .map { it.copy(fields = request.fields) }
+                .map { transformResult(request, it) }
     }
 
     override fun count(query: Query): Observable<Long> {
@@ -25,13 +27,13 @@ class QueryTransformingSearchDao<T>(
         return super.findOne(transformQuery(query))
     }
 
-    fun transformQuery(query: Query): Query {
+    private fun transformQuery(query: Query): Query {
         return query
                 .let { LuceneQueryTransformer().transform(it) }
                 .let { FieldAliasQueryTransformer(aliases).transform(it) }
     }
 
-    fun transformAggs(aggs: List<Agg>): List<Agg> {
+    private fun transformAggs(aggs: List<Agg>): List<Agg> {
         val aliasXform = FieldAliasAggTransformer(aliases)
         val namedXform = NamedAggTransformer(namedAggs)
         return aggs
@@ -43,7 +45,7 @@ class QueryTransformingSearchDao<T>(
                 }
     }
 
-    fun transformSorts(sorts: List<DocSort>): List<DocSort> {
+    private fun transformSorts(sorts: List<DocSort>): List<DocSort> {
         return sorts.map {
             val alias = aliases[it.field]
             DocSort(alias?.expr ?: alias?.name ?: it.field, it.direction)
@@ -51,7 +53,7 @@ class QueryTransformingSearchDao<T>(
     }
 
 
-    fun transformRequest(request: SearchRequest): SearchRequest {
+    private fun transformRequest(request: SearchRequest): SearchRequest {
         val fields = request.fields
                 .plus(fieldSets[request.fieldSet] ?: emptyList())
                 .map {
@@ -70,6 +72,21 @@ class QueryTransformingSearchDao<T>(
         val aggs = transformAggs(request.aggs)
         val fieldSet = if (fieldSets.containsKey(request.fieldSet)) null else request.fieldSet
         return request.copy(fieldSet = fieldSet, fields = fields, sorts = sorts, query = query, aggs = aggs)
+    }
+
+    private fun transformResult(request: SearchRequest, result: SearchResult<T>): SearchResult<T> {
+        val aggs = transformAggResults(request, result.aggs)
+        return result.copy(aggs = aggs)
+    }
+
+    private fun transformAggResults(request: SearchRequest, aggResults: Map<String, AggResult>): Map<String, AggResult> {
+        return request.aggs.mapNotNull { agg ->
+            val aggResult = aggResults[agg.key]
+            if (agg is NamedAgg) {
+                val named = namedAggs[agg.name]
+                aggResult?.copy(field = (named as? Fielded)?.field)
+            } else aggResult
+        }.associateBy { it.key }
     }
 
 }
