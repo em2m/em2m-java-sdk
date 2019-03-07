@@ -64,12 +64,11 @@ class BasicPolicyEngine(policySource: PolicySource, val simplex: Simplex = Simpl
         return statementsForRoles(roles).filter { statement -> matchesAction(statement, actionName) }
     }
 
-    private fun statementsForRoles(roles: List<String>): List<Statement> {
-        return roles
-                .flatMap { expandRole(it) }
-                .flatMap { policiesForRole(it) }
-                .distinct()
+    private fun statementsForRoles(roleIds: List<String>): List<Statement> {
+        val roles = roleIds.flatMap { expandRole(it) }.distinct().mapNotNull { roles[it] }
+        return roles.flatMap { policiesForRole(it.id) }.distinct()
                 .flatMap { it.statements }
+                .plus(roles.flatMap { it.statements })
     }
 
     private fun matchesAction(statement: Statement, actionName: String): Boolean {

@@ -15,6 +15,7 @@ data class Statement(val id: String? = null, val effect: Effect, val actions: Li
 data class Role(val id: String,
                 val label: String, val policies: List<String>,
                 val inherits: List<String> = emptyList(),
+                val statements: List<Statement> = emptyList(),
                 val condition: List<Condition> = emptyList())
 
 data class Policy(val id: String,
