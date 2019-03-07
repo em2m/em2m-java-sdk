@@ -13,7 +13,8 @@ class QueryTransformingSyncDao<T>(
         delegate: SyncDao<T>) : SyncDaoWrapper<T>(delegate) {
 
     override fun search(request: SearchRequest): SearchResult<T> {
-        return super.search(transformRequest(request)).copy(fields = request.fields)
+        val result = super.search(transformRequest(request)).copy(fields = request.fields)
+        return transformResult(request, result)
     }
 
     override fun count(query: Query): Long {
@@ -69,5 +70,21 @@ class QueryTransformingSyncDao<T>(
         val fieldSet = if (fieldSets.containsKey(request.fieldSet)) null else request.fieldSet
         return request.copy(fieldSet = fieldSet, fields = fields, sorts = sorts, query = query, aggs = aggs)
     }
+
+    private fun transformResult(request: SearchRequest, result: SearchResult<T>): SearchResult<T> {
+        val aggs = transformAggResults(request, result.aggs)
+        return result.copy(aggs = aggs)
+    }
+
+    private fun transformAggResults(request: SearchRequest, aggResults: Map<String, AggResult>): Map<String, AggResult> {
+        return request.aggs.mapNotNull { agg ->
+            val aggResult = aggResults[agg.key]
+            if (agg is NamedAgg) {
+                val named = namedAggs[agg.name]
+                aggResult?.copy(field = (named as? Fielded)?.field)
+            } else aggResult
+        }.associateBy { it.key }
+    }
+
 
 }
