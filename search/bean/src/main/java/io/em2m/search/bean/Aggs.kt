@@ -126,7 +126,7 @@ class Aggs {
             val buckets = agg.filters.map { (key, value) ->
                 val predicate = Functions.toPredicate(value)
                 val count = matches.filter { predicate.invoke(it as Any) }.size.toLong()
-                Bucket(key, count)
+                Bucket(key, count, query = value)
             }
             return AggResult(agg.key, buckets, op = agg.op())
         }
@@ -181,7 +181,7 @@ class Aggs {
 
             sortedBuckets.map {
                 Bucket(key = dateFormat.parse(it.key as String).time, count = it.count, label = it.label,
-                        stats = it.stats, from = it.from, to = it.to, aggs = it.aggs)
+                        stats = it.stats, from = it.from, to = it.to, query = it.query, aggs = it.aggs)
             }
 
 

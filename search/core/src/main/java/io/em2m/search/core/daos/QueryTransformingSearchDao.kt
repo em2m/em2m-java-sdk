@@ -84,9 +84,22 @@ class QueryTransformingSearchDao<T>(
             val aggResult = aggResults[agg.key]
             if (agg is NamedAgg) {
                 val named = namedAggs[agg.name]
-                aggResult?.copy(field = (named as? Fielded)?.field)
+                when (named) {
+                    is Fielded -> aggResult?.copy(field = named.field)
+                    is FiltersAgg -> aggResult?.copy(buckets = transformFilterBuckets(named, aggResult.buckets))
+                    else -> aggResult
+                }
             } else aggResult
         }.associateBy { it.key }
+    }
+
+    private fun transformFilterBuckets(agg: FiltersAgg, buckets: List<Bucket>?): List<Bucket>? {
+        if (buckets == null) return null
+        return buckets.map { bucket ->
+            val key = bucket.key
+            val query = agg.filters[key]
+            bucket.copy(query = query)
+        }
     }
 
 }
