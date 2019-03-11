@@ -13,8 +13,10 @@ data class Statement(val id: String? = null, val effect: Effect, val actions: Li
                      val condition: ConditionExpr = ConstConditionExpr(true))
 
 data class Role(val id: String,
-                val label: String, val policies: List<String>,
+                val label: String = id,
+                val policies: List<String> = emptyList(),
                 val inherits: List<String> = emptyList(),
+                val statements: List<Statement> = emptyList(),
                 val condition: List<Condition> = emptyList())
 
 data class Policy(val id: String,

@@ -75,6 +75,16 @@ class PolicyEngineTest : Assert() {
     }
 
     @Test
+    fun testRoleStatements() {
+        val claims = Claims(mapOf("sub" to "1234", "roles" to listOf("sales"), "exp" to Date()))
+        val environment = Environment(emptyMap())
+        val resource = "em2m:ident:account:1234"
+        val context = PolicyContext(claims, environment, resource)
+        val allowed = policyEngine.isActionAllowed("feature:SalesRoleFeature", context)
+        assertTrue(allowed)
+    }
+
+    @Test
     @Ignore
     fun testDeny() {
         error("Not implemented")
