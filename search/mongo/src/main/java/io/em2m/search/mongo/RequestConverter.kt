@@ -184,6 +184,16 @@ class RequestConverter(private val schemaMapper: SchemaMapper, val objectMapper:
                         ))
                     }
                 }
+                is DateRangeAgg -> {
+                    val key = agg.key
+                    agg.ranges.forEach { range ->
+                        val facetKey = "$key:${range.key}"
+                        facets.add(Facet(facetKey,
+                                Aggregates.match(convertInternal(RangeQuery(agg.field, gte = range.from, lt = range.to))),
+                                Document(mapOf("\$group" to mapOf("_id" to null, "count" to mapOf("\$sum" to 1))))
+                        ))
+                    }
+                }
                 is NativeAgg -> {
                     val value = when (agg.value) {
                         is Bson -> {
