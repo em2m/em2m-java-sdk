@@ -1,0 +1,16 @@
+{
+  "label": "Test",
+  "policies": [
+    "TestPolicy"
+  ],
+  "statements": [
+    {
+      "allow": {
+        "features": [
+          "SalesRoleFeature"
+        ]
+      },
+      "resource": "em2m:ident:account:*"
+    }
+  ]
+}
