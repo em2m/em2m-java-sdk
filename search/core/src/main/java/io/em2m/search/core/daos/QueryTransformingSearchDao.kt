@@ -1,10 +1,7 @@
 package io.em2m.search.core.daos
 
 import io.em2m.search.core.model.*
-import io.em2m.search.core.xform.FieldAliasAggTransformer
-import io.em2m.search.core.xform.FieldAliasQueryTransformer
-import io.em2m.search.core.xform.LuceneQueryTransformer
-import io.em2m.search.core.xform.NamedAggTransformer
+import io.em2m.search.core.xform.*
 import rx.Observable
 
 class QueryTransformingSearchDao<T>(
@@ -31,6 +28,7 @@ class QueryTransformingSearchDao<T>(
         return query
                 .let { LuceneQueryTransformer().transform(it) }
                 .let { FieldAliasQueryTransformer(aliases).transform(it) }
+                .let { NamedAggQueryTransformer(namedAggs).transform(it) }
     }
 
     private fun transformAggs(aggs: List<Agg>): List<Agg> {
