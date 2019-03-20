@@ -186,7 +186,7 @@ class MongoSearchDaoAggTest : FeaturesTestBase() {
             val agg = result.aggs["magnitude"] ?: error("agg should not be null")
             val buckets = agg.buckets ?: error("buckets should not be null")
             assertEquals(1, buckets.size)
-            assertEquals(21, buckets.map { it.count }.sum())
+            assertEquals(20, buckets.map { it.count }.sum())
         }.subscribe(sub)
         sub.awaitTerminalEvent()
         sub.assertNoErrors()

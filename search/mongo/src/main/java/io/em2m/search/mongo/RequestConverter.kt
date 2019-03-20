@@ -175,13 +175,24 @@ class RequestConverter(private val schemaMapper: SchemaMapper, val objectMapper:
 //                    //result.dateHistogram(it.key, it.field, it.interval, it.offset, it.timeZone)
 //                }
                 is RangeAgg -> {
-                    /*
-                    val esRanges = result.agg(it.key, "range").put("field", it.field)
-                            .withArray("ranges")
-                    it.ranges.forEach {
-                        esRanges.addPOJO(it)
+                    val key = agg.key
+                    agg.ranges.forEach { range ->
+                        val facetKey = "$key:${range.key}"
+                        facets.add(Facet(facetKey,
+                                Aggregates.match(convertInternal(RangeQuery(agg.field, gte = range.from, lt = range.to))),
+                                Document(mapOf("\$group" to mapOf("_id" to null, "count" to mapOf("\$sum" to 1))))
+                        ))
                     }
-                    */
+                }
+                is DateRangeAgg -> {
+                    val key = agg.key
+                    agg.ranges.forEach { range ->
+                        val facetKey = "$key:${range.key}"
+                        facets.add(Facet(facetKey,
+                                Aggregates.match(convertInternal(RangeQuery(agg.field, gte = range.from, lt = range.to))),
+                                Document(mapOf("\$group" to mapOf("_id" to null, "count" to mapOf("\$sum" to 1))))
+                        ))
+                    }
                 }
                 is NativeAgg -> {
                     val value = when (agg.value) {
