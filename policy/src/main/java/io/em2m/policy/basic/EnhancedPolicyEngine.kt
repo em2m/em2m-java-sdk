@@ -6,6 +6,10 @@ import java.util.regex.Matcher
 
 class EnhancedPolicyEngine(policySource: PolicySource, val simplex: Simplex = Simplex()) : PolicyEngine {
 
+    override fun checkAction(actionName: String, context: PolicyContext): ActionCheck {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
     private val roles = policySource.roles.associateBy { it.id }
     private val policies = policySource.policies.associateBy { it.id }
 

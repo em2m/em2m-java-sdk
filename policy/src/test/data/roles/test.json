@@ -6,11 +6,15 @@
   "statements": [
     {
       "allow": {
+        "actions": [ "CreateReport", "..."],
         "features": [
-          "SalesRoleFeature"
+          "Reports"
+        ],
+        "reportTypes": [
+          "Impact", "Utilization"
         ]
       },
-      "resource": "em2m:ident:account:*"
+      "resource": "em2m:ident:organization:*"
     }
   ]
 }
