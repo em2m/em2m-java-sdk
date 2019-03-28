@@ -39,7 +39,7 @@ class Functions {
 
     companion object {
 
-        fun term(path: String, term: Any?): (Any) -> Boolean {
+        private fun term(path: String, term: Any?): (Any) -> Boolean {
             val fieldGetter = field(path)
             return { obj ->
                 val values = fieldGetter.invoke(obj)
@@ -49,8 +49,8 @@ class Functions {
                         val termVal = Coerce.to(term, value.javaClass)
                         result = termVal == value
                     } else if (value != null) {
-                        val termStr = term.toString().toLowerCase()
-                        result = value.toString().toLowerCase().contains(termStr)
+                        val termStr = term.toString()
+                        result = value == termStr
                     }
                     if (result) break
                 }
@@ -58,7 +58,7 @@ class Functions {
             }
         }
 
-        fun all(predicates: List<(Any) -> Boolean>): (Any) -> Boolean {
+        private fun all(predicates: List<(Any) -> Boolean>): (Any) -> Boolean {
             return { obj ->
                 var result = true
                 for (p in predicates) {
@@ -71,7 +71,7 @@ class Functions {
             }
         }
 
-        fun any(predicates: List<(Any) -> Boolean>): (Any) -> Boolean {
+        private fun any(predicates: List<(Any) -> Boolean>): (Any) -> Boolean {
             return { obj ->
                 var result = false
                 for (p in predicates) {
@@ -84,7 +84,7 @@ class Functions {
             }
         }
 
-        internal fun matches(path: String, pattern: Pattern): (Any) -> Boolean {
+        private fun matches(path: String, pattern: Pattern): (Any) -> Boolean {
             val fieldGetter = field(path)
             return { obj ->
                 var result = false
@@ -99,29 +99,28 @@ class Functions {
             }
         }
 
-        internal fun not(predicate: (Any) -> Boolean): (Any) -> Boolean {
+        private fun not(predicate: (Any) -> Boolean): (Any) -> Boolean {
             return { obj -> !predicate(obj) }
         }
 
-        internal fun asList(obj: Any?): List<Any?> {
-            if (obj == null) {
-                return emptyList()
-            } else if (obj is List<*>) {
-                return obj.map { it }
-            } else if (obj.javaClass.isArray) {
-                val length = Array.getLength(obj)
-                val result = ArrayList<Any>(length)
-                for (i in 0 until length) {
-                    val item = Array.get(obj, i)
-                    result.add(item)
+        private fun asList(obj: Any?): List<Any?> {
+            return when {
+                obj == null -> emptyList()
+                obj is List<*> -> obj.map { it }
+                obj.javaClass.isArray -> {
+                    val length = Array.getLength(obj)
+                    val result = ArrayList<Any>(length)
+                    for (i in 0 until length) {
+                        val item = Array.get(obj, i)
+                        result.add(item)
+                    }
+                    result
                 }
-                return result
-            } else {
-                return Arrays.asList(obj)
+                else -> Arrays.asList(obj)
             }
         }
 
-        internal fun lte(path: String, term: Any): (Any) -> Boolean {
+        private fun lte(path: String, term: Any): (Any) -> Boolean {
             val fieldGetter = field(path)
             return { obj ->
                 var result = false
@@ -134,7 +133,7 @@ class Functions {
             }
         }
 
-        internal fun gte(path: String, term: Any): (Any) -> Boolean {
+        private fun gte(path: String, term: Any): (Any) -> Boolean {
             val fieldGetter = field(path)
             return { obj ->
                 var result = false
@@ -147,7 +146,7 @@ class Functions {
             }
         }
 
-        internal fun gt(path: String, term: Any): (Any) -> Boolean {
+        private fun gt(path: String, term: Any): (Any) -> Boolean {
             val fieldGetter = field(path)
             return { obj ->
                 var result = false
@@ -160,7 +159,7 @@ class Functions {
             }
         }
 
-        internal fun lt(path: String, term: Any): (Any) -> Boolean {
+        private fun lt(path: String, term: Any): (Any) -> Boolean {
             val fieldGetter = field(path)
             return { obj ->
                 var result = false
@@ -173,7 +172,7 @@ class Functions {
             }
         }
 
-        internal fun field(field: String): (Any) -> List<Any?> {
+        fun field(field: String): (Any) -> List<Any?> {
             return { obj ->
                 try {
                     asList(obj.evalPath(field))
@@ -183,7 +182,7 @@ class Functions {
             }
         }
 
-        internal fun fieldValue(field: String): (Any) -> Any? {
+        fun fieldValue(field: String): (Any) -> Any? {
             return { obj ->
                 try {
                     obj.evalPath(field)
@@ -193,28 +192,28 @@ class Functions {
             }
         }
 
-        internal fun toPredicate(terms: List<Query>): List<(Any) -> Boolean> {
-            return terms.map({ toPredicate(it) })
+        private fun toPredicate(terms: List<Query>): List<(Any) -> Boolean> {
+            return terms.map { toPredicate(it) }
         }
 
-        internal fun toPredicate(expr: PhraseQuery): (Any) -> Boolean {
+        private fun toPredicate(expr: PhraseQuery): (Any) -> Boolean {
             val field = expr.field
             val value = expr.value.joinToString(" ")
             val pattern = Pattern.compile(Matcher.quoteReplacement(value), Pattern.CASE_INSENSITIVE)
             return matches(field, pattern)
         }
 
-        internal fun toPredicate(expr: PrefixQuery): (Any) -> Boolean {
+        private fun toPredicate(expr: PrefixQuery): (Any) -> Boolean {
             val field = expr.field
             val text = expr.value
             val pattern = Pattern.compile("^" + Matcher.quoteReplacement(text) + ".*", Pattern.CASE_INSENSITIVE)
             return matches(field, pattern)
         }
 
-        internal fun toPredicate(expr: RegexQuery): (Any) -> Boolean {
+        private fun toPredicate(expr: RegexQuery): (Any) -> Boolean {
             val field = expr.field
             val regex = expr.value
-            return matches(field, regex.toPattern())
+            return matches(field, Pattern.compile(regex, Pattern.CASE_INSENSITIVE))
         }
 
         internal fun toPredicate(query: RangeQuery): (Any) -> Boolean {
@@ -227,13 +226,13 @@ class Functions {
             return all(expr)
         }
 
-        internal fun toPredicate(expr: TermQuery): (Any) -> Boolean {
+        private fun toPredicate(expr: TermQuery): (Any) -> Boolean {
             val field = expr.field
             val value = expr.value
             return term(field, value)
         }
 
-        internal fun toPredicate(expr: MatchAllQuery): (Any) -> Boolean {
+        private fun toPredicate(expr: MatchAllQuery): (Any) -> Boolean {
             return { true }
         }
 
@@ -250,22 +249,22 @@ class Functions {
                     not(any(toPredicate(query.of)))
                 }
                 is PhraseQuery -> {
-                    Companion.toPredicate(query)
+                    toPredicate(query)
                 }
                 is RegexQuery -> {
-                    Companion.toPredicate(query)
+                    toPredicate(query)
                 }
                 is PrefixQuery -> {
-                    Companion.toPredicate(query)
+                    toPredicate(query)
                 }
                 is RangeQuery -> {
-                    Companion.toPredicate(query)
+                    toPredicate(query)
                 }
                 is TermQuery -> {
-                    Companion.toPredicate(query)
+                    toPredicate(query)
                 }
                 is MatchAllQuery -> {
-                    Companion.toPredicate(query)
+                    toPredicate(query)
                 }
                 else -> {
                     throw IllegalArgumentException("Unsupported expression type")
