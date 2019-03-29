@@ -13,8 +13,9 @@ class NumberPipe : PipeTransform {
 
     override fun args(args: List<String>) {
         if (args.isNotEmpty()) {
-            val fractionSize = args[0].toInt()
+            val fractionSize = args[0].trim().toInt()
             format.maximumFractionDigits = fractionSize
+            format.minimumFractionDigits = fractionSize
         }
     }
 
@@ -34,7 +35,7 @@ class RoundPipe : PipeTransform {
 
     override fun args(args: List<String>) {
         if (args.isNotEmpty()) {
-            precision = Integer.parseInt(args[0])
+            precision = Integer.parseInt(args[0].trim())
         }
     }
 
@@ -125,6 +126,46 @@ class MinusPipe : PipeTransform {
     }
 }
 
+class MaxPipe : PipeTransform {
+
+    private var max: Double? = null
+
+    override fun args(args: List<String>) {
+        if (args.isNotEmpty()) {
+            max = args.first().trimEnd().coerce()
+        }
+    }
+
+    override fun transform(value: Any?, context: ExprContext): Any? {
+        val maxValue = max
+        return if (value is Number && maxValue != null) {
+            if (value.toDouble() > maxValue) {
+                maxValue
+            } else value
+        } else value
+    }
+}
+
+class MinPipe : PipeTransform {
+
+    private var min: Double? = null
+
+    override fun args(args: List<String>) {
+        if (args.isNotEmpty()) {
+            min = args.first().trimEnd().coerce()
+        }
+    }
+
+    override fun transform(value: Any?, context: ExprContext): Any? {
+        val minValue = min
+        return if (value is Number && minValue != null) {
+            if (value.toDouble() < minValue) {
+                minValue
+            } else value
+        } else value
+    }
+}
+
 
 class RandomKey : KeyHandler {
 
@@ -188,6 +229,8 @@ object Numbers {
     val pipes = BasicPipeTransformResolver()
             .transform("number") { NumberPipe() }
             .transform("round") { RoundPipe() }
+            .transform("max") { MaxPipe() }
+            .transform("min") { MinPipe() }
             .transform("times") { TimesPIpe() }
             .transform("div") { DivPipe() }
             .transform("plus") { PlusPipe() }

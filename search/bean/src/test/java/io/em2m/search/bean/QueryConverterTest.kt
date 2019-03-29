@@ -38,7 +38,7 @@ class QueryConverterTest {
 
     @Test
     fun testBooleanAndQuery() {
-        val result = toPredicate("firstName:fred AND lastName:flinstone")
+        val result = toPredicate("firstName:Fred AND lastName:Flinstone")
         assertNotNull(result)
         assertTrue(result(fred))
         assertFalse(result(barn))
@@ -46,13 +46,13 @@ class QueryConverterTest {
 
     @Test
     fun testBooleanOrQuery() {
-        val result = toPredicate("firstName:(fred OR barney)")
+        val result = toPredicate("firstName:(Fred OR Barney)")
         assertNotNull(result)
         assertTrue(result(fred))
         assertTrue(result(barn))
     }
 
-    internal fun toPredicate(query: String): (Any) -> Boolean {
+    private fun toPredicate(query: String): (Any) -> Boolean {
         val parser = LuceneExprParser("text")
         return Functions.toPredicate(parser.parse(query))
     }

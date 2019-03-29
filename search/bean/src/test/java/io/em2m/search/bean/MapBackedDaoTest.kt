@@ -35,14 +35,14 @@ class MapBackedDaoTest {
     @Test
     @Throws(Exception::class)
     fun testFindOne() {
-        val movie = dao.findOne(TermQuery("fields.title", "Robocop")) ?: error("expect movie")
+        val movie = dao.findOne(TermQuery("fields.title", "RoboCop")) ?: error("expect movie")
         assertTrue(dao.exists(movie.id))
     }
 
     @Test
     @Throws(Exception::class)
     fun testSearch() {
-        var req = SearchRequest(limit = 10, query = TermQuery("fields.genres", "Sci-Fi"))
+        val req = SearchRequest(limit = 10, query = TermQuery("fields.genres", "Sci-Fi"))
         val results = dao.search(req)
         assertNotNull(results)
         assertNotNull(results.items)

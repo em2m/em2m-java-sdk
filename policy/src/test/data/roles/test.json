@@ -1,0 +1,20 @@
+{
+  "label": "Test",
+  "policies": [
+    "TestPolicy"
+  ],
+  "statements": [
+    {
+      "allow": {
+        "actions": [ "CreateReport", "..."],
+        "features": [
+          "Reports"
+        ],
+        "reportTypes": [
+          "Impact", "Utilization"
+        ]
+      },
+      "resource": "em2m:ident:organization:*"
+    }
+  ]
+}
