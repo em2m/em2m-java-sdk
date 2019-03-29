@@ -17,6 +17,7 @@ class UpperCasePipe : PipeTransform {
     }
 }
 
+
 class CapitalizePipe : PipeTransform {
     override fun transform(value: Any?, context: ExprContext): Any? {
         return if (value is List<*>) {
@@ -37,6 +38,24 @@ class TrimPipe : PipeTransform {
             value.map { it?.toString()?.trim() }
         } else {
             value?.toString()?.trim()
+        }
+    }
+}
+
+class AppendPipe : PipeTransform {
+    var text = ""
+
+    override fun args(args: List<String>) {
+        if (args.isNotEmpty()) {
+            text = args[0]
+        }
+    }
+
+    override fun transform(value: Any?, context: ExprContext): Any? {
+        return if (value != null) {
+            value.toString() + text
+        } else {
+            return null
         }
     }
 }
@@ -169,6 +188,7 @@ object Strings {
             "upperCase" to UpperCasePipe(),
             "capitalize" to CapitalizePipe(),
             "trim" to TrimPipe(),
+            "append" to AppendPipe(),
             "join" to JoinPipe()))
     val keys = BasicKeyResolver()
     val conditions = BasicConditionResolver(StandardStringConditions)
