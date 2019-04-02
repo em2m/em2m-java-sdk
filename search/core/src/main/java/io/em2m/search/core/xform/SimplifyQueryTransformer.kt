@@ -9,26 +9,26 @@ import io.em2m.search.core.model.Query
 class SimplifyQueryTransformer : QueryTransformer() {
 
     override fun transformAndQuery(query: AndQuery): Query {
-        val of = query.of.filter { it !is MatchAllQuery }
+        val of = query.of.map(this::transform).filter { it !is MatchAllQuery }
 
         return when {
             of.isEmpty() -> MatchAllQuery()
-            of.size == 1 -> transform(of.first())
+            of.size == 1 -> of.first()
             else -> {
-                AndQuery(of.map(this::transform))
+                AndQuery(of)
             }
         }
     }
 
     override fun transformOrQuery(query: OrQuery): Query {
-        val of = query.of
+        val of = query.of.map(this::transform)
         val matchAllCount = of.count { it is MatchAllQuery }
 
         return when {
             matchAllCount > 0 -> MatchAllQuery()
             of.isEmpty() -> MatchAllQuery()
-            of.size == 1 -> transform(of.first())
-            else -> OrQuery(of.map(this::transform))
+            of.size == 1 -> of.first()
+            else -> OrQuery(of)
         }
     }
 }
