@@ -17,21 +17,23 @@ private fun File.isYml(): Boolean = extension == "yml" || extension == "yaml"
 private fun File.isJson(): Boolean = extension == "json"
 
 
-class LocalPolicySource(private val dir: File, private val simplex: Simplex) : PolicySource {
+class LocalPolicySource(roleDir: File, policyDir: File, simplex: Simplex) : PolicySource {
 
-    val jsonMapper = jacksonObjectMapper().registerModule(SimplexModule(simplex))
-    val ymlMapper = ObjectMapper(YAMLFactory()).registerKotlinModule().registerModule(SimplexModule(simplex))
+    constructor(dir: File, simplex: Simplex) : this(File(dir, "roles"), File(dir, "policies"), simplex)
 
-    override val policies: List<Policy> = loadPolicyDir(File(dir, "policies"))
-    override val roles: List<Role> = loadRoleDir(File(dir, "roles"))
+    private val jsonMapper = jacksonObjectMapper().registerModule(SimplexModule(simplex))
+    private val ymlMapper = ObjectMapper(YAMLFactory()).registerKotlinModule().registerModule(SimplexModule(simplex))
 
-    fun readTree(file: File): ObjectNode {
+    override val policies: List<Policy> = loadPolicyDir(policyDir)
+    override val roles: List<Role> = loadRoleDir(roleDir)
+
+    private fun readTree(file: File): ObjectNode {
         return if (file.isYml()) {
             ymlMapper.readTree(file) as ObjectNode
         } else jsonMapper.readTree(file) as ObjectNode
     }
 
-    fun loadPolicyDir(dir: File): List<Policy> {
+    private fun loadPolicyDir(dir: File): List<Policy> {
         return dir.walk().maxDepth(1).toList().filter { it.isJson() || it.isYml() }.map {
             val id = it.nameWithoutExtension
             val tree = readTree(it)
@@ -40,7 +42,7 @@ class LocalPolicySource(private val dir: File, private val simplex: Simplex) : P
         }
     }
 
-    fun loadRoleDir(dir: File): List<Role> {
+    private fun loadRoleDir(dir: File): List<Role> {
         return dir.walk().maxDepth(1).toList().filter { it.isJson() || it.isYml() }.map {
             val id = it.nameWithoutExtension
             val tree = readTree(it)
