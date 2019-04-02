@@ -26,7 +26,7 @@ class QueryTransformingSearchDao<T>(
         return super.findOne(transformQuery(query))
     }
 
-    private fun transformQuery(query: Query, request: SearchRequest? = null): Query {
+    private fun transformQuery(query: Query): Query {
         return query
                 .let { LuceneQueryTransformer().transform(it) }
                 .let { FieldAliasQueryTransformer(aliases).transform(it) }
