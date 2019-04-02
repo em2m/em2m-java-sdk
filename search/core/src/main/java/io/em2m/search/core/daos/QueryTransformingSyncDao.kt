@@ -9,6 +9,8 @@ class QueryTransformingSyncDao<T>(
         private val namedAggs: Map<String, Agg> = emptyMap(),
         delegate: SyncDao<T>) : SyncDaoWrapper<T>(delegate) {
 
+    var timeZone : String = "America/Los_Angeles"
+
     override fun search(request: SearchRequest): SearchResult<T> {
         val result = super.search(transformRequest(request)).copy(fields = request.fields)
         return transformResult(request, result)
@@ -26,7 +28,7 @@ class QueryTransformingSyncDao<T>(
         return query
                 .let { LuceneQueryTransformer().transform(it) }
                 .let { FieldAliasQueryTransformer(aliases).transform(it) }
-                .let { NamedAggQueryTransformer(namedAggs).transform(it) }
+                .let { NamedAggQueryTransformer(namedAggs, timeZone).transform(it) }
     }
 
     private fun transformAggs(aggs: List<Agg>): List<Agg> {
@@ -49,6 +51,7 @@ class QueryTransformingSyncDao<T>(
     }
 
     private fun transformRequest(request: SearchRequest): SearchRequest {
+        if (request.params["timeZone"] != null) timeZone = request.params["timeZone"].toString()
         val fields = request.fields
                 .plus(fieldSets[request.fieldSet] ?: emptyList())
                 .map {

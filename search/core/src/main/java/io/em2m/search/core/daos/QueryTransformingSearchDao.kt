@@ -10,6 +10,8 @@ class QueryTransformingSearchDao<T>(
         val namedAggs: Map<String, Agg> = emptyMap(),
         delegate: SearchDao<T>) : SearchDaoWrapper<T>(delegate) {
 
+    var timeZone : String = "America/Los_Angeles"
+
     override fun search(request: SearchRequest): Observable<SearchResult<T>> {
         return super.search(transformRequest(request))
                 .map { it.copy(fields = request.fields) }
@@ -24,11 +26,11 @@ class QueryTransformingSearchDao<T>(
         return super.findOne(transformQuery(query))
     }
 
-    private fun transformQuery(query: Query): Query {
+    private fun transformQuery(query: Query, request: SearchRequest? = null): Query {
         return query
                 .let { LuceneQueryTransformer().transform(it) }
                 .let { FieldAliasQueryTransformer(aliases).transform(it) }
-                .let { NamedAggQueryTransformer(namedAggs).transform(it) }
+                .let { NamedAggQueryTransformer(namedAggs, timeZone).transform(it) }
     }
 
     private fun transformAggs(aggs: List<Agg>): List<Agg> {
@@ -52,6 +54,7 @@ class QueryTransformingSearchDao<T>(
 
 
     private fun transformRequest(request: SearchRequest): SearchRequest {
+        if (request.params["timeZone"] != null) timeZone = request.params["timeZone"].toString()
         val fields = request.fields
                 .plus(fieldSets[request.fieldSet] ?: emptyList())
                 .map {
