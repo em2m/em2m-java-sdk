@@ -54,7 +54,7 @@ class RequestConverter(val objectMapper: ObjectMapper = jacksonObjectMapper(), v
         is RangeQuery -> {
             // format support?
             // boost?
-            val timeZone = query.timeZone ?: params?.get("timeZone").toString() ?: "America/Los_Angeles"
+            val timeZone = query.timeZone ?: params?.get("timeZone").toString()
             EsRangeQuery(query.field, query.gte, query.gt, query.lte, query.lt, timeZone = timeZone)
         }
         is BboxQuery -> {
@@ -94,7 +94,7 @@ class RequestConverter(val objectMapper: ObjectMapper = jacksonObjectMapper(), v
 
     fun convertAggs(aggs: List<Agg>, params: Map<String, Any>): EsAggs {
         val result = EsAggs()
-        val timeZone = DateTimeZone.forID(params["timeZone"] as? String ?: "America/Los_Angeles")
+        val timeZone = DateTimeZone.forID(params["timeZone"] as? String)
         aggs.forEach {
             val subAggs = if (it.aggs?.isNotEmpty()) {
                 convertAggs(it.aggs, params)
