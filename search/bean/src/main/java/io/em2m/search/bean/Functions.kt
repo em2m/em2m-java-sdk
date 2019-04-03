@@ -45,12 +45,11 @@ class Functions {
                 val values = fieldGetter.invoke(obj)
                 var result = false
                 for (value in values) {
-                    if (value is Number) {
+                    if (value is Number || value is Boolean) {
                         val termVal = Coerce.to(term, value.javaClass)
                         result = termVal == value
                     } else if (value != null) {
-                        val termStr = term.toString()
-                        result = value == termStr
+                        result = value.toString() == term.toString()
                     }
                     if (result) break
                 }
