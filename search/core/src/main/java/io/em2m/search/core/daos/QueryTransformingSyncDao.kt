@@ -22,11 +22,11 @@ class QueryTransformingSyncDao<T>(
         return super.findOne(transformQuery(query))
     }
 
-    private fun transformQuery(query: Query): Query {
+    private fun transformQuery(query: Query, timeZone: String? = null): Query {
         return query
                 .let { LuceneQueryTransformer().transform(it) }
                 .let { FieldAliasQueryTransformer(aliases).transform(it) }
-                .let { NamedAggQueryTransformer(namedAggs).transform(it) }
+                .let { NamedAggQueryTransformer(namedAggs, timeZone).transform(it) }
     }
 
     private fun transformAggs(aggs: List<Agg>): List<Agg> {
@@ -49,6 +49,8 @@ class QueryTransformingSyncDao<T>(
     }
 
     private fun transformRequest(request: SearchRequest): SearchRequest {
+        var timeZone = "America/Los_Angeles"
+        if (request.params["timeZone"] != null) timeZone = request.params["timeZone"].toString()
         val fields = request.fields
                 .plus(fieldSets[request.fieldSet] ?: emptyList())
                 .map {
@@ -63,7 +65,7 @@ class QueryTransformingSyncDao<T>(
                     } else it
                 }
         val sorts = transformSorts(request.sorts)
-        val query = request.query?.let { transformQuery(it) }
+        val query = request.query?.let { transformQuery(it, timeZone) }
         val aggs = transformAggs(request.aggs)
         val fieldSet = if (fieldSets.containsKey(request.fieldSet)) null else request.fieldSet
         return request.copy(fieldSet = fieldSet, fields = fields, sorts = sorts, query = query, aggs = aggs)
