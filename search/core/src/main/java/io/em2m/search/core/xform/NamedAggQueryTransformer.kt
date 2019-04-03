@@ -3,7 +3,7 @@ package io.em2m.search.core.xform
 import io.em2m.search.core.model.*
 import io.em2m.utils.coerce
 
-class NamedAggQueryTransformer(val namedAggs: Map<String, Agg>) : QueryTransformer() {
+class NamedAggQueryTransformer(val namedAggs: Map<String, Agg>, val timeZone: String?) : QueryTransformer() {
 
     override fun transformNamedQuery(query: NamedQuery): Query {
         val agg = namedAggs[query.name]
@@ -21,7 +21,7 @@ class NamedAggQueryTransformer(val namedAggs: Map<String, Agg>) : QueryTransform
             }
             is DateRangeAgg -> {
                 val range = requireNotNull(agg.ranges.find { it.key == query.value?.toString() })
-                RangeQuery(agg.field, gte = range.from, lte = range.to)
+                RangeQuery(agg.field, gte = range.from, lte = range.to, timeZone = timeZone)
             }
             is GeoBoundsAgg -> {
                 TermQuery(agg.field, value)
