@@ -14,7 +14,7 @@ class RequestConverter(val objectMapper: ObjectMapper = jacksonObjectMapper(), v
 
         val from = request.offset
         val size = request.limit
-        val query = convertQuery(request.query)
+        val query = convertQuery(request.query, request.params)
         val fields = convertFields(request.fields)
         val aggs = convertAggs(request.aggs, request.params)
         val sort = convertSorts(request.sorts)
@@ -26,15 +26,15 @@ class RequestConverter(val objectMapper: ObjectMapper = jacksonObjectMapper(), v
 
     }
 
-    fun convertQuery(query: Query?): EsQuery = when (query) {
+    fun convertQuery(query: Query?, params: Map<String, Any>?): EsQuery = when (query) {
         is AndQuery -> {
-            EsBoolQuery(must = query.of.map { convertQuery(it) })
+            EsBoolQuery(must = query.of.map { convertQuery(it, params) })
         }
         is OrQuery -> {
-            EsBoolQuery(should = query.of.map { convertQuery(it) })
+            EsBoolQuery(should = query.of.map { convertQuery(it, params) })
         }
         is NotQuery -> {
-            EsBoolQuery(mustNot = query.of.map { convertQuery(it) })
+            EsBoolQuery(mustNot = query.of.map { convertQuery(it, params) })
         }
         is MatchAllQuery -> {
             EsMatchAllQuery()
@@ -54,7 +54,8 @@ class RequestConverter(val objectMapper: ObjectMapper = jacksonObjectMapper(), v
         is RangeQuery -> {
             // format support?
             // boost?
-            EsRangeQuery(query.field, query.gte, query.gt, query.lte, query.lt, timeZone = query.timeZone)
+            val timeZone = query.timeZone ?: params?.get("timeZone").toString()
+            EsRangeQuery(query.field, query.gte, query.gt, query.lte, query.lt, timeZone = timeZone)
         }
         is BboxQuery -> {
             EsGeoBoundingBoxQuery(query.field, query.value)
@@ -93,7 +94,7 @@ class RequestConverter(val objectMapper: ObjectMapper = jacksonObjectMapper(), v
 
     fun convertAggs(aggs: List<Agg>, params: Map<String, Any>): EsAggs {
         val result = EsAggs()
-        val timeZone = DateTimeZone.forID(params["timeZone"] as? String ?: "America/Los_Angeles")
+        val timeZone = DateTimeZone.forID(params["timeZone"] as? String)
         aggs.forEach {
             val subAggs = if (it.aggs?.isNotEmpty()) {
                 convertAggs(it.aggs, params)
@@ -126,7 +127,7 @@ class RequestConverter(val objectMapper: ObjectMapper = jacksonObjectMapper(), v
                 is DateRangeAgg -> {
                     val esAgg = result.agg(it.key, "date_range", subAggs).put("field", it.field).minDocCount(it.minDocCount)
                     if (it.format != null) esAgg.put("format", it.format)
-                    //if (it.timeZone != null) esAgg.put("time_zone", timeZone.id)
+                    if (it.timeZone != null) esAgg.put("time_zone", timeZone.id)
                     val esRanges = esAgg.withArray("ranges")
 
                     val dateMathParser = DateMathParser(timeZone)
@@ -183,7 +184,7 @@ class RequestConverter(val objectMapper: ObjectMapper = jacksonObjectMapper(), v
                     val esAgg = result.agg(it.key, "filters", subAggs)
                     val esFilters = esAgg.with("filters").minDocCount(it.minDocCount)
                     it.filters.forEach {
-                        esFilters.putPOJO(it.key, convertQuery(it.value))
+                        esFilters.putPOJO(it.key, convertQuery(it.value, params))
                     }
                 }
                 else -> {
