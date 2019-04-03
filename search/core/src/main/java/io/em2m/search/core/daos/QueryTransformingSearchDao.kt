@@ -52,8 +52,7 @@ class QueryTransformingSearchDao<T>(
 
 
     private fun transformRequest(request: SearchRequest): SearchRequest {
-        var timeZone = "America/Los_Angeles"
-        if (request.params["timeZone"] != null) timeZone = request.params["timeZone"].toString()
+        val timeZone: String? = request.params.get("timeZone") as String?
         val fields = request.fields
                 .plus(fieldSets[request.fieldSet] ?: emptyList())
                 .map {
