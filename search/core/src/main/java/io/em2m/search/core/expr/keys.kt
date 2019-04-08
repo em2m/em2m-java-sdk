@@ -37,10 +37,17 @@ class FieldKeyHandler : KeyHandler, Fielded {
             return expr.parts.flatMap { part ->
                 if (part is PipePart) {
                     val handler = part.handler
+                    val fields = mutableListOf<String>()
                     if (handler is Fielded) {
-                        handler.fields(part.key)
-                    } else emptyList<String>()
-                } else emptyList()
+                        fields.addAll(handler.fields(part.key))
+                    }
+                    part.transforms.map { transform ->
+                        if (transform is Fielded) {
+                            fields.addAll(transform.fields(part.key))
+                        }
+                    }
+                    fields
+                } else emptyList<String>()
             }
         }
     }
