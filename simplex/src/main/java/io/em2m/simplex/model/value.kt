@@ -13,9 +13,13 @@ interface Part {
 interface PipePart : Part {
     val key: Key
     val handler: KeyHandler?
+    val transforms: List<PipeTransform>
 }
 
 data class KeyOnlyPipePart(override val key: Key, override val handler: KeyHandler?) : PipePart {
+
+    override val transforms  = emptyList<PipeTransform>()
+
     override fun call(context: ExprContext): Any? {
         val contextKeys: KeyResolver? = context["keys"] as? KeyResolver
         val handler = contextKeys?.find(key) ?: handler
@@ -25,6 +29,8 @@ data class KeyOnlyPipePart(override val key: Key, override val handler: KeyHandl
 
 data class SingleTransformPipePart(override val key: Key, override val handler: KeyHandler?, val transform: PipeTransform) : PipePart {
 
+    override val transforms  = listOf(transform)
+
     override fun call(context: ExprContext): Any? {
         val contextKeys: KeyResolver? = context["keys"] as? KeyResolver
         val handler = contextKeys?.find(key) ?: handler
@@ -33,7 +39,7 @@ data class SingleTransformPipePart(override val key: Key, override val handler: 
     }
 }
 
-data class MultiTransformPipePart(override val key: Key, override val handler: KeyHandler?, val transforms: List<PipeTransform> = emptyList()) : PipePart {
+data class MultiTransformPipePart(override val key: Key, override val handler: KeyHandler?, override val transforms: List<PipeTransform> = emptyList()) : PipePart {
 
     override fun call(context: ExprContext): Any? {
         val contextKeys: KeyResolver? = context["keys"] as? KeyResolver
