@@ -19,6 +19,7 @@ package io.em2m.search.bean
 
 import io.em2m.search.core.daos.AbstractSearchDao
 import io.em2m.search.core.model.*
+import io.em2m.search.core.xform.SimplifyQueryTransformer
 import rx.Observable
 import rx.Observable.just
 import java.util.*
@@ -39,7 +40,7 @@ class MapBackedSearchDao<T>(idMapper: IdMapper<T>, val items: MutableMap<String,
 
     override fun search(request: SearchRequest): Observable<SearchResult<T>> {
         val matches = if (request.sorts.isNotEmpty()) {
-            findMatches(request.query).sortedWith(CompositeComparator(request.sorts))
+            findMatches(request.query).sortedWith(MapBackedSyncDao.CompositeComparator(request.sorts))
         } else {
             findMatches(request.query)
         }
@@ -68,9 +69,15 @@ class MapBackedSearchDao<T>(idMapper: IdMapper<T>, val items: MutableMap<String,
         return just(entity)
     }
 
-    internal fun findMatches(query: Query?): List<T> {
-        val predicate: (Any) -> Boolean = Functions.toPredicate(query ?: MatchAllQuery())
+    private fun findMatches(query: Query?): List<T> {
+        val predicate: (Any) -> Boolean = Functions.toPredicate(simplifyQuery(query))
         return items.values.filter { predicate.invoke(it as Any) }
+    }
+
+    private fun simplifyQuery(query: Query?): Query {
+        return if (query != null) {
+            SimplifyQueryTransformer().transform(query)
+        } else MatchAllQuery()
     }
 
     fun buildRows(matches: List<T>, fields: List<Field>): List<List<Any?>> {
@@ -88,53 +95,5 @@ class MapBackedSearchDao<T>(idMapper: IdMapper<T>, val items: MutableMap<String,
         }
     }
 
-    class CompositeComparator<T>(sorts: List<DocSort>) : Comparator<T> {
-
-        private val comparators = sorts.map {
-            val c = SortComparator<T>(it)
-            if (it.direction == Direction.Descending) {
-                c.reversed()
-            } else {
-                c
-            }
-        }
-
-        override fun compare(o1: T, o2: T): Int {
-            comparators.forEach { c ->
-                val value = c.compare(o1, o2)
-                if (value != 0) return value
-            }
-            return 0
-        }
-    }
-
-    class SortComparator<T>(val sort: DocSort) : Comparator<T> {
-
-        val expr = Functions.fieldValue(sort.field)
-
-        override fun compare(o1: T, o2: T): Int {
-            val v1 = if (o1 != null) expr.invoke(o1 as Any) else null
-            val v2 = if (o2 != null) expr.invoke(o2 as Any) else null
-            return if (v1 is Number && (v2 is Number)) {
-                compareNumbers(v1, v2)
-            } else {
-                v1.toString().compareTo(v2.toString())
-            }
-        }
-
-        private fun compareNumbers(n1: Number?, n2: Number?): Int {
-            return when {
-                (n1 == n2) -> 0
-                (n2 == null) -> 1
-                (n1 == null) -> -1
-                (n1 is Float) -> n1.compareTo(n2.toFloat())
-                (n1 is Double) -> n1.compareTo(n2.toDouble())
-                (n1 is Int) -> n1.compareTo(n2.toInt())
-                (n1 is Long) -> n1.compareTo(n2.toLong())
-                (n1 is Short) -> n1.compareTo(n2.toShort())
-                else -> n1.toDouble().compareTo(n2.toDouble())
-            }
-        }
-    }
 
 }
