@@ -132,7 +132,7 @@ class RequestConverter(val objectMapper: ObjectMapper = jacksonObjectMapper(), v
                 is DateRangeAgg -> {
                     val esAgg = result.agg(it.key, "date_range", subAggs).put("field", it.field).minDocCount(it.minDocCount)
                     if (it.format != null) esAgg.put("format", it.format)
-                    if (it.timeZone != null) esAgg.put("time_zone", timeZone.id)
+                    //if (it.timeZone != null) esAgg.put("time_zone", timeZone.id)
                     val esRanges = esAgg.withArray("ranges")
 
                     val dateMathParser = DateMathParser(timeZone)
