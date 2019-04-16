@@ -66,26 +66,28 @@ class TreeTest {
             "@repeat": "#{ns:people}",
             "name": "#{repeat:item.name}",
             "index": "#{repeat:index}",
-            "@container second": {
-              "@if": "#{repeat:index | plus:1 | cond:NumberEquals:2}",
-              "second": "This is the second item"
-            },
-            "@container odd": {
-              "@if": "#{repeat:odd}",
-              "label": "This item is odd!"
-             },
-            "@container even": {
-              "@if": "#{repeat:even}",
-              "label": "This item is even!"
-            },
-            "@container last": {
-              "@if": "#{repeat:last}",
-              "last": "This is the last item!"
-            },
-            "@container first": {
-              "@if": "#{repeat:first}",
-              "first": "This is the first item!"
-            }
+            "@container": [
+                {
+                  "@if": "#{repeat:index | plus:1 | cond:NumberEquals:2}",
+                  "second": "This is the second item"
+                },
+                {
+                  "@if": "#{repeat:odd}",
+                  "label": "This item is odd!"
+                },
+                {
+                  "@if": "#{repeat:even}",
+                  "label": "This item is even!"
+                },
+                {
+                  "@if": "#{repeat:last}",
+                  "last": "This is the last item!"
+                },
+                {
+                  "@if": "#{repeat:first}",
+                  "first": "This is the first item!"
+                }
+            ]
           },
           "Goodbye": {
             "@if": {
@@ -94,6 +96,29 @@ class TreeTest {
               }
             },
             "@value": "Space"
+          },
+`         "PS": {
+            "@when": [
+                {
+                  "@if": "#{repeat:first}",
+                  "label": "This is the first item!"
+                },
+                {
+                  "@if": "#{repeat:index | plus:1 | cond:NumberEquals:2}",
+                  "label": "This is the second item"
+                },
+                {
+                  "@if": "#{repeat:last}",
+                  "label": "This is the last item!"
+                },
+                {
+                  "@if": "#{repeat:odd}",
+                  "label": "This item is odd and not first, second or last!!"
+                },
+                {
+                  "label": "This item is even and not first, second, or last!"
+                }
+            ]
           }
         }
         """.trimIndent().replace("#", "$")

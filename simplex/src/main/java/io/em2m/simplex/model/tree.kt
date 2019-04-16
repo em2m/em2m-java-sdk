@@ -78,7 +78,7 @@ class ObjectExpr(val fields: List<FieldExpr>) : TreeExpr {
             // skip objects that return null
             if (field.value is ObjectExpr && value == null) {
                 listOf(null)
-            } else if (field.field.startsWith("@container")) {
+            } else if (field.value is ObjectExpr && field.field.startsWith("@container")) {
                 val map: Map<String, Any?> = value.coerce() ?: emptyMap()
                 map.toList()
             } else {

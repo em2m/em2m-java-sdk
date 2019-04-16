@@ -162,6 +162,21 @@ class EsSearchDaoAggTest : FeatureTestBase() {
     }
 
     @Test
+    fun testDateRangeTZ() {
+        val request = SearchRequest(0, 0, MatchAllQuery(), aggs = listOf(DateRangeAgg("properties.time", key = "magnitude",
+                ranges = listOf(Range(from = "1408447319000", to = "now")), timeZone = "+:05:00")))
+        val sub = TestSubscriber<Any>()
+        searchDao.search(request).doOnNext { result ->
+            val agg = result.aggs["magnitude"] ?: error("agg should not be null")
+            val buckets = agg.buckets ?: error("buckets should not be null")
+            assertEquals(1, buckets.size)
+            assertEquals(21, buckets.map { it.count }.sum())
+        }.subscribe(sub)
+        sub.awaitTerminalEvent()
+        sub.assertNoErrors()
+    }
+
+    @Test
     fun testDateHistogram() {
         val request = SearchRequest(0, 0, MatchAllQuery(), aggs = listOf(DateHistogramAgg("properties.time", interval = "hour", key = "time")))
         val sub = TestSubscriber<Any>()

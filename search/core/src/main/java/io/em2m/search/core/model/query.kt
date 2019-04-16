@@ -11,6 +11,7 @@ import com.vividsolutions.jts.geom.Envelope
         Type(value = OrQuery::class, name = "or"),
         Type(value = NotQuery::class, name = "not"),
         Type(value = RangeQuery::class, name = "range"),
+        Type(value = DateRangeQuery::class, name = "dateRange"),
         Type(value = TermQuery::class, name = "term"),
         Type(value = MatchQuery::class, name = "match"),
         Type(value = RegexQuery::class, name = "regex"),
@@ -58,6 +59,9 @@ class RegexQuery(field: String, val value: String) : FieldedQuery(field)
 
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 class RangeQuery(field: String, val lt: Any? = null, val lte: Any? = null, val gt: Any? = null, val gte: Any? = null, val timeZone: String? = null) : FieldedQuery(field)
+
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
+class DateRangeQuery(field: String, val lt: Any? = null, val lte: Any? = null, val gt: Any? = null, val gte: Any? = null, val timeZone: String? = null) : FieldedQuery(field)
 
 class BboxQuery(field: String, val value: Envelope) : FieldedQuery(field)
 
