@@ -36,6 +36,9 @@ open class QueryTransformer {
         is RangeQuery -> {
             transformRangeQuery(query)
         }
+        is DateRangeQuery -> {
+            transformDateRangeQuery(query)
+        }
         is BboxQuery -> {
             transformBboxQuery(query)
         }
@@ -80,6 +83,7 @@ open class QueryTransformer {
     open fun transformPhraseQuery(query: PhraseQuery): Query = query
     open fun transformPrefixQuery(query: PrefixQuery): Query = query
     open fun transformRegexQuery(query: RegexQuery): Query = query
+    open fun transformDateRangeQuery(query: DateRangeQuery): Query = query
     open fun transformRangeQuery(query: RangeQuery): Query = query
     open fun transformBboxQuery(query: BboxQuery): Query = query
     open fun transformExistsQuery(query: ExistsQuery): Query = query

@@ -94,6 +94,16 @@ class RequestConverter(private val schemaMapper: SchemaMapper, val objectMapper:
                 }
                 and(expr)
             }
+            is DateRangeQuery -> {
+                val field = query.field
+                val expr = ArrayList<Bson>()
+                val now = Date().time
+                query.lt?.let { expr.add(Filters.lt(field, parseDate(it.toString(), now, true))) }
+                query.lte?.let { expr.add(Filters.lte(field, parseDate(it.toString(), now, true))) }
+                query.gt?.let { expr.add(Filters.gt(field, parseDate(it.toString(), now, false))) }
+                query.gte?.let { expr.add(Filters.gte(field, parseDate(it.toString(), now, false))) }
+                and(expr)
+            }
             is PhraseQuery -> {
                 val field = query.field
                 val phrase = query.value.joinToString(" ")

@@ -34,7 +34,7 @@ class MongoSyncDaoQueryTest : FeaturesTestBase() {
 
     @Test
     fun testDateRange() {
-        val request = SearchRequest(0, 5, RangeQuery("properties.time", gte = "1408447319000", lte = "now"))
+        val request = SearchRequest(0, 5, DateRangeQuery("properties.time", gte = "1408447319000", lte = "now"))
         val result = syncDao.search(request)
         // Shouldn't this be 21?
         Assert.assertEquals(20, result.totalItems)
