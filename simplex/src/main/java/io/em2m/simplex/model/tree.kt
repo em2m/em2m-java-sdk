@@ -67,11 +67,29 @@ class ObjectExpr(val fields: List<FieldExpr>) : TreeExpr {
         } else emptyList()
     }
 
+    private fun processContainerArray(expr: ArrayExpr, context: ExprContext): Map<String, Any?> {
+        return expr.values.flatMap {
+            val value = (it as? ObjectExpr)?.call(context) as? Map<String, Any?>
+            value?.toList() ?: emptyList()
+        }.associate { it }
+    }
+
+    // TODO - Support alternate non-object values (literals, arrays) for @when statements
+    private fun processWhenArray(expr: ArrayExpr, context: ExprContext): Map<String, Any?> {
+        expr.values.forEach {
+            val value = (it as? ObjectExpr)?.call(context) as? Map<String, Any?>
+            if (value != null) {
+                return value
+            }
+        }
+        return emptyMap()
+    }
+
     private fun processFields(context: ExprContext): Map<String, Any?> {
 
         return fields.filter {
             // don't render annotations
-            !it.field.startsWith("@") || it.field.startsWith("@container")
+            !it.field.startsWith("@") || it.field.startsWith("@container") || it.field.startsWith("@when")
         }.flatMap { field ->
             val key = field.field
             val value = field.value.call(context)
@@ -81,6 +99,10 @@ class ObjectExpr(val fields: List<FieldExpr>) : TreeExpr {
             } else if (field.value is ObjectExpr && field.field.startsWith("@container")) {
                 val map: Map<String, Any?> = value.coerce() ?: emptyMap()
                 map.toList()
+            } else if (field.value is ArrayExpr && field.field.startsWith("@container")) {
+                processContainerArray(field.value, context).toList()
+            } else if (field.value is ArrayExpr && field.field.startsWith("@when")) {
+                processWhenArray(field.value, context).toList()
             } else {
                 listOf(key to value)
             }

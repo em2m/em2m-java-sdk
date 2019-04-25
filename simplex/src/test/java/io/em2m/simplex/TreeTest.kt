@@ -86,6 +86,9 @@ class TreeTest {
                 {
                   "@if": "#{repeat:first}",
                   "first": "This is the first item!"
+                },
+                {
+                  "index": "#{repeat:index}"
                 }
             ]
           },
@@ -97,7 +100,7 @@ class TreeTest {
             },
             "@value": "Space"
           },
-`         "PS": {
+         "PS": {
             "@when": [
                 {
                   "@if": "#{repeat:first}",
