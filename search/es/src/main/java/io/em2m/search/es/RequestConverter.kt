@@ -55,7 +55,16 @@ class RequestConverter(val objectMapper: ObjectMapper = jacksonObjectMapper(), v
             // format support?
             // boost?
             val timeZone = query.timeZone ?: params?.get("timeZone")?.toString()
-
+            if (query.gt is String || query.gte is String || query.lt is String || query.lte is String) {
+                EsRangeQuery(query.field, query.gte, query.gt, query.lte, query.lt, timeZone = timeZone)
+            } else {
+                EsRangeQuery(query.field, query.gte, query.gt, query.lte, query.lt)
+            }
+        }
+        is DateRangeQuery -> {
+            // format support?
+            // boost?
+            val timeZone = query.timeZone ?: params?.get("timeZone")?.toString()
             if (query.gt is String || query.gte is String || query.lt is String || query.lte is String) {
                 EsRangeQuery(query.field, query.gte, query.gt, query.lte, query.lt, timeZone = timeZone)
             } else {
@@ -132,7 +141,7 @@ class RequestConverter(val objectMapper: ObjectMapper = jacksonObjectMapper(), v
                 is DateRangeAgg -> {
                     val esAgg = result.agg(it.key, "date_range", subAggs).put("field", it.field).minDocCount(it.minDocCount)
                     if (it.format != null) esAgg.put("format", it.format)
-                    if (it.timeZone != null) esAgg.put("time_zone", timeZone.id)
+                    //if (it.timeZone != null) esAgg.put("time_zone", timeZone.id)
                     val esRanges = esAgg.withArray("ranges")
 
                     val dateMathParser = DateMathParser(timeZone)

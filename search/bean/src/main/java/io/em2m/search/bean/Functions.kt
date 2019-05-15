@@ -215,7 +215,17 @@ class Functions {
             return matches(field, Pattern.compile(regex, Pattern.CASE_INSENSITIVE))
         }
 
-        internal fun toPredicate(query: RangeQuery): (Any) -> Boolean {
+        private fun toPredicate(query: RangeQuery): (Any) -> Boolean {
+            val field = query.field
+            val expr = ArrayList<(Any) -> Boolean>()
+            query.lt?.let { expr.add(lt(field, it)) }
+            query.lte?.let { expr.add(lte(field, it)) }
+            query.gt?.let { expr.add(gt(field, it)) }
+            query.gte?.let { expr.add(gte(field, it)) }
+            return all(expr)
+        }
+
+        private fun toPredicate(query: DateRangeQuery): (Any) -> Boolean {
             val field = query.field
             val expr = ArrayList<(Any) -> Boolean>()
             query.lt?.let { expr.add(lt(field, it)) }
@@ -257,6 +267,9 @@ class Functions {
                     toPredicate(query)
                 }
                 is RangeQuery -> {
+                    toPredicate(query)
+                }
+                is DateRangeQuery -> {
                     toPredicate(query)
                 }
                 is TermQuery -> {
