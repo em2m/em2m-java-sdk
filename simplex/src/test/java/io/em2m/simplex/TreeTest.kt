@@ -6,9 +6,11 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import io.em2m.simplex.model.*
 import io.em2m.simplex.parser.SimplexModule
 import io.em2m.simplex.std.Numbers
+import io.em2m.utils.coerce
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Test
+import javax.swing.text.html.HTML.Tag.I
 
 
 class TreeTest {
@@ -122,7 +124,17 @@ class TreeTest {
                   "label": "This item is even and not first, second, or last!"
                 }
             ]
-          }
+          },
+          "PSS": [
+            {
+             "@if": "#{Bool:true}",
+             "@value": 1
+            },
+            {
+             "@if": "#{Bool:true}",
+             "@value": 2
+            }
+          ]
         }
         """.trimIndent().replace("#", "$")
         println(json)
@@ -130,6 +142,7 @@ class TreeTest {
          val obj = tree.call(emptyMap())
         println(mapper.writeValueAsString(obj))
         assertNotNull(obj)
+        assertEquals(2, obj.evalPath("PSS").coerce<List<Int>>()?.size)
     }
 
 }
