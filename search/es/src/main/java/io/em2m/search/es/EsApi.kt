@@ -90,6 +90,10 @@ class EsMatchQuery(field: String, value: String, operator: String? = "or", boost
     val match = mapOf(field to mapOf("query" to value, "boost" to boost).filter { it.value != null })
 }
 
+class EsWildcardQuery(field: String, value: String) : EsQuery() {
+    val wildcard = mapOf(field to mapOf("value" to value))
+}
+
 class EsRegexpQuery(field: String, value: String, operator: String? = "regexp", boost: Double? = null) : EsQuery() {
     val regexp = mapOf(field to mapOf("value" to value, "boost" to boost).filter { it.value != null })
 }
@@ -137,6 +141,7 @@ class EsExistsQuery(field: String) : EsQuery() {
     val exists = mapOf("field" to field)
 }
 
+
 enum class EsSortDirection {
     ASC, DESC
 }
@@ -169,7 +174,7 @@ class EsAggs() {
     }
 
     fun agg(name: String, type: String, subAggs: EsAggs? = null): ObjectNode {
-        val agg =  agg(name)
+        val agg = agg(name)
         if (subAggs != null) {
             val node: ObjectNode? = subAggs.aggs.coerce()
             if (node != null) {

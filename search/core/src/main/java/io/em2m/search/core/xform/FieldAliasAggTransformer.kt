@@ -4,9 +4,9 @@ import io.em2m.search.core.model.*
 
 class FieldAliasAggTransformer(val aliases: Map<String, Field>) : AggTransformer() {
 
-    val queryTransformer = FieldAliasQueryTransformer(aliases)
+    private val queryTransformer = FieldAliasQueryTransformer(aliases)
 
-    fun applyAlias(field: String): String {
+    private fun applyAlias(field: String): String {
         return aliases.getOrElse(field, { null })?.name ?: field
     }
 

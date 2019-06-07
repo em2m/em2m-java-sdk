@@ -81,6 +81,9 @@ class RequestConverter(val objectMapper: ObjectMapper = jacksonObjectMapper(), v
                 EsBoolQuery(mustNot = listOf(EsExistsQuery(query.field)))
             }
         }
+        is WildcardQuery -> {
+            EsWildcardQuery(query.field, query.value)
+        }
         is LuceneQuery -> {
             EsQueryStringQuery(query.query, query.defaultField, "and")
         }

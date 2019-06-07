@@ -57,7 +57,22 @@ class RequestConverter(private val schemaMapper: SchemaMapper, val objectMapper:
                 val value = convertValue(field, query.value)
                 Filters.eq<Any>(field, value)
             }
+            is WildcardQuery -> {
+                val field = schemaMapper.mapPath(query.field)
+                when {
+                    query.value == "*" -> Filters.ne(field, null)
+                    field == "\$text" -> Filters.text(query.value)
+                    else -> {
+                        var value = query.value.replace("?", "_QUESTION_MARK_").replace("*", "_STAR_")
+                        value = Matcher.quoteReplacement(value)
+                        value = value.replace("_QUESTION_MARK_", ".?").replace("_STAR_", ".*")
+                        val pattern = Pattern.compile(".*" + Matcher.quoteReplacement(value) + ".*", Pattern.CASE_INSENSITIVE)
+                        Filters.regex(field, pattern)
+                    }
+                }
+            }
             is MatchQuery -> {
+                // TODO - This is not the correct implementation for Match Query - This is Wildcard Query
                 val field = schemaMapper.mapPath(query.field)
                 when {
                     query.value == "*" -> Filters.ne(field, null)

@@ -54,7 +54,7 @@ class MapBackedSyncDao<T>(idMapper: IdMapper<T>, val items: MutableMap<String, T
         } else {
             rows = buildRows(matches.page(request.offset.toInt(), request.limit.toInt()), request.fields)
         }
-        return SearchResult(aggResults, items, rows, totalItems.toLong())
+        return SearchResult(aggResults, items, rows, totalItems.toLong(), fields = request.fields)
     }
 
     override fun findById(id: String): T? {
