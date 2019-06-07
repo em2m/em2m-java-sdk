@@ -81,6 +81,18 @@ class MongoSearchDaoQueryTest : FeaturesTestBase() {
     }
 
     @Test
+    fun testWildcard() {
+        val sub = TestSubscriber<Any>()
+        val request = SearchRequest(0, 0, WildcardQuery("id", value = "nn*"))
+        searchDao.search(request).doOnNext { result ->
+            Assert.assertEquals(13, result.totalItems)
+        }.subscribe(sub)
+        sub.awaitTerminalEvent()
+        sub.assertNoErrors()
+    }
+
+
+    @Test
     fun testPrefix() {
         val sub = TestSubscriber<Any>()
         val request = SearchRequest(0, 0, PrefixQuery("id", value = "nn"))

@@ -3,7 +3,7 @@ package io.em2m.search.core.xform
 import io.em2m.search.core.model.*
 import io.em2m.utils.coerce
 
-class NamedAggQueryTransformer(val namedAggs: Map<String, Agg>, val timeZone: String?) : QueryTransformer() {
+class NamedAggQueryTransformer(private val namedAggs: Map<String, Agg>, val timeZone: String?) : QueryTransformer() {
 
     override fun transformNamedQuery(query: NamedQuery): Query {
         val agg = namedAggs[query.name]

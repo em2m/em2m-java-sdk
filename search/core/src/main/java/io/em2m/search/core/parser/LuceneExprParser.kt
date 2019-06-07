@@ -26,7 +26,6 @@ import org.apache.lucene.search.TermRangeQuery
 import org.apache.lucene.search.WildcardQuery
 import org.apache.lucene.util.BytesRef
 import java.util.*
-import java.util.regex.Matcher
 
 class LuceneExprParser(private val defaultField: String? = "_all") {
 
@@ -71,12 +70,7 @@ class LuceneExprParser(private val defaultField: String? = "_all") {
     }
 
     fun handleWildcardQuery(wildcardQuery: WildcardQuery): Query {
-        val term = wildcardQuery.term
-        var value = term.text().replace("?", "_QUESTION_MARK_").replace("*", "_STAR_")
-        value = Matcher.quoteReplacement(value)
-        value = value.replace("_QUESTION_MARK_", ".?").replace("_STAR_", ".*")
-        val regex = Matcher.quoteReplacement(value)
-        return RegexQuery(term.field(), regex)
+        return WildcardQuery(wildcardQuery.field, wildcardQuery.term.text())
     }
 
     fun handlePrefixQuery(prefixQuery: org.apache.lucene.search.PrefixQuery): Query {

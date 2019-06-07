@@ -30,6 +30,9 @@ open class QueryTransformer {
         is PrefixQuery -> {
             transformPrefixQuery(query)
         }
+        is WildcardQuery -> {
+            transformWildcardQuery(query)
+        }
         is RegexQuery -> {
             transformRegexQuery(query)
         }
@@ -82,6 +85,7 @@ open class QueryTransformer {
     open fun transformMatchQuery(query: MatchQuery): Query = query
     open fun transformPhraseQuery(query: PhraseQuery): Query = query
     open fun transformPrefixQuery(query: PrefixQuery): Query = query
+    open fun transformWildcardQuery(query: WildcardQuery): Query = query
     open fun transformRegexQuery(query: RegexQuery): Query = query
     open fun transformDateRangeQuery(query: DateRangeQuery): Query = query
     open fun transformRangeQuery(query: RangeQuery): Query = query
