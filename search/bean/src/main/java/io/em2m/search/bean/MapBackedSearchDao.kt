@@ -24,7 +24,7 @@ import rx.Observable
 import rx.Observable.just
 import java.util.*
 
-class MapBackedSearchDao<T>(idMapper: IdMapper<T>, val items: MutableMap<String, T> = HashMap()) : AbstractSearchDao<T>(idMapper) {
+class MapBackedSearchDao<T>(idMapper: IdMapper<T>, private val items: MutableMap<String, T> = HashMap()) : AbstractSearchDao<T>(idMapper) {
 
     override fun create(entity: T): Observable<T> {
         throw NotImplementedError()
@@ -34,7 +34,7 @@ class MapBackedSearchDao<T>(idMapper: IdMapper<T>, val items: MutableMap<String,
         return if (items.containsKey(id)) {
             Observable.error(NotFoundException())
         } else {
-            Observable.just(items.remove(id) != null)
+            just(items.remove(id) != null)
         }
     }
 
@@ -56,15 +56,15 @@ class MapBackedSearchDao<T>(idMapper: IdMapper<T>, val items: MutableMap<String,
         } else {
             rows = buildRows(matches.page(request.offset.toInt(), request.limit.toInt()), request.fields)
         }
-        return Observable.just(SearchResult(aggResults, items, rows, totalItems.toLong()))
+        return just(SearchResult(aggResults, items, rows, totalItems.toLong(), fields = request.fields))
     }
 
     override fun findById(id: String): Observable<T?> {
-        return Observable.just(items[id])
+        return just(items[id])
     }
 
     override fun save(id: String, entity: T): Observable<T> {
-        items.put(id, entity)
+        items[id] = entity
         // TODO: Need a function for setting the ID on the entity
         return just(entity)
     }
@@ -80,7 +80,7 @@ class MapBackedSearchDao<T>(idMapper: IdMapper<T>, val items: MutableMap<String,
         } else MatchAllQuery()
     }
 
-    fun buildRows(matches: List<T>, fields: List<Field>): List<List<Any?>> {
+    private fun buildRows(matches: List<T>, fields: List<Field>): List<List<Any?>> {
         val getters: List<(Any) -> Any?> = fields
                 .map { it.name }
                 .map { name ->
