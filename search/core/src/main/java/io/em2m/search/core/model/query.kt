@@ -20,6 +20,7 @@ import com.vividsolutions.jts.geom.Envelope
         Type(value = ExistsQuery::class, name = "exists"),
         Type(value = BboxQuery::class, name = "bbox"),
         Type(value = MatchAllQuery::class, name = "all"),
+        Type(value = WildcardQuery::class, name = "wildcard"),
         Type(value = LuceneQuery::class, name = "lucene"),
         Type(value = NativeQuery::class, name = "native"),
         Type(value = NamedQuery::class, name = "named")
@@ -52,6 +53,8 @@ class TermsQuery(field: String, val value: Array<Any?>) : FieldedQuery(field)
 
 class MatchQuery(field: String, val value: String, val operator: String? = null) : FieldedQuery(field)
 
+class WildcardQuery(field: String, val value: String) : FieldedQuery(field)
+
 class PhraseQuery(field: String, val value: List<String>) : FieldedQuery(field)
 class PrefixQuery(field: String, val value: String) : FieldedQuery(field)
 
@@ -68,4 +71,3 @@ class BboxQuery(field: String, val value: Envelope) : FieldedQuery(field)
 class LuceneQuery(val query: String, val defaultField: String? = null) : Query()
 
 class ExistsQuery(field: String, val value: Boolean = true) : FieldedQuery(field)
-
