@@ -40,6 +40,23 @@ class ConditionTest : Assert() {
     }
 
     @Test
+    fun allStringNotEqualsAllowed() {
+        val keyVals = listOf("x")
+        val conditionVals = listOf("foo", "bar")
+        val condition = ForAllStringNotEquals()
+        assert(condition.test(keyVals, conditionVals))
+    }
+
+    @Test
+    fun allStringNotEqualsForbidden() {
+        val keyVals = listOf("foo")
+        val conditionVals = listOf("foo", "bar")
+        val condition = ForAllStringNotEquals()
+        assert(!condition.test(keyVals, conditionVals))
+    }
+
+
+    @Test
     fun anyStringLikeAllowed() {
         val keyVals = listOf("foo.bar", "foo.baz")
         val conditionVals = listOf("foo.*")
