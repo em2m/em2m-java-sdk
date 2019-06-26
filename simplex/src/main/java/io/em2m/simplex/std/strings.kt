@@ -127,6 +127,7 @@ open class ForAllStringHandler(private val op: (String?, String?) -> Boolean) : 
     }
 }
 
+
 fun stringLike(k: String?, v: String?): Boolean {
     if (k == null && v == null) return true
     if (k == null || v == null) return false
@@ -138,25 +139,25 @@ fun stringLike(k: String?, v: String?): Boolean {
 }
 
 class StringEquals : SingleStringHandler({ k, v -> k == v })
-class StringNotEquals : SingleStringHandler({ k, v -> k != v })
+class StringNotEquals : Not(StringEquals())
 class StringEqualsIgnoreCase : SingleStringHandler({ k, v -> k.equals(v, ignoreCase = true) })
-class StringNotEqualsIgnoreCase : SingleStringHandler({ k, v -> !k.equals(v, ignoreCase = true) })
+class StringNotEqualsIgnoreCase : Not(StringEqualsIgnoreCase())
 class StringLike : SingleStringHandler({ k, v -> stringLike(k, v) })
-class StringNotLike : SingleStringHandler({ k, v -> !stringLike(k, v) })
+class StringNotLike : Not(StringLike())
 
 class ForAnyStringEquals : ForAnyStringHandler({ k, v -> k == v })
-class ForAnyStringNotEquals : ForAnyStringHandler({ k, v -> k != v })
+class ForAnyStringNotEquals : Not(ForAnyStringEquals())
 class ForAnyStringEqualsIgnoreCase : ForAnyStringHandler({ k, v -> k.equals(v, ignoreCase = true) })
-class ForAnyStringNotEqualsIgnoreCase : ForAnyStringHandler({ k, v -> !k.equals(v, ignoreCase = true) })
+class ForAnyStringNotEqualsIgnoreCase : Not(ForAnyStringEqualsIgnoreCase())
 class ForAnyStringLike : ForAnyStringHandler({ k, v -> stringLike(k, v) })
-class ForAnyStringNotLike : ForAnyStringHandler({ k, v -> !stringLike(k, v) })
+class ForAnyStringNotLike : Not(ForAnyStringLike())
 
 class ForAllStringEquals : ForAllStringHandler({ k, v -> k == v })
-class ForAllStringNotEquals : ForAllStringHandler({ k, v -> k != v })
+class ForAllStringNotEquals : Not(ForAllStringEquals())
 class ForAllStringEqualsIgnoreCase : ForAllStringHandler({ k, v -> k.equals(v, ignoreCase = true) })
-class ForAllStringNotEqualsIgnoreCase : ForAllStringHandler({ k, v -> !k.equals(v, ignoreCase = true) })
+class ForAllStringNotEqualsIgnoreCase : Not(ForAllStringEqualsIgnoreCase())
 class ForAllStringLike : ForAllStringHandler({ k, v -> stringLike(k, v) })
-class ForAllStringNotLike : ForAllStringHandler({ k, v -> !stringLike(k, v) })
+class ForAllStringNotLike : Not(ForAllStringLike())
 
 val StandardStringConditions = mapOf(
 

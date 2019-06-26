@@ -7,6 +7,14 @@ interface ConditionHandler {
     fun test(keyValue: Any?, conditionValue: Any?): Boolean
 }
 
+open class Not(val delegate: ConditionHandler) : ConditionHandler {
+
+    override fun test(keyValue: Any?, conditionValue: Any?): Boolean {
+        return !delegate.test(keyValue, conditionValue)
+    }
+}
+
+
 interface ConditionResolver {
     fun getCondition(condition: String): ConditionHandler?
 }
