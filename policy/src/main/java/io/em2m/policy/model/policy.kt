@@ -22,7 +22,7 @@ data class Role(val id: String,
                 val policies: List<String> = emptyList(),
                 val inherits: List<String> = emptyList(),
                 val statements: List<Statement> = emptyList(),
-                val condition: List<Condition> = emptyList())
+                val condition: List<ConditionExpr> = emptyList())
 
 data class Policy(val id: String,
                   val label: String,
