@@ -18,7 +18,7 @@ data class Statement(val id: String? = null,
 
 data class Role(val id: String,
                 val label: String = id,
-                val summary: String = "",
+                val summary: String? = null,
                 val policies: List<String> = emptyList(),
                 val inherits: List<String> = emptyList(),
                 val statements: List<Statement> = emptyList(),
