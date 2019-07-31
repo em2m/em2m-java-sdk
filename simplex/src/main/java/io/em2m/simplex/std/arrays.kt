@@ -15,10 +15,21 @@ class NotNullPipe : PipeTransform {
     }
 }
 
+class ReversedPipe : PipeTransform {
+
+    override fun transform(value: Any?, context: ExprContext): Any? {
+        return when (value) {
+            is List<*> -> value.reversed()
+            is Array<*> -> value.reversed()
+            else -> value
+        }
+    }
+}
+
 val StandardArrayConditions = emptyMap<String, ConditionHandler>()
 
 
 object Arrays {
     val conditions = BasicConditionResolver(StandardBoolConditions)
-    val pipes = BasicPipeTransformResolver(mapOf("notNull" to NotNullPipe()))
+    val pipes = BasicPipeTransformResolver(mapOf("notNull" to NotNullPipe(), "reversed" to ReversedPipe()))
 }
