@@ -7,7 +7,7 @@ interface TreeExpr : Expr
 class ArrayExpr(val values: List<Expr>) : TreeExpr {
 
     override fun call(context: ExprContext): List<Any?> {
-        return values.map { it.call(context) }.toList()
+        return values.filterNot { (it as? ObjectExpr)?.skip(context) ?: false }.map { it.call(context) }.toList()
     }
 }
 
@@ -21,6 +21,10 @@ class FieldExpr(val field: String, val value: Expr) : TreeExpr {
 class ObjectExpr(val fields: List<FieldExpr>) : TreeExpr {
 
     private val fieldMap = fields.associateBy { it.field }
+
+    fun skip(context: ExprContext): Boolean {
+        return !(fieldMap["@if"]?.value?.call(context)?.coerce(true) ?: true)
+    }
 
     override fun call(context: ExprContext): Any? {
         val skip = !(fieldMap["@if"]?.value?.call(context)?.coerce(true) ?: true)
