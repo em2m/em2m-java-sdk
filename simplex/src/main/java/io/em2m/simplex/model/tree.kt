@@ -27,7 +27,7 @@ class ObjectExpr(val fields: List<FieldExpr>) : TreeExpr {
     }
 
     override fun call(context: ExprContext): Any? {
-        val skip = !(fieldMap["@if"]?.value?.call(context)?.coerce(true) ?: true)
+        val skip = skip(context)
         return when {
             skip -> null
             fieldMap.containsKey("@repeat") -> processRepeat(context)
