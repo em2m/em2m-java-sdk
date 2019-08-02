@@ -1,7 +1,6 @@
 package io.em2m.policy.model
 
 import com.fasterxml.jackson.annotation.JsonFormat
-import io.em2m.simplex.model.Condition
 import io.em2m.simplex.model.ConditionExpr
 import io.em2m.simplex.model.ConstConditionExpr
 
