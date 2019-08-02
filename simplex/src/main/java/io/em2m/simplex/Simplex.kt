@@ -1,5 +1,6 @@
 package io.em2m.simplex
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.em2m.simplex.model.*
 import io.em2m.simplex.parser.ExprParser
@@ -41,7 +42,7 @@ class Simplex {
 
     val parser = ExprParser(keys, pipes)
 
-    val objectMapper = jacksonObjectMapper().registerModule(SimplexModule(this))
+    val objectMapper: ObjectMapper = jacksonObjectMapper().registerModule(SimplexModule(this))
 
     fun keys(delegate: KeyResolver): Simplex {
         keys.delegate(delegate)
@@ -83,26 +84,17 @@ class Simplex {
         return expr.call(context)
     }
 
-    fun testConditions(conditions: List<Condition>, context: ExprContext): Boolean {
-        return compileCondition(conditions).call(context)
-    }
-
-    fun compileCondition(conditions: List<Condition>): ConditionExpr {
-        return if (conditions.size == 1) {
-            getConditionExpr(conditions.first())
-        } else {
-            MultiConditionExpr(conditions.map { getConditionExpr(it) })
-        }
+    fun compileCondition(op: String, key: String, value: List<String>): ConditionExpr {
+        return getConditionExpr(op, key, value)
     }
 
     fun findConditionHandler(name: String): ConditionHandler? {
         return conditions.getCondition(name)
     }
 
-    private fun getConditionExpr(condition: Condition): SingleConditionExpr {
-        val op = condition.op
-        val keyExpr = parser.parse("$" + "{" + condition.key + "}")
-        val values = ArrayExpr(condition.value.map { parser.parse(it) })
+    private fun getConditionExpr(op: String, key: String, value: List<String>): SingleConditionExpr {
+        val keyExpr = parser.parse("$" + "{" + key + "}")
+        val values = ArrayExpr(value.map { parser.parse(it) })
         val handler = requireNotNull(conditions.getCondition(op))
         return SingleConditionExpr(op, handler, keyExpr, values)
     }

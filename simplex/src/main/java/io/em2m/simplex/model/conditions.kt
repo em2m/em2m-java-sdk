@@ -1,8 +1,5 @@
 package io.em2m.simplex.model
 
-
-data class Condition(val op: String, val key: String, val value: List<String>)
-
 interface ConditionHandler {
     fun test(keyValue: Any?, conditionValue: Any?): Boolean
 }
@@ -13,7 +10,6 @@ open class Not(val delegate: ConditionHandler) : ConditionHandler {
         return !delegate.test(keyValue, conditionValue)
     }
 }
-
 
 interface ConditionResolver {
     fun getCondition(condition: String): ConditionHandler?
@@ -59,7 +55,7 @@ class ConstConditionExpr(val value: Boolean) : ConditionExpr {
     }
 }
 
-class SingleConditionExpr(val condition: String, val handler: ConditionHandler, val first: Expr, val second: Expr) : ConditionExpr {
+class SingleConditionExpr(val condition: String, val handler: ConditionHandler, val first: Expr, private val second: Expr) : ConditionExpr {
 
     override fun call(context: ExprContext): Boolean {
 
@@ -68,10 +64,29 @@ class SingleConditionExpr(val condition: String, val handler: ConditionHandler, 
 
         return handler.test(firstVal, secondVal)
     }
-
 }
 
-class MultiConditionExpr(val conditions: List<ConditionExpr>) : ConditionExpr {
+class NotConditionExpr(private val conditions: List<ConditionExpr>) : ConditionExpr {
+
+    override fun call(context: ExprContext): Boolean {
+        conditions.forEach {
+            if (it.call(context)) return false
+        }
+        return true
+    }
+}
+
+class OrConditionExpr(private val conditions: List<ConditionExpr>) : ConditionExpr {
+
+    override fun call(context: ExprContext): Boolean {
+        conditions.forEach {
+            if (it.call(context)) return true
+        }
+        return false
+    }
+}
+
+class AndConditionExpr(private val conditions: List<ConditionExpr>) : ConditionExpr {
 
     override fun call(context: ExprContext): Boolean {
         conditions.forEach {
