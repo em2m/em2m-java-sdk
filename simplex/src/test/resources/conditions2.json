@@ -1,25 +1,22 @@
 {
   "condition": [
     {
-      "Or": [
-        {
+      "Not": {
+        "Or": {
           "ForAnyValue:StringEquals": {
             "ns:key1": [
               "value1a",
               "value1b"
             ],
             "ns:key2": "value2"
-          }
-        },
-        {
+          },
           "StringNotEquals": {
             "ns:key3": [
-              "value3a",
-              "value3b"
+              "value3"
             ]
           }
         }
-      ]
+      }
     },
     {
       "StringEquals": {

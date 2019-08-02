@@ -18,7 +18,7 @@ class ConditionDeserializerTest {
                     .key(Key("ns", "key1"), ConstKeyHandler("value1"))
                     .key(Key("ns", "key2"), ConstKeyHandler("value2"))
                     .key(Key("ns", "key3"), ConstKeyHandler("value3"))
-                    .key(Key("ns", "key4"), ConstKeyHandler("value4"))
+                    .key(Key("ns", "key4"), ConstKeyHandler("value4a"))
             )
 
     data class ConditionHolder(
@@ -29,9 +29,16 @@ class ConditionDeserializerTest {
     fun parseConditions() {
         val holder: ConditionHolder = jacksonObjectMapper().registerModule(SimplexModule(simplex)).readValue(File("src/test/resources/conditions.json"))
         assertNotNull(holder)
-        assertTrue(holder.condition is ConditionExpr)
         val result = holder.condition.call(emptyMap())
-        assertFalse(result)
+        assertTrue(result)
+    }
+
+    @Test
+    fun parseConditions2() {
+        val holder: ConditionHolder = jacksonObjectMapper().registerModule(SimplexModule(simplex)).readValue(File("src/test/resources/conditions2.json"))
+        assertNotNull(holder)
+        val result = holder.condition.call(emptyMap())
+        assertTrue(result)
     }
 
 }

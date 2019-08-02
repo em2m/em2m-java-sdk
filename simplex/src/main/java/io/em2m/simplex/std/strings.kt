@@ -79,6 +79,19 @@ class JoinPipe : PipeTransform {
     }
 }
 
+class EmptyToNull : PipeTransform {
+
+    override fun transform(value: Any?, context: ExprContext): Any? {
+        return if (value is List<*>) {
+            value.map { }
+        } else if (value is Array<*>) {
+            value.map { }
+        } else {
+            if ((value as? String)?.isEmpty() == true) null else value
+        }
+    }
+
+}
 
 open class SingleStringHandler(private val op: (String?, String?) -> Boolean) : ConditionHandler {
 
@@ -190,7 +203,8 @@ object Strings {
             "capitalize" to CapitalizePipe(),
             "trim" to TrimPipe(),
             "append" to AppendPipe(),
-            "join" to JoinPipe()))
+            "join" to JoinPipe(),
+            "emptyToNull" to EmptyToNull()))
     val keys = BasicKeyResolver()
     val conditions = BasicConditionResolver(StandardStringConditions)
 
