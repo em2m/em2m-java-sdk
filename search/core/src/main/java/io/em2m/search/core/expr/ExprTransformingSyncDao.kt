@@ -7,7 +7,7 @@ import io.em2m.search.core.xform.SourceFormatAggTransformer
 import io.em2m.simplex.Simplex
 import io.em2m.simplex.model.Expr
 
-class ExprTransformingSyncDao<T>(simplex: Simplex, delegate: SyncDao<T>) : SyncDaoWrapper<T>(delegate) {
+open class ExprTransformingSyncDao<T>(simplex: Simplex, delegate: SyncDao<T>) : SyncDaoWrapper<T>(delegate) {
 
     val parser = simplex.parser
 
@@ -25,7 +25,7 @@ class ExprTransformingSyncDao<T>(simplex: Simplex, delegate: SyncDao<T>) : SyncD
         return delegate.search(req).let { results ->
             val rows = transformRows(request, results.rows, delegateFields, rowExprs)
             val aggs = transformAggResults(request, results.aggs)
-            results.copy(fields = req.fields, rows = rows, aggs = aggs)
+            results.copy(fields = request.fields, rows = rows, aggs = aggs)
         }
     }
 
@@ -111,5 +111,4 @@ class ExprTransformingSyncDao<T>(simplex: Simplex, delegate: SyncDao<T>) : SyncD
             } else aggResult
         }
     }
-
 }
