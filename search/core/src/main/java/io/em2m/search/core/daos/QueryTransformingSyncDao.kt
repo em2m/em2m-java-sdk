@@ -72,7 +72,7 @@ class QueryTransformingSyncDao<T>(
 
     private fun transformResult(request: SearchRequest, result: SearchResult<T>): SearchResult<T> {
         val aggs = transformAggResults(request, result.aggs)
-        return result.copy(aggs = aggs)
+        return result.copy(aggs = aggs, fields = request.fields)
     }
 
     private fun transformAggResults(request: SearchRequest, aggResults: Map<String, AggResult>): Map<String, AggResult> {
