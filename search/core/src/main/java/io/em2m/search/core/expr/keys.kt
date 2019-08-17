@@ -84,7 +84,15 @@ class FieldKeyHandler : KeyHandler, Fielded {
         }
 
         private fun conditionFields(expr: ConditionExpr): List<String> {
-            return emptyList()
+            return when (expr) {
+                is AndConditionExpr -> expr.conditions.flatMap { fields(it) }
+                is OrConditionExpr -> expr.conditions.flatMap { fields(it) }
+                is NotConditionExpr -> expr.conditions.flatMap { fields(it) }
+                is SingleConditionExpr -> {
+                    fields(expr.first).plus(fields(expr.second))
+                }
+                else -> emptyList()
+            }
         }
     }
 }

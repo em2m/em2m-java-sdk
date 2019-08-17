@@ -55,7 +55,7 @@ class ConstConditionExpr(val value: Boolean) : ConditionExpr {
     }
 }
 
-class SingleConditionExpr(val condition: String, val handler: ConditionHandler, val first: Expr, private val second: Expr) : ConditionExpr {
+class SingleConditionExpr(val condition: String, val handler: ConditionHandler, val first: Expr, val second: Expr) : ConditionExpr {
 
     override fun call(context: ExprContext): Boolean {
 
@@ -66,7 +66,7 @@ class SingleConditionExpr(val condition: String, val handler: ConditionHandler, 
     }
 }
 
-class NotConditionExpr(private val conditions: List<ConditionExpr>) : ConditionExpr {
+class NotConditionExpr(val conditions: List<ConditionExpr>) : ConditionExpr {
 
     override fun call(context: ExprContext): Boolean {
         conditions.forEach {
@@ -76,7 +76,7 @@ class NotConditionExpr(private val conditions: List<ConditionExpr>) : ConditionE
     }
 }
 
-class OrConditionExpr(private val conditions: List<ConditionExpr>) : ConditionExpr {
+class OrConditionExpr(val conditions: List<ConditionExpr>) : ConditionExpr {
 
     override fun call(context: ExprContext): Boolean {
         conditions.forEach {
@@ -86,7 +86,7 @@ class OrConditionExpr(private val conditions: List<ConditionExpr>) : ConditionEx
     }
 }
 
-class AndConditionExpr(private val conditions: List<ConditionExpr>) : ConditionExpr {
+class AndConditionExpr(val conditions: List<ConditionExpr>) : ConditionExpr {
 
     override fun call(context: ExprContext): Boolean {
         conditions.forEach {
