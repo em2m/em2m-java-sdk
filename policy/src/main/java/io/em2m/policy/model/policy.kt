@@ -21,6 +21,7 @@ data class Role(val id: String,
                 val policies: List<String> = emptyList(),
                 val inherits: List<String> = emptyList(),
                 val statements: List<Statement> = emptyList(),
+                val priority: Int = 0,
                 val condition: ConditionExpr = ConstConditionExpr(false))
 
 data class Policy(val id: String,
