@@ -15,19 +15,28 @@ object TimeAgo {
             TimeUnit.SECONDS.toMillis(1))
     val timeUnits = listOf("year", "month", "day", "hour", "minute", "second")
 
-    fun fromNow(duration: Long, withoutSuffix: Boolean): String {
-        val suffix = if (withoutSuffix) "" else " ago"
+    fun fromNow(span: Long, withoutAffix: Boolean): String {
+        var duration = span
+        val prefix = when {
+            (duration < 0 && !withoutAffix) -> "in "
+            else -> ""
+        }
+        val suffix = when {
+            (duration >= 0 && !withoutAffix) -> " ago"
+            else -> ""
+        }
+        if (duration < 0 ) duration *= -1
         val res = StringBuffer()
         for (i in TimeAgo.times.indices) {
             val current = TimeAgo.times[i]
             val temp = duration / current
             if (temp > 0) {
-                res.append(temp).append(" ").append(timeUnits[i]).append(if (temp != 1L) "s" else "").append(suffix)
+                res.append(prefix).append(temp).append(" ").append(timeUnits[i]).append(if (temp != 1L) "s" else "").append(suffix)
                 break
             }
         }
         return if ("" == res.toString())
-            "0 seconds$suffix"
+            "${prefix}0 seconds$suffix"
         else
             res.toString()
     }
