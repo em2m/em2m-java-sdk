@@ -56,7 +56,7 @@ class FromNowPipe : PipeTransform {
     override fun transform(value: Any?, context: ExprContext): Any? {
         val date: Date? = value.coerce()
         return if (date != null) {
-            Duration.between( Instant.now(), date.toInstant()).fromNow()
+            Duration.between(Instant.now(), date.toInstant()).fromNow()
         } else value
     }
 
