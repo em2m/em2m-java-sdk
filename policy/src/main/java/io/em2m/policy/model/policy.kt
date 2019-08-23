@@ -1,7 +1,6 @@
 package io.em2m.policy.model
 
 import com.fasterxml.jackson.annotation.JsonFormat
-import io.em2m.simplex.model.Condition
 import io.em2m.simplex.model.ConditionExpr
 import io.em2m.simplex.model.ConstConditionExpr
 
@@ -18,10 +17,12 @@ data class Statement(val id: String? = null,
 
 data class Role(val id: String,
                 val label: String = id,
+                val summary: String? = null,
                 val policies: List<String> = emptyList(),
                 val inherits: List<String> = emptyList(),
                 val statements: List<Statement> = emptyList(),
-                val condition: List<Condition> = emptyList())
+                val priority: Int = 0,
+                val condition: ConditionExpr = ConstConditionExpr(false))
 
 data class Policy(val id: String,
                   val label: String,
