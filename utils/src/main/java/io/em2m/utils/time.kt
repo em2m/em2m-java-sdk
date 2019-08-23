@@ -18,11 +18,11 @@ object TimeAgo {
     fun fromNow(span: Long, withoutAffix: Boolean): String {
         var duration = span
         val prefix = when {
-            (duration < 0 && !withoutAffix) -> "in "
+            (duration >= 0 && !withoutAffix) -> "in "
             else -> ""
         }
         val suffix = when {
-            (duration >= 0 && !withoutAffix) -> " ago"
+            (duration < 0 && !withoutAffix) -> " ago"
             else -> ""
         }
         if (duration < 0 ) duration *= -1
