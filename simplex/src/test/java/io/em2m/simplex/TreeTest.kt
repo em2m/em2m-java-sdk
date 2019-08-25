@@ -3,29 +3,28 @@ package io.em2m.simplex
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import io.em2m.simplex.model.*
+import io.em2m.simplex.model.BasicKeyResolver
+import io.em2m.simplex.model.ConstKeyHandler
+import io.em2m.simplex.model.Expr
+import io.em2m.simplex.model.Key
 import io.em2m.simplex.parser.SimplexModule
 import io.em2m.simplex.std.Numbers
 import io.em2m.utils.coerce
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Test
-import javax.swing.text.html.HTML.Tag.I
+import kotlin.test.assertTrue
 
 
 class TreeTest {
 
     val people = listOf(mapOf("name" to "Fred"), mapOf("name" to "Barney"), mapOf("name" to "Wilma"), mapOf("name" to "Betty"))
-
     val keyResolver = BasicKeyResolver(mapOf(
             Key("ns", "key1") to ConstKeyHandler("value1"),
             Key("ns", "key2") to ConstKeyHandler("value2"),
             Key("ns", "people") to ConstKeyHandler(people)
-    ))
-            .delegate(Numbers.keys)
-
+    )).delegate(Numbers.keys)
     val simplex = Simplex().keys(keyResolver)
-
     val mapper = jacksonObjectMapper().registerModule(SimplexModule(simplex)).enable(SerializationFeature.INDENT_OUTPUT)
 
     @Test
@@ -58,6 +57,61 @@ class TreeTest {
     }
 
     data class Rule(val obj: Expr, val value: Expr)
+
+    @Test
+    fun testContainerWhen() {
+        val json = """
+   {
+     "foo": "bar",
+     "@container": {
+        "@when" : [
+            {
+              "@if": "#{Bool:false}",
+              "value": 1
+            },
+            {
+              "value": 2
+            }
+        ]
+     }
+   }""".replace("#", "$")
+        val tree: Expr = mapper.readValue(json)
+        val obj = tree.call(emptyMap())
+        assertEquals("{foo=bar, value=2}", obj.toString())
+    }
+
+    @Test
+    fun testValueWhen() {
+        val json = """
+   {
+    "@when" : [
+        {
+          "@if": "#{Bool:false}",
+          "@value": 1
+        },
+        {
+          "@value": 2
+        }
+    ]
+   }""".replace("#", "$")
+        val tree: Expr = mapper.readValue(json)
+        val result = tree.call(emptyMap())
+        assertEquals(2, result)
+    }
+
+
+    @Test
+    fun testRepeat() {
+        val json = """
+   {
+     "@repeat":  "#{ns:people}",
+     "name": "#{repeat:item.name}",
+     "index": "#{repeat:index}"
+   }""".replace("#", "$")
+        val tree: Expr = mapper.readValue(json)
+        val value = tree.call(emptyMap())
+        assertTrue { value is List<*> }
+    }
 
     @Test
     fun testTags() {
@@ -134,12 +188,23 @@ class TreeTest {
              "@if": "#{Bool:true}",
              "@value": 2
             }
-          ]
+          ],
+          "TestWhenValue": {
+            "@when" : [
+                {
+                  "@if": "#{Bool:false}",
+                  "@value": 1
+                },
+                {
+                  "@value": 2
+                }
+            ]
+          }
         }
         """.trimIndent().replace("#", "$")
         println(json)
         val tree: Expr = mapper.readValue(json)
-         val obj = tree.call(emptyMap())
+        val obj = tree.call(emptyMap())
         println(mapper.writeValueAsString(obj))
         assertNotNull(obj)
         assertEquals(2, obj.evalPath("PSS").coerce<List<Int>>()?.size)
