@@ -60,6 +60,24 @@ class AppendPipe : PipeTransform {
     }
 }
 
+class PrependPipe : PipeTransform {
+    var text = ""
+
+    override fun args(args: List<String>) {
+        if (args.isNotEmpty()) {
+            text = args[0]
+        }
+    }
+
+    override fun transform(value: Any?, context: ExprContext): Any? {
+        return if (value != null) {
+            text + value.toString()
+        } else {
+            return null
+        }
+    }
+}
+
 class JoinPipe : PipeTransform {
 
     var separator = ", "
@@ -203,6 +221,7 @@ object Strings {
             "capitalize" to CapitalizePipe(),
             "trim" to TrimPipe(),
             "append" to AppendPipe(),
+            "prepend" to PrependPipe(),
             "join" to JoinPipe(),
             "emptyToNull" to EmptyToNull()))
     val keys = BasicKeyResolver()
