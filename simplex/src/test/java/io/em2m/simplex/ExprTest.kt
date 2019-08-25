@@ -6,18 +6,12 @@ import io.em2m.simplex.model.Key
 import io.em2m.simplex.std.Dates
 import io.em2m.simplex.std.Numbers
 import io.em2m.utils.coerceNonNull
-import org.joda.time.DateTime
 import org.junit.Assert
 import org.junit.Test
 import java.text.SimpleDateFormat
-import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
-import java.time.temporal.ChronoUnit
-import java.time.temporal.TemporalAmount
-import java.time.temporal.TemporalUnit
 import java.util.*
-import java.util.concurrent.TimeUnit
 
 
 class ExprTest : Assert() {
@@ -157,6 +151,15 @@ class ExprTest : Assert() {
     fun testAdditionError() {
         val exprString = "\${ns:key1 | add:2}"
         val expected = null
+        val expr = requireNotNull(simplex.parser.parse(exprString))
+        val actual = expr.call(emptyMap())
+        assertEquals(expected, actual)
+    }
+
+    @Test
+    fun testEscapeAndPrepend() {
+        val exprString = "\${ns:key1 | prepend:\\:}"
+        val expected = ":value1"
         val expr = requireNotNull(simplex.parser.parse(exprString))
         val actual = expr.call(emptyMap())
         assertEquals(expected, actual)
