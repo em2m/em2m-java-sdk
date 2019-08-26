@@ -101,9 +101,13 @@ class EmptyToNull : PipeTransform {
 
     override fun transform(value: Any?, context: ExprContext): Any? {
         return if (value is List<*>) {
-            value.map { }
+            value.map {
+                if ((it as? String)?.isEmpty() == true) null else it
+            }
         } else if (value is Array<*>) {
-            value.map { }
+            value.map {
+                if ((it as? String)?.isEmpty() == true) null else it
+            }
         } else {
             if ((value as? String)?.isEmpty() == true) null else value
         }

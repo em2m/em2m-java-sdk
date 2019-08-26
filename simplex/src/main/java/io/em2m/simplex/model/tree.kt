@@ -23,7 +23,13 @@ class ObjectExpr(val fields: List<FieldExpr>) : TreeExpr {
     private val fieldMap = fields.associateBy { it.field }
 
     fun skip(context: ExprContext): Boolean {
-        return !(fieldMap["@if"]?.value?.call(context)?.coerce(true) ?: true)
+        val ifExpr = fieldMap["@if"]?.value ?: return false
+        return when (val value = ifExpr.call(context)) {
+            is Boolean -> !value
+            is String -> value.isNullOrBlank()
+            is Number -> (value == 0) || (value == Double.NaN)
+            else -> value == null
+        }
     }
 
     override fun call(context: ExprContext): Any? {
