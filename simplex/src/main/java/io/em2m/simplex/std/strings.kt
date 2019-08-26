@@ -60,6 +60,24 @@ class AppendPipe : PipeTransform {
     }
 }
 
+class PrependPipe : PipeTransform {
+    var text = ""
+
+    override fun args(args: List<String>) {
+        if (args.isNotEmpty()) {
+            text = args[0]
+        }
+    }
+
+    override fun transform(value: Any?, context: ExprContext): Any? {
+        return if (value != null) {
+            text + value.toString()
+        } else {
+            return null
+        }
+    }
+}
+
 class JoinPipe : PipeTransform {
 
     var separator = ", "
@@ -83,9 +101,13 @@ class EmptyToNull : PipeTransform {
 
     override fun transform(value: Any?, context: ExprContext): Any? {
         return if (value is List<*>) {
-            value.map { }
+            value.map {
+                if ((it as? String)?.isEmpty() == true) null else it
+            }
         } else if (value is Array<*>) {
-            value.map { }
+            value.map {
+                if ((it as? String)?.isEmpty() == true) null else it
+            }
         } else {
             if ((value as? String)?.isEmpty() == true) null else value
         }
@@ -203,6 +225,7 @@ object Strings {
             "capitalize" to CapitalizePipe(),
             "trim" to TrimPipe(),
             "append" to AppendPipe(),
+            "prepend" to PrependPipe(),
             "join" to JoinPipe(),
             "emptyToNull" to EmptyToNull()))
     val keys = BasicKeyResolver()

@@ -23,7 +23,13 @@ class ObjectExpr(val fields: List<FieldExpr>) : TreeExpr {
     private val fieldMap = fields.associateBy { it.field }
 
     fun skip(context: ExprContext): Boolean {
-        return !(fieldMap["@if"]?.value?.call(context)?.coerce(true) ?: true)
+        val ifExpr = fieldMap["@if"]?.value ?: return false
+        return when (val value = ifExpr.call(context)) {
+            is Boolean -> !value
+            is String -> value.isNullOrBlank()
+            is Number -> (value == 0) || (value == Double.NaN)
+            else -> value == null
+        }
     }
 
     override fun call(context: ExprContext): Any? {
@@ -31,6 +37,7 @@ class ObjectExpr(val fields: List<FieldExpr>) : TreeExpr {
         return when {
             skip -> null
             fieldMap.containsKey("@repeat") -> processRepeat(context)
+            fieldMap.containsKey("@when") -> processWhenArray(context)
             fieldMap.containsKey("@value") -> processValue(context)
             else -> processFields(context)
         }
@@ -79,14 +86,15 @@ class ObjectExpr(val fields: List<FieldExpr>) : TreeExpr {
     }
 
     // TODO - Support alternate non-object values (literals, arrays) for @when statements
-    private fun processWhenArray(expr: ArrayExpr, context: ExprContext): Map<String, Any?> {
+    private fun processWhenArray(context: ExprContext): Any? {
+        val expr = fieldMap["@when"]?.value as? ArrayExpr ?: return null
         expr.values.forEach {
-            val value = (it as? ObjectExpr)?.call(context) as? Map<String, Any?>
+            val value = (it as? ObjectExpr)?.call(context)
             if (value != null) {
                 return value
             }
         }
-        return emptyMap()
+        return null
     }
 
     private fun processFields(context: ExprContext): Map<String, Any?> {
@@ -105,8 +113,6 @@ class ObjectExpr(val fields: List<FieldExpr>) : TreeExpr {
                 map.toList()
             } else if (field.value is ArrayExpr && field.field.startsWith("@container")) {
                 processContainerArray(field.value, context).toList()
-            } else if (field.value is ArrayExpr && field.field.startsWith("@when")) {
-                processWhenArray(field.value, context).toList()
             } else {
                 listOf(key to value)
             }
