@@ -28,16 +28,12 @@ class EsBoolQuery(
         should: List<EsQuery> = emptyList(),
         mustNot: List<EsQuery> = emptyList()) : EsQuery() {
 
-    val bool: Map<String, MutableList<EsQuery>>
-
-    init {
-        bool = mapOf(
-                "must" to must.toMutableList(),
-                "filter" to filter.toMutableList(),
-                "should" to should.toMutableList(),
-                "must_not" to mustNot.toMutableList()
-        )
-    }
+    val bool: Map<String, MutableList<EsQuery>> = mapOf(
+            "must" to must.toMutableList(),
+            "filter" to filter.toMutableList(),
+            "should" to should.toMutableList(),
+            "must_not" to mustNot.toMutableList()
+    )
 
     fun must(query: EsQuery): EsBoolQuery {
         bool["must"]?.add(query)
@@ -178,7 +174,7 @@ class EsAggs() {
         if (subAggs != null) {
             val node: ObjectNode? = subAggs.aggs.coerce()
             if (node != null) {
-                agg.set("aggs", node)
+                agg.set("aggs", node as JsonNode)
             }
         }
         return agg.with(type)

@@ -97,9 +97,9 @@ class RequestConverter(private val schemaMapper: SchemaMapper, val objectMapper:
                 val expr = ArrayList<Bson>()
                 if (Date::class.java.isAssignableFrom(fieldType)) {
                     val now = Date().time
-                    query.lt?.let { expr.add(Filters.lt(field, parseDate(it.toString(), now, true))) }
+                    query.lt?.let { expr.add(Filters.lt(field, parseDate(it.toString(), now, false))) }
                     query.lte?.let { expr.add(Filters.lte(field, parseDate(it.toString(), now, true))) }
-                    query.gt?.let { expr.add(Filters.gt(field, parseDate(it.toString(), now, false))) }
+                    query.gt?.let { expr.add(Filters.gt(field, parseDate(it.toString(), now, true))) }
                     query.gte?.let { expr.add(Filters.gte(field, parseDate(it.toString(), now, false))) }
                 } else {
                     query.lt?.let { expr.add(Filters.lt(field, convertValue(field, it))) }
@@ -113,9 +113,9 @@ class RequestConverter(private val schemaMapper: SchemaMapper, val objectMapper:
                 val field = query.field
                 val expr = ArrayList<Bson>()
                 val now = Date().time
-                query.lt?.let { expr.add(Filters.lt(field, parseDate(it.toString(), now, true))) }
+                query.lt?.let { expr.add(Filters.lt(field, parseDate(it.toString(), now, false))) }
                 query.lte?.let { expr.add(Filters.lte(field, parseDate(it.toString(), now, true))) }
-                query.gt?.let { expr.add(Filters.gt(field, parseDate(it.toString(), now, false))) }
+                query.gt?.let { expr.add(Filters.gt(field, parseDate(it.toString(), now, true))) }
                 query.gte?.let { expr.add(Filters.gte(field, parseDate(it.toString(), now, false))) }
                 and(expr)
             }

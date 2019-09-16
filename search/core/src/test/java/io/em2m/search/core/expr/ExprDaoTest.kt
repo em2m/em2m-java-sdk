@@ -8,14 +8,12 @@ import io.em2m.simplex.Simplex
 import io.em2m.simplex.model.BasicKeyResolver
 import io.em2m.simplex.model.Key
 import org.junit.Assert
-import org.junit.Ignore
 import org.junit.Test
-import rx.Observable
 
 
 class ExprDaoTest : Assert() {
 
-    val keyResolver = BasicKeyResolver(mapOf(
+    private val keyResolver = BasicKeyResolver(mapOf(
             Key("ns", "key1") to ConstKeyHandler("value1"),
             Key("ns", "key2") to ConstKeyHandler("value2"),
             Key("bucket", "key") to BucketKeyKeyHandler(),
@@ -24,7 +22,7 @@ class ExprDaoTest : Assert() {
 
     val request = SearchRequest()
 
-    val mock = mock<SyncDao<Any>> {
+    private val mock = mock<SyncDao<Any>> {
         val rows = listOf(
                 listOf("fred", "flinstone"),
                 listOf("wilma", "flinstone"),
@@ -36,11 +34,11 @@ class ExprDaoTest : Assert() {
                         Bucket(key = "flinstone", count = 2),
                         Bucket(key = "rubble", count = 2)
                 )))
-        on { search(any()) } doReturn SearchResult<Any>(rows = rows, aggs = aggResults, totalItems = rows.size.toLong())
+        on { search(any()) } doReturn SearchResult(rows = rows, aggs = aggResults, totalItems = rows.size.toLong())
     }
 
-    val simplex = Simplex().keys(keyResolver)
-    val dao = ExprTransformingSyncDao(simplex, mock)
+    private val simplex = Simplex().keys(keyResolver)
+    private val dao = ExprTransformingSyncDao(simplex, mock)
 
     @Test
     fun testTransformRows() {
@@ -89,6 +87,13 @@ class ExprDaoTest : Assert() {
     fun testTransformSorts() {
         val sorts = listOf(DocSort(field = "\${lastName}, \${firstName}"))
         val request = SearchRequest(sorts = sorts)
+        val result = dao.search(request)
+        assertNotNull(result)
+    }
+
+    @Test
+    fun testTransformQuery() {
+        val request = SearchRequest(query = TermQuery("lastName", "Flinstone"))
         val result = dao.search(request)
         assertNotNull(result)
     }
