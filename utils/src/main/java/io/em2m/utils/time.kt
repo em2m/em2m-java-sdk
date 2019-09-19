@@ -44,6 +44,6 @@ object TimeAgo {
 }
 
 
-fun Duration.fromNow(withoutSuffix: Boolean = false): String {
-    return TimeAgo.fromNow(toMillis(), withoutSuffix)
+fun Duration.fromNow(withoutAffix: Boolean = false): String {
+    return TimeAgo.fromNow(toMillis(), withoutAffix)
 }
