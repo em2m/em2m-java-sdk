@@ -53,10 +53,18 @@ class FormatDurationPipe : PipeTransform {
 
 class FromNowPipe : PipeTransform {
 
+    private var withoutAffix = false
+
+    override fun args(args: List<String>) {
+        if (args.isNotEmpty()) {
+            withoutAffix = args[0].coerce() ?: false
+        }
+    }
+
     override fun transform(value: Any?, context: ExprContext): Any? {
         val date: Date? = value.coerce()
         return if (date != null) {
-            Duration.between(Instant.now(), date.toInstant()).fromNow()
+            Duration.between(Instant.now(), date.toInstant()).fromNow(withoutAffix)
         } else value
     }
 
