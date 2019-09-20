@@ -50,6 +50,8 @@ class Functions {
                         result = termVal == value
                     } else if (value != null) {
                         result = value.toString() == term.toString()
+                    } else {
+                        result = (term == value)
                     }
                     if (result) break
                 }
@@ -209,6 +211,20 @@ class Functions {
             return matches(field, pattern)
         }
 
+        private fun toPredicate(expr: WildcardQuery): (Any) -> Boolean {
+            val field = expr.field
+            return when {
+                expr.value == "*" -> not(term(field, null))
+                else -> {
+                    var value = expr.value.replace("?", "_QUESTION_MARK_").replace("*", "_STAR_")
+                    value = Matcher.quoteReplacement(value)
+                    value = value.replace("_QUESTION_MARK_", ".?").replace("_STAR_", ".*")
+                    val pattern = Pattern.compile(".*" + Matcher.quoteReplacement(value) + ".*", Pattern.CASE_INSENSITIVE)
+                    matches(field, pattern)
+                }
+            }
+        }
+
         private fun toPredicate(expr: RegexQuery): (Any) -> Boolean {
             val field = expr.field
             val regex = expr.value
@@ -264,6 +280,9 @@ class Functions {
                     toPredicate(query)
                 }
                 is PrefixQuery -> {
+                    toPredicate(query)
+                }
+                is WildcardQuery -> {
                     toPredicate(query)
                 }
                 is RangeQuery -> {

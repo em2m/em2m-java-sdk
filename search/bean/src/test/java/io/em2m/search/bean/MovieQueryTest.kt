@@ -35,7 +35,7 @@ class MovieQueryTest {
 
     @Test
     fun testTitleWildcard() {
-        val results = find(PrefixQuery("fields.title", "robocop"))
+        val results = find(WildcardQuery("fields.title", "robocop*"))
         assertEquals(4, results.size.toLong())
     }
 
