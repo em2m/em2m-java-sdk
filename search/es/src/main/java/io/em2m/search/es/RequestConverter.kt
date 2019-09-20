@@ -148,16 +148,16 @@ class RequestConverter(val objectMapper: ObjectMapper = jacksonObjectMapper(), v
                     val esRanges = esAgg.withArray("ranges")
 
                     val dateMathParser = DateMathParser(timeZone)
+                    val now = Date()
                     it.ranges.forEach { range ->
                         if (timeZone != null) {
-                            val now = Date()
                             val from = if (range.from is String)
                                 dateMathParser.parse(range.from as String, now.time, false, timeZone)
                             else
                                 range.from
 
                             val to = if (range.to is String)
-                                dateMathParser.parse(range.to as String, now.time, true, timeZone)
+                                dateMathParser.parse(range.to as String, now.time, false, timeZone)
                             else
                                 range.to
 

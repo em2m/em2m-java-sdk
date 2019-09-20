@@ -11,7 +11,7 @@ import com.vividsolutions.jts.geom.Envelope
         Type(value = OrQuery::class, name = "or"),
         Type(value = NotQuery::class, name = "not"),
         Type(value = RangeQuery::class, name = "range"),
-        Type(value = DateRangeQuery::class, name = "dateRange"),
+        Type(value = DateRangeQuery::class, name = "date_range"),
         Type(value = TermQuery::class, name = "term"),
         Type(value = MatchQuery::class, name = "match"),
         Type(value = RegexQuery::class, name = "regex"),
