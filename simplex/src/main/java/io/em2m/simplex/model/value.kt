@@ -18,23 +18,23 @@ interface PipePart : Part {
 
 data class KeyOnlyPipePart(override val key: Key, override val handler: KeyHandler?) : PipePart {
 
-    override val transforms  = emptyList<PipeTransform>()
+    override val transforms = emptyList<PipeTransform>()
 
     override fun call(context: ExprContext): Any? {
         val contextKeys: KeyResolver? = context["keys"] as? KeyResolver
         val handler = contextKeys?.find(key) ?: handler
-        return requireNotNull(handler) { "Handler not found for $key"}.call(key, context)
+        return requireNotNull(handler) { "Handler not found for $key" }.call(key, context)
     }
 }
 
 data class SingleTransformPipePart(override val key: Key, override val handler: KeyHandler?, val transform: PipeTransform) : PipePart {
 
-    override val transforms  = listOf(transform)
+    override val transforms = listOf(transform)
 
     override fun call(context: ExprContext): Any? {
         val contextKeys: KeyResolver? = context["keys"] as? KeyResolver
         val handler = contextKeys?.find(key) ?: handler
-        val initial = requireNotNull(handler) { "Handler not found for $key"}.call(key, context)
+        val initial = requireNotNull(handler) { "Handler not found for $key" }.call(key, context)
         return transform.transform(initial, context)
     }
 }
@@ -44,7 +44,7 @@ data class MultiTransformPipePart(override val key: Key, override val handler: K
     override fun call(context: ExprContext): Any? {
         val contextKeys: KeyResolver? = context["keys"] as? KeyResolver
         val handler = contextKeys?.find(key) ?: handler
-        val initial = requireNotNull(handler) { "Handler not found for $key"}.call(key, context)
+        val initial = requireNotNull(handler) { "Handler not found for $key" }.call(key, context)
         return transforms.fold(initial) { current, pipe -> pipe.transform(current, context) }
     }
 }
