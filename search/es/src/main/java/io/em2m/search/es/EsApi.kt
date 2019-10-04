@@ -173,8 +173,8 @@ class EsAggs() {
         val agg = agg(name)
         if (subAggs != null) {
             val node: ObjectNode? = subAggs.aggs.coerce()
-            if (node != null) {
-                agg.set("aggs", node as JsonNode)
+            if (node is JsonNode) {
+                agg.set<JsonNode>("aggs", node)
             }
         }
         return agg.with(type)
@@ -184,7 +184,7 @@ class EsAggs() {
         val body = agg(name, "terms", subAggs)
         body.put("field", field)
         body.put("size", size)
-        body.set("order", toOrder(sortType, sortDirection))
+        body.set<JsonNode>("order", toOrder(sortType, sortDirection))
         if (missing != null) {
             body.putPOJO("missing", missing)
         }
@@ -240,7 +240,7 @@ class EsAggs() {
         aggs[name] = agg
         val filterAgg = agg.with("filter")
         filterAgg.putPOJO("query", filter)
-        filterAgg.set("order", toOrder(sortType, sortDirection))
+        filterAgg.set<JsonNode>("order", toOrder(sortType, sortDirection))
         if (subAggs != null) {
             filterAgg.putPOJO("aggs", subAggs.aggs)
         }
