@@ -8,9 +8,9 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import io.em2m.actions.model.ActionContext
 import io.em2m.actions.model.ActionTransformer
 import io.em2m.actions.model.Problem
+import io.em2m.actions.model.Problem.Companion.notAuthorized
 import io.em2m.flows.Priorities
 import io.em2m.policy.model.Claims
-import rx.Observable
 import java.util.*
 
 class JwtTransformer(val secretKey: String, val requireAuth: Boolean = false, override val priority: Int = Priorities.AUTHENTICATE) : ActionTransformer {
@@ -18,15 +18,13 @@ class JwtTransformer(val secretKey: String, val requireAuth: Boolean = false, ov
     val mapper = jacksonObjectMapper()
     val decoder = Base64.getDecoder()
 
-    override fun call(obs: Observable<ActionContext>): Observable<ActionContext> {
 
-        return obs.doOnNext { context ->
-            val token = context.environment["Token"] as? String
-            if (token != null && token.isNotEmpty()) {
-                context.claims = parseToken(token)
-            } else if (requireAuth) {
-                Problem(status = Problem.Status.NOT_AUTHORIZED, title = "Not Authorized").throwException()
-            }
+    override fun doOnNext(ctx: ActionContext) {
+        val token = ctx.environment["Token"] as? String
+        if (token != null && token.isNotEmpty()) {
+            ctx.claims = parseToken(token)
+        } else if (requireAuth) {
+            Problem(status = Problem.Status.NOT_AUTHORIZED, title = "Not Authorized").throwException()
         }
     }
 
@@ -36,9 +34,9 @@ class JwtTransformer(val secretKey: String, val requireAuth: Boolean = false, ov
             val jwtVerifier = JWT.require(algorithm).build()
             val jwt = jwtVerifier.verify(token)
             val values: Map<String, Any?> = mapper.readValue(decoder.decode(jwt.payload))
-            return Claims(values)
+            Claims(values)
         } catch (ex: Exception) {
-            Problem(status = Problem.Status.NOT_AUTHORIZED, title = "Not Authorized", detail = ex.message).throwException()
+            notAuthorized(title = { "Not Authorized" }, detail = { ex.message })
         }
     }
 
