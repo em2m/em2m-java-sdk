@@ -63,10 +63,8 @@ class ExampleServer {
     }
 
     class Echo : TypedActionFlow<Any, Any>(Any::class.java, Any::class.java) {
-        override fun main(obs: Observable<ActionContext>): Observable<ActionContext> {
-            return obs.doOnNext {
-                response(it, it.request)
-            }
+        override fun main(context: ActionContext, req: Any): Any? {
+            return context.request
         }
     }
 
