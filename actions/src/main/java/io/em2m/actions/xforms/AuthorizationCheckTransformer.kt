@@ -3,8 +3,8 @@ package io.em2m.actions.xforms
 
 import io.em2m.actions.model.ActionContext
 import io.em2m.actions.model.ActionTransformer
+import io.em2m.actions.model.Priorities
 import io.em2m.actions.model.Problem
-import io.em2m.flows.Priorities
 import io.em2m.policy.model.Environment
 import io.em2m.policy.model.PolicyEngine
 import org.slf4j.LoggerFactory

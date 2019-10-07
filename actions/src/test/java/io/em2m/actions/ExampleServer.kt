@@ -4,20 +4,19 @@ import com.google.inject.Binder
 import com.google.inject.Module
 import com.google.inject.name.Names
 import io.em2m.actions.model.ActionContext
+import io.em2m.actions.model.ActionFlow
 import io.em2m.actions.model.ActionProcessorBuilder
+import io.em2m.actions.model.Priorities.Companion.MAIN
 import io.em2m.actions.model.TypedActionFlow
 import io.em2m.actions.servlet.ServletRuntime
 import io.em2m.actions.xforms.JacksonRequestTransformer
 import io.em2m.actions.xforms.JacksonResponseTransformer
 import io.em2m.actions.xforms.LoggingTransformer
-import io.em2m.flows.Flow
-import io.em2m.flows.Priorities.Companion.MAIN
 import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.server.handler.HandlerList
 import org.eclipse.jetty.servlet.ServletContextHandler
 import org.eclipse.jetty.servlet.ServletHolder
 import org.slf4j.LoggerFactory
-import rx.Observable
 import javax.servlet.MultipartConfigElement
 import javax.servlet.http.HttpServlet
 import javax.servlet.http.HttpServletRequest
@@ -56,7 +55,7 @@ class ExampleServer {
         }
     }
 
-    class Log : Flow<ActionContext> {
+    class Log : ActionFlow {
         override val transformers = listOf(
                 LoggingTransformer(LoggerFactory.getLogger(javaClass), { it.toString() }, MAIN)
         )
@@ -71,11 +70,8 @@ class ExampleServer {
     data class UploadRequest(val foo: String, val hasHeaders: Boolean)
 
     class Upload : TypedActionFlow<Any, Any>(UploadRequest::class.java, Any::class.java) {
-        override fun main(obs: Observable<ActionContext>): Observable<ActionContext> {
-            return obs.doOnNext { context ->
-                val filePart = context.multipart?.files?.get("file")
-                response(context, context.request)
-            }
+        override fun main(context: ActionContext) {
+            val filePart = context.multipart?.files?.get("file")
         }
     }
 
@@ -84,9 +80,9 @@ class ExampleServer {
         private val processor = ActionProcessorBuilder()
                 .prefix("demo")
                 .flow(Log::class)
-                .flow(Echo::class)
-                .flow(Upload::class)
-                .module(TestModule())
+                .flow(ExampleServer.Echo::class)
+                .flow(ExampleServer.Upload::class)
+                .module(ExampleServer.TestModule())
                 .transformer(JacksonRequestTransformer())
                 .transformer(JacksonResponseTransformer())
                 .build()

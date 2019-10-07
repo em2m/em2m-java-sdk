@@ -3,39 +3,30 @@ package io.em2m.actions.model
 import com.google.inject.Guice
 import com.google.inject.Injector
 import com.google.inject.Module
-import io.em2m.flows.*
 import kotlin.reflect.KClass
 
 
-class ActionProcessorBuilder : AbstractBuilder<ActionContext>() {
+class ActionProcessorBuilder {
 
     private var prefix: String? = null
-    private val classes = HashMap<String, KClass<out Flow<ActionContext>>>()
-    private val instances = HashMap<String, Flow<ActionContext>>()
+    private val classes = HashMap<String, KClass<out ActionFlow>>()
+    private val instances = HashMap<String, ActionFlow>()
+    private val modules = ArrayList<Module>()
+    private var injector: Injector? = null
+    private val xforms = ArrayList<ActionTransformer>()
 
-    override fun resolver(injector: Injector): FlowResolver<ActionContext> {
-        return object : FlowResolver<ActionContext> {
-            override fun findFlow(context: ActionContext): Flow<ActionContext>? {
-                val key = context.actionName
-                return instances[key] ?: classes[key]?.let {
-                    injector.getInstance(it.java)
-                }
-            }
-        }
-    }
-
-    override fun injector(injector: Injector): ActionProcessorBuilder {
-        super.injector(injector)
+    fun injector(injector: Injector): ActionProcessorBuilder {
+        this.injector = injector
         return this
     }
 
-    override fun module(module: Module): ActionProcessorBuilder {
-        super.module(module)
+    fun module(module: Module): ActionProcessorBuilder {
+        modules.add(module)
         return this
     }
 
-    override fun transformer(transformer: Transformer<ActionContext>): ActionProcessorBuilder {
-        super.transformer(transformer)
+    fun transformer(transformer: ActionTransformer): ActionProcessorBuilder {
+        xforms.add(transformer)
         return this
     }
 
@@ -44,17 +35,17 @@ class ActionProcessorBuilder : AbstractBuilder<ActionContext>() {
         return this
     }
 
-    fun flow(key: String, flow: Flow<ActionContext>): ActionProcessorBuilder {
+    fun flow(key: String, flow: ActionFlow): ActionProcessorBuilder {
         instances[key] = flow
         return this
     }
 
-    fun flow(key: String, flowClass: KClass<out Flow<ActionContext>>): ActionProcessorBuilder {
+    fun flow(key: String, flowClass: KClass<out ActionFlow>): ActionProcessorBuilder {
         classes[key] = flowClass
         return this
     }
 
-    fun flow(flowClass: KClass<out Flow<ActionContext>>): ActionProcessorBuilder {
+    fun flow(flowClass: KClass<out ActionFlow>): ActionProcessorBuilder {
         val simpleName = requireNotNull(flowClass.simpleName)
         if (prefix != null) {
             classes["$prefix:$simpleName"] = flowClass
@@ -64,13 +55,22 @@ class ActionProcessorBuilder : AbstractBuilder<ActionContext>() {
         return this
     }
 
-    override fun build(): ActionProcessor {
+    private fun resolver(injector: Injector): ActionFlowResolver {
+        return object : ActionFlowResolver {
+            override fun findFlow(context: ActionContext): ActionFlow? {
+                val key = context.actionName
+                return instances[key] ?: classes[key]?.let {
+                    injector.getInstance(it.java)
+                }
+            }
+        }
+    }
+
+    fun build(): ActionProcessor {
         val injector = injector?.createChildInjector(modules) ?: Guice.createInjector(modules)
         val resolver = resolver(injector)
         return BasicActionProcessor(resolver, xforms)
     }
 
-    class BasicActionProcessor(flowResolver: FlowResolver<ActionContext>, standardXforms: List<Transformer<ActionContext>> = emptyList())
-        : ActionProcessor, BasicProcessor<ActionContext>(flowResolver, standardXforms)
 
 }

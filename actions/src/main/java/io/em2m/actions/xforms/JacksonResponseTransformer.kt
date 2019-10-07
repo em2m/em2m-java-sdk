@@ -4,8 +4,8 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.em2m.actions.model.ActionContext
 import io.em2m.actions.model.ActionTransformer
+import io.em2m.actions.model.Priorities
 import io.em2m.actions.model.Problem
-import io.em2m.flows.Priorities
 import java.io.IOException
 import javax.servlet.http.HttpServletResponse
 
