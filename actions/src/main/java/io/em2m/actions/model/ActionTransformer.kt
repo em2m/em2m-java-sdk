@@ -1,14 +1,9 @@
 package io.em2m.actions.model
 
-import io.em2m.flows.Transformer
-import rx.Observable
+interface ActionTransformer {
 
-interface ActionTransformer : Transformer<ActionContext> {
+    val priority: Int
 
-    override fun call(obs: Observable<ActionContext>): Observable<ActionContext> {
-        return obs.doOnNext { ctx ->
-            doOnNext(ctx)
-        }
-    }
+    fun doOnNext(ctx: ActionContext)
 
 }

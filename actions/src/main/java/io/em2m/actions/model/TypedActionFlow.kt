@@ -1,10 +1,8 @@
 package io.em2m.actions.model
 
-import io.em2m.flows.Transformer
-
 open class TypedActionFlow<T, R>(val requestType: Class<out Any>, val resultType: Class<out Any>) : ActionFlow {
 
-    override val transformers = ArrayList<Transformer<ActionContext>>()
+    override val transformers = ArrayList<ActionTransformer>()
 
     @Suppress("UNCHECKED_CAST")
     fun request(context: ActionContext): T {

@@ -3,8 +3,8 @@ package io.em2m.actions.xforms
 import com.fasterxml.jackson.databind.ObjectMapper
 import io.em2m.actions.model.ActionContext
 import io.em2m.actions.model.ActionTransformerSupport
+import io.em2m.actions.model.Priorities
 import io.em2m.actions.model.Problem
-import io.em2m.flows.Priorities
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
