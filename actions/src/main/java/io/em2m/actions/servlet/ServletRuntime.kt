@@ -32,7 +32,7 @@ open class ServletRuntime(private val actionPrefix: String, private val processo
         context.scope["servletContext"] = request
         try {
             processor.process(context)
-        } catch (error: Exception) {
+        } catch (error: RuntimeException) {
             handleError(response, context, error)
         }
     }
