@@ -6,7 +6,6 @@ open class BasicActionProcessor(private val flowResolver: ActionFlowResolver, pr
         val flow = flowResolver.findFlow(context) ?: throw FlowNotFound("")
         context.flow = flow
         val transformers = flow.transformers
-                .asSequence()
                 .plus(standardXforms)
                 .filter { it.priority < Priorities.ERROR }
                 .plus(MainTransformer(flow))

@@ -27,7 +27,7 @@ class Problem(val type: String? = null,
         return this
     }
 
-    fun throwException(): Nothing {
+    inline fun throwException(): Nothing {
         throw ProblemException(this)
     }
 
