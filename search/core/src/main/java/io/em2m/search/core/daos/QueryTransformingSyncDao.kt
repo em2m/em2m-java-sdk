@@ -90,8 +90,7 @@ class QueryTransformingSyncDao<T>(
     }
 
     private fun transformFilterBuckets(agg: FiltersAgg, buckets: List<Bucket>?): List<Bucket>? {
-        if (buckets == null) return null
-        return buckets.map { bucket ->
+        return buckets?.map { bucket ->
             val key = bucket.key
             val query = agg.filters[key]
             bucket.copy(query = query)
