@@ -71,7 +71,7 @@ data class ConstExpr(val value: Any?) : Expr {
 
 data class ConstValueExpr(val value: Any?) : ValueExpr {
 
-    override val parts: List<Part> = emptyList()
+    override val parts: List<Part> = listOf(ConstPart(value))
 
     override fun call(context: ExprContext): Any? {
         return value
