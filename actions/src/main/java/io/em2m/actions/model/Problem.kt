@@ -4,8 +4,6 @@ import com.fasterxml.jackson.annotation.JsonAnyGetter
 import com.fasterxml.jackson.annotation.JsonAnySetter
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonInclude
-import io.em2m.flows.FlowNotFound
-
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 class Problem(val type: String? = null,
@@ -29,7 +27,7 @@ class Problem(val type: String? = null,
         return this
     }
 
-    fun throwException(): Nothing {
+    inline fun throwException(): Nothing {
         throw ProblemException(this)
     }
 

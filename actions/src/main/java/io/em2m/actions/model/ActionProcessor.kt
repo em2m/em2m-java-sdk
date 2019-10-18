@@ -1,6 +1,6 @@
 package io.em2m.actions.model
 
-import io.em2m.flows.Processor
-
-
-interface ActionProcessor : Processor<ActionContext>
+interface ActionProcessor {
+    fun process(context: ActionContext)
+    fun handleError(context: ActionContext)
+}

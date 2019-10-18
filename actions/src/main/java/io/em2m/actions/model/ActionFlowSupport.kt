@@ -1,8 +1,11 @@
 package io.em2m.actions.model
 
-import io.em2m.flows.FlowSupport
+open class ActionFlowSupport(transformers: List<ActionTransformer>) : ActionFlow {
 
-open class ActionFlowSupport(transformers: List<ActionTransformer>) : ActionFlow, FlowSupport<ActionContext>(transformers) {
+    final override val transformers: MutableList<ActionTransformer> = ArrayList()
 
-    constructor(vararg transformers: ActionTransformer) : this(transformers.toList())
+    init {
+        this.transformers.addAll(transformers)
+    }
+
 }

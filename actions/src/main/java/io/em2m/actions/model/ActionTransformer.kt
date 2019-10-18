@@ -1,5 +1,9 @@
 package io.em2m.actions.model
 
-import io.em2m.flows.Transformer
+interface ActionTransformer {
 
-interface ActionTransformer : Transformer<ActionContext>
+    val priority: Int
+
+    fun doOnNext(ctx: ActionContext)
+
+}

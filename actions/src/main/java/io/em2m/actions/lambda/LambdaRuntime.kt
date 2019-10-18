@@ -3,16 +3,16 @@ package io.em2m.actions.lambda
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.em2m.actions.model.ActionContext
+import io.em2m.actions.model.ActionProcessor
 import io.em2m.actions.model.MultipartData
 import io.em2m.actions.model.Problem
-import io.em2m.flows.FlowNotFound
-import io.em2m.flows.Processor
 import io.em2m.policy.model.Claims
+import java.lang.Exception
 import java.util.*
 
 open class LambdaRuntime(
         private val actionPrefix: String,
-        private val processor: Processor<ActionContext>,
+        private val processor: ActionProcessor,
         private val mapper: ObjectMapper = jacksonObjectMapper()) {
 
     fun process(actionName: String, request: LambdaRequest): LambdaResponse {
@@ -33,14 +33,8 @@ open class LambdaRuntime(
                 response = response)
         context.scope["servletContext"] = request
         try {
-            processor.process(context).toBlocking().subscribe(
-                    {
-                    },
-                    { error ->
-                        handleError(context, error)
-                    }
-            )
-        } catch (error: FlowNotFound) {
+            processor.process(context)
+        } catch (error: Exception) {
             handleError(context, error)
         }
         return response
@@ -59,7 +53,7 @@ open class LambdaRuntime(
         context.response.entity = problem
         context.response.statusCode = problem.status
         context.response.contentType = "application/json"
-        processor.handleError(context).subscribe()
+        processor.handleError(context)
     }
 
     private fun createEnvironment(request: LambdaRequest): Map<String, Any?> {
