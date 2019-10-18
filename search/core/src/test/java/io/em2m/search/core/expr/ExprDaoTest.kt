@@ -69,10 +69,25 @@ class ExprDaoTest : Assert() {
     }
 
     @Test
-    fun testSourceFormatAggs() {
+    fun testSourceFormatTermAggs() {
         val sourceFormat = "\${bucket:key | capitalize}"
         val format = "\${bucket:key | upperCase}"
         val request = SearchRequest(aggs = listOf(TermsAgg(field = "lastName", key = "lastName", format = format, ext = mapOf("sourceFormat" to sourceFormat))))
+        val result = dao.search(request)
+        assertNotNull(result)
+
+        val aggs = result.aggs
+        assertNotNull(aggs)
+
+        val buckets = requireNotNull(aggs["lastName"]?.buckets)
+        assertEquals("FLINSTONE", buckets[0].label)
+    }
+
+    @Test
+    fun testSourceFormatStatsAggs() {
+        val sourceFormat = "\${bucket:key | capitalize}"
+        val format = "\${bucket:key | upperCase}"
+        val request = SearchRequest(aggs = listOf(StatsAgg(field = "lastName", key = "lastName", format = format, ext = mapOf("sourceFormat" to sourceFormat))))
         val result = dao.search(request)
         assertNotNull(result)
 

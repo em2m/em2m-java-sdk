@@ -84,10 +84,12 @@ open class ExprTransformingSyncDao<T>(simplex: Simplex, delegate: SyncDao<T>) : 
         request.aggs.forEach {
             aggMap[it.key] = it
             val termsAgg = it as? TermsAgg
-            if (termsAgg?.format != null) {
-                aggExprs[termsAgg.key] = parser.parse(termsAgg.format)
-                if (termsAgg.missing != null) {
-                    missings[termsAgg.key] = termsAgg.missing
+            val statsAgg = it as? StatsAgg
+            val format = termsAgg?.format ?: statsAgg?.format
+            if (format != null) {
+                aggExprs[it.key] = parser.parse(format)
+                if (termsAgg?.missing != null) {
+                    missings[it.key] = termsAgg.missing
                 }
             }
         }
