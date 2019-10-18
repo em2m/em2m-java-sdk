@@ -207,6 +207,7 @@ class RangeAgg(
 class StatsAgg(
         override val field: String,
         key: String? = null,
+        val format: String? = null,
         aggs: List<Agg> = emptyList(),
         ext: Map<String, Any?>? = null,
         minDocCount: Int? = null) : Agg(key ?: field, aggs = aggs, ext = ext, minDocCount = minDocCount), Fielded {
