@@ -1,7 +1,5 @@
 package io.em2m.actions.model
 
-import io.em2m.flows.Flow
-import io.em2m.flows.FlowAware
 import io.em2m.policy.model.Claims
 import io.em2m.policy.model.Environment
 import io.em2m.policy.model.PolicyContext
@@ -23,7 +21,7 @@ data class ActionContext(val actionName: String,
                          val scope: MutableMap<String, Any?> = HashMap(),
                          var debug: Boolean = false,
                          var error: Throwable? = null,
-                         val response: Response) : FlowAware {
+                         val response: Response) : ActionFlowAware {
 
     constructor(actionName: String,
                 inputStream: InputStream? = null,
@@ -41,7 +39,7 @@ data class ActionContext(val actionName: String,
     val keyHandlers = HashMap<Key, KeyHandler>()
     private val keyResolver = BasicKeyResolver(keyHandlers)
 
-    override var flow: Flow<*>? = null
+    override var flow: ActionFlow? = null
 
     fun toPolicyContext(): PolicyContext {
 

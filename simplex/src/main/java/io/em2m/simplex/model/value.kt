@@ -61,6 +61,25 @@ interface ValueExpr : Expr {
     val parts: List<Part>
 }
 
+data class ConstExpr(val value: Any?) : Expr {
+
+    override fun call(context: ExprContext): Any? {
+        return value
+    }
+
+}
+
+data class ConstValueExpr(val value: Any?) : ValueExpr {
+
+    override val parts: List<Part> = listOf(ConstPart(value))
+
+    override fun call(context: ExprContext): Any? {
+        return value
+    }
+
+}
+
+
 data class SinglePartExpr(val part: Part) : ValueExpr {
 
     override val parts = listOf(part)

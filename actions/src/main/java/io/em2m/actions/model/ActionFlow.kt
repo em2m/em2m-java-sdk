@@ -1,6 +1,10 @@
 package io.em2m.actions.model
 
-import io.em2m.flows.Flow
+interface ActionFlow {
 
+    val transformers: List<ActionTransformer>
 
-interface ActionFlow : Flow<ActionContext>
+    fun main(context: ActionContext) {
+    }
+
+}

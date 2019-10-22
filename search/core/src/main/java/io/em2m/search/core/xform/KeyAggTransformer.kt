@@ -15,6 +15,6 @@ class KeyAggTransformer(val key: String) : AggTransformer() {
     override fun transformHistogramAgg(agg: HistogramAgg) = HistogramAgg(agg.field, agg.interval, agg.offset, key, agg.missing, agg.aggs, agg.extensions, agg.minDocCount)
     override fun transformMissingAgg(agg: MissingAgg) = MissingAgg(agg.field, key, agg.aggs, agg.extensions, agg.minDocCount)
     override fun transformRangeAgg(agg: RangeAgg) = RangeAgg(agg.field, agg.ranges, key, agg.aggs, agg.extensions, agg.minDocCount)
-    override fun transformStatsAgg(agg: StatsAgg) = StatsAgg(agg.field, key, agg.aggs, agg.extensions, agg.minDocCount)
+    override fun transformStatsAgg(agg: StatsAgg) = StatsAgg(agg.field, key, agg.format, agg.aggs, agg.extensions, agg.minDocCount)
     override fun transformTermsAgg(agg: TermsAgg) = TermsAgg(agg.field, agg.size, key, agg.sort, agg.format, agg.missing, agg.aggs, agg.extensions, agg.minDocCount)
 }

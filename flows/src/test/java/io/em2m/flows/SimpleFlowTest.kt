@@ -32,12 +32,10 @@ class TestModule : Module {
 
 }
 
-class SimpleTransformer(override val priority: Int = Priorities.INIT) : Transformer<Context> {
+class SimpleTransformer(priority: Int = Priorities.INIT) : TransformerSupport<Context>(priority) {
 
-    override fun call(obs: Observable<Context>): Observable<Context> {
-        return obs.doOnNext {
-            it["key2"] = "v2"
-        }
+    override fun doOnNext(ctx: Context) {
+        ctx["key2"] = "v2"
     }
 
 }

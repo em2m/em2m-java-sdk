@@ -3,10 +3,9 @@ package io.em2m.actions.servlet
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.em2m.actions.model.ActionContext
+import io.em2m.actions.model.ActionProcessor
 import io.em2m.actions.model.MultipartData
 import io.em2m.actions.model.Problem
-import io.em2m.flows.FlowNotFound
-import io.em2m.flows.Processor
 import io.em2m.policy.model.Claims
 import java.io.InputStream
 import java.util.*
@@ -15,7 +14,7 @@ import javax.servlet.http.HttpServletResponse
 import javax.servlet.http.Part
 
 
-open class ServletRuntime(private val actionPrefix: String, private val processor: Processor<ActionContext>, private val mapper: ObjectMapper = jacksonObjectMapper()) {
+open class ServletRuntime(private val actionPrefix: String, private val processor: ActionProcessor, private val mapper: ObjectMapper = jacksonObjectMapper()) {
 
     fun process(actionName: String, request: HttpServletRequest, response: HttpServletResponse) {
 
@@ -32,15 +31,8 @@ open class ServletRuntime(private val actionPrefix: String, private val processo
                 response = ServletResponse(response))
         context.scope["servletContext"] = request
         try {
-            processor.process(context).toBlocking().subscribe(
-                    {
-
-                    },
-                    { error ->
-                        handleError(response, context, error)
-                    }
-            )
-        } catch (error: FlowNotFound) {
+            processor.process(context)
+        } catch (error: Error) {
             handleError(response, context, error)
         }
     }
@@ -59,7 +51,7 @@ open class ServletRuntime(private val actionPrefix: String, private val processo
         context.response.statusCode = problem.status
         context.response.contentType = "application/json"
 
-        processor.handleError(context).subscribe()
+        processor.handleError(context)
 
         response.contentType = "application/json"
         response.status = problem.status

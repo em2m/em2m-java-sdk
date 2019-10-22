@@ -45,26 +45,30 @@ open class BasicProcessor<T>(private val flowResolver: FlowResolver<T>, private 
         }
     }
 
-    class InitTransformer<T>(val flow: Flow<T>) : Transformer<T> {
+    class InitTransformer<T>(val flow: Flow<T>) : TransformerSupport<T>(Priorities.INIT) {
 
-        override val priority: Int = Priorities.INIT
-
-        override fun call(obs: Observable<T>): Observable<T> {
-            return obs.doOnNext { context ->
-                if (context is FlowAware) {
-                    context.flow = flow
-                }
+        override fun doOnNext(ctx: T) {
+            if (ctx is FlowAware) {
+                ctx.flow = flow
             }
         }
     }
 
-    class MainTransformer<T>(val flow: Flow<T>) : Transformer<T> {
+    class MainTransformer<T>(val flow: Flow<T>) : TransformerSupport<T>(Priorities.MAIN) {
 
-        override val priority: Int = Priorities.MAIN
+        override fun doOnNext(ctx: T) {
+            flow.main(ctx)
+        }
+    }
+
+    class TransformerAdapter<T>(val xform: Transformer<T>) : Observable.Transformer<T, T> {
 
         override fun call(obs: Observable<T>): Observable<T> {
-            return flow.main(obs)
+            return obs.doOnNext { ctx ->
+                xform.doOnNext(ctx)
+            }
         }
+
     }
 
 }
