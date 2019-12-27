@@ -11,7 +11,11 @@ class ExprParser(private val keyResolver: KeyResolver, private val pipeTransform
         val pipes = pipeExpr.findAll(expr).toList().map { parsePipe(it.groupValues[1]) }
         val parts = merge(text, pipes).filter { it != BLANK }
         return when (parts.size) {
-            1 -> SinglePartExpr(parts[0])
+            1 -> {
+                if (parts[0] is ConstPart) {
+                    ConstValueExpr(parts[0].call(emptyMap()))
+                } else SinglePartExpr(parts[0])
+            }
             2 -> TwoPartExpr(parts[0], parts[1])
             3 -> ThreePartExpr(parts[0], parts[1], parts[2])
             else -> MultiPartExpr(parts)
@@ -28,7 +32,7 @@ class ExprParser(private val keyResolver: KeyResolver, private val pipeTransform
         return results
     }
 
-     private fun parsePipe(text: String): Part {
+    private fun parsePipe(text: String): Part {
         val splits = text.split('|')
         val key = Key.parse(splits.first().trim())
         val handler = keyResolver.find(key)

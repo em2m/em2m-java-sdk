@@ -8,7 +8,6 @@ import io.em2m.simplex.parser.SimplexModule
 import io.em2m.simplex.std.*
 import io.em2m.utils.coerce
 import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.ConcurrentMap
 
 
 class Simplex {
@@ -25,6 +24,7 @@ class Simplex {
             .delegate(I18n.pipes)
             .delegate(Dates.pipes)
             .delegate(Arrays.pipes)
+            .delegate(Bytes.pipes)
             .delegate(Bools.pipes(this))
 
     private val conditions = BasicConditionResolver()
@@ -36,7 +36,7 @@ class Simplex {
 
     private val execs = BasicExecResolver()
 
-    private val cache: ConcurrentMap<String, Expr> = ConcurrentHashMap()
+    private val cache =  ConcurrentHashMap<String, Expr>()
 
     private val pathExprCache = ConcurrentHashMap<String, PathExpr>()
 
