@@ -5,7 +5,6 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import io.em2m.simplex.model.ConditionExpr
 import io.em2m.simplex.model.ExprContext
 import io.em2m.simplex.model.KeyResolver
-import java.util.concurrent.atomic.AtomicInteger
 
 
 data class Assertion(val key: String, val value: List<Any?>)
@@ -21,7 +20,7 @@ data class Rule(
         @JsonProperty("match")
         @JsonFormat(with = [JsonFormat.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY, JsonFormat.Feature.WRITE_SINGLE_ELEM_ARRAYS_UNWRAPPED])
         val match: List<ConditionExpr> = emptyList(),
-        @JsonProperty("do")
+        @JsonProperty("rules")
         val doRules: List<Rule> = emptyList(),
         @JsonProperty("when")
         val whenRules: List<Rule> = emptyList(),

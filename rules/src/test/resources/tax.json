@@ -1,5 +1,5 @@
 {
-  "do": [
+  "rules": [
     {
       "match": {
         "NumberLessThan": {
@@ -11,14 +11,16 @@
       }
     },
     {
-      "match": [{
-        "NumberGreaterThanEquals": {
-          "grossSalary": 50000
-        },
-        "NumberLessThan": {
-          "grossSalary": 80000
+      "match": [
+        {
+          "NumberGreaterThanEquals": {
+            "grossSalary": 50000
+          },
+          "NumberLessThan": {
+            "grossSalary": 80000
+          }
         }
-      }],
+      ],
       "assert": {
         "taxRate": 0.2
       }
@@ -31,7 +33,7 @@
       },
       "assert": {
         "taxRate": 0.3
-      } 
+      }
     }
   ]
 }
