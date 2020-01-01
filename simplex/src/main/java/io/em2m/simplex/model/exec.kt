@@ -10,8 +10,10 @@ data class Exec(
 
 interface ExecHandler {
     fun configure(config: Map<String, Any?>)
-    fun call(context: ExprContext, params: Map<String, Any?>): Any?
+    fun call(context: ExprContext, op: String, params: Map<String, Any?>): ExecResult
 }
+
+data class ExecResult(val value: Any? = null)
 
 interface ExecResolver {
     fun findHandler(exec: Exec): ExecHandler?
@@ -50,10 +52,10 @@ class BasicExecResolver(handlers: Map<String, (op: String) -> ExecHandler> = emp
 
 class ExecExpr(val op: String, val handler: ExecHandler, val config: Map<String, Any?>, val paramExprs: Map<String, Expr>) {
 
-    fun call(context: ExprContext): Any? {
+    fun call(context: ExprContext): ExecResult {
 
         val params = paramExprs.mapValues { it.value.call(context) }
 
-        return handler.call(context, params)
+        return handler.call(context, op, params)
     }
 }
