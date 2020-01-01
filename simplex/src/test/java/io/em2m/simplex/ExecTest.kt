@@ -5,16 +5,21 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import io.em2m.simplex.model.*
 import org.junit.Test
 import org.slf4j.LoggerFactory
+import java.net.HttpURLConnection
+import java.net.URL
 
 
 class ExecTest {
 
     val simplex = Simplex()
     val parser = simplex.parser
-    val mapper = jacksonObjectMapper()
+    private val mapper = jacksonObjectMapper()
 
     init {
-        simplex.execs(BasicExecResolver().handler("log") { LogHandler() })
+        simplex.execs(BasicExecResolver()
+                .handler("log") { LogHandler() }
+                .handler("http") { HttpHandler() }
+        )
     }
 
     fun parse(expr: String): Expr {
@@ -30,9 +35,25 @@ class ExecTest {
                      "op": "log",
                      "config": { "level" : "info" },
                       "params": { "value": "value" }
-                    }""".trimIndent())
+                    }
+                    """)
         val context = HashMap<String, Any?>()
         simplex.exec(exec, context)
+    }
+
+    @Test
+    fun testHttp() {
+        val exec: Exec = mapper.readValue(
+                """
+                 {
+                     "op": "http",
+                     "params": { 
+                       "method":  "POST",
+                       "url": "https://jsonplaceholder.typicode.com/posts/1"
+                     }
+                 }   
+                """)
+        val result = simplex.exec(exec, emptyMap())
     }
 
     class LogHandler : ExecHandler {
@@ -47,7 +68,7 @@ class ExecTest {
             }
         }
 
-        override fun call(context: ExprContext, params: Map<String, Any?>) {
+        override fun call(context: ExprContext, op: String, params: Map<String, Any?>): ExecResult {
             val value = params["value"]?.toString()
             if (value != null) {
                 when (level) {
@@ -57,6 +78,7 @@ class ExecTest {
                     else -> log.info(value.toString())
                 }
             }
+            return ExecResult()
         }
 
     }
@@ -74,7 +96,14 @@ class ExecTest {
             // headers
         }
 
-        override fun call(context: ExprContext, params: Map<String, Any?>) {
+        override fun call(context: ExprContext, op: String, params: Map<String, Any?>): ExecResult {
+            val url = URL(params["url"].toString())
+            var value: Any? = null
+            with(url.openConnection() as HttpURLConnection) {
+                println("\nSent 'GET' request to URL : $url; Response Code : $responseCode")
+                value = inputStream.bufferedReader().readText()
+            }
+            return ExecResult(value)
         }
 
     }
