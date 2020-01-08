@@ -1,8 +1,6 @@
 package io.em2m.simplex.std
 
 import io.em2m.simplex.model.*
-import io.em2m.utils.coerce
-import java.io.File.separator
 
 class NotNullPipe : PipeTransform {
 

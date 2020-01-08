@@ -1,19 +1,23 @@
 {
   "match": {
-    "resource": "em2m:ident:account:*"
+    "StringLike": {
+      "resource": "em2m:ident:account:*"
+    }
   },
-  "do": [
+  "rules": [
     {
       "match": {
         "${organization.orgType | lowerCase}": "dealer"
       },
-      "allow": {
+      "assert": {
         "role": [
           "sales",
           "admin",
           "fimanager"
         ],
-        "reportType": [ "Alerts" ]
+        "reportType": [
+          "Alerts"
+        ]
       }
     },
     {
@@ -23,7 +27,7 @@
         }
       },
       "assert": {
-        "allow": [
+        "action": [
           "ident:AddRoleToAccount",
           "ident:PutAccountRoles",
           "ident:RemoveRoleFromAccount"

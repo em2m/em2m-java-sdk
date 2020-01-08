@@ -1,5 +1,5 @@
 {
-  "do": [
+  "rules": [
     {
       "match": [
         {
@@ -24,11 +24,7 @@
         }
       },
       "assert": {
-        "color": "green",
-        "action": [
-          "Croak",
-          "Eat"
-        ]
+        "color": "green"
       }
     }
   ]
