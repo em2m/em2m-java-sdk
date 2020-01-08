@@ -20,7 +20,6 @@ package io.em2m.search.bean
 import com.scaleset.utils.Coerce
 import io.em2m.search.core.model.*
 import io.em2m.simplex.evalPath
-import java.lang.reflect.Array
 import java.util.*
 import java.util.regex.Matcher
 import java.util.regex.Pattern
@@ -45,19 +44,43 @@ class Functions {
                 val values = fieldGetter.invoke(obj)
                 var result = false
                 for (value in values) {
-                    if (value is Number || value is Boolean) {
+                    result = if (value is Number || value is Boolean) {
                         val termVal = Coerce.to(term, value.javaClass)
-                        result = termVal == value
+                        termVal == value
                     } else if (value != null) {
-                        result = value.toString() == term.toString()
+                        value.toString() == term.toString()
                     } else {
-                        result = (term == value)
+                        (term == value)
                     }
                     if (result) break
                 }
                 result
             }
         }
+
+        private fun terms(path: String, terms: List<Any?>): (Any) -> Boolean {
+            val fieldGetter = field(path)
+            return { obj ->
+                val values = fieldGetter.invoke(obj)
+                var result = false
+                for (term in terms) {
+                    for (value in values) {
+                        result = if (value is Number || value is Boolean) {
+                            val termVal = Coerce.to(term, value.javaClass)
+                            termVal == value
+                        } else if (value != null) {
+                            value.toString() == term.toString()
+                        } else {
+                            (term == value)
+                        }
+                        if (result) break
+                    }
+                    if (result) break
+                }
+                result
+            }
+        }
+
 
         private fun all(predicates: List<(Any) -> Boolean>): (Any) -> Boolean {
             return { obj ->
@@ -109,15 +132,15 @@ class Functions {
                 obj == null -> emptyList()
                 obj is List<*> -> obj.map { it }
                 obj.javaClass.isArray -> {
-                    val length = Array.getLength(obj)
+                    val length = java.lang.reflect.Array.getLength(obj)
                     val result = ArrayList<Any>(length)
                     for (i in 0 until length) {
-                        val item = Array.get(obj, i)
+                        val item = java.lang.reflect.Array.get(obj, i)
                         result.add(item)
                     }
                     result
                 }
-                else -> Arrays.asList(obj)
+                else -> listOf(obj)
             }
         }
 
@@ -257,6 +280,12 @@ class Functions {
             return term(field, value)
         }
 
+        private fun toPredicate(expr: TermsQuery): (Any) -> Boolean {
+            val field = expr.field
+            val terms = expr.value
+            return terms(field, terms)
+        }
+
         private fun toPredicate(expr: MatchAllQuery): (Any) -> Boolean {
             return { true }
         }
@@ -292,6 +321,9 @@ class Functions {
                     toPredicate(query)
                 }
                 is TermQuery -> {
+                    toPredicate(query)
+                }
+                is TermsQuery -> {
                     toPredicate(query)
                 }
                 is MatchAllQuery -> {

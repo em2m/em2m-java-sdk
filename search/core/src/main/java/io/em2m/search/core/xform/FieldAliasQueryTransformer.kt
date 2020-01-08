@@ -10,6 +10,7 @@ class FieldAliasQueryTransformer(private val aliases: Map<String, Field>) : Quer
     }
 
     override fun transformTermQuery(query: TermQuery) = TermQuery(applyAlias(query.field), query.value)
+    override fun transformTermsQuery(query: TermsQuery) = TermsQuery(applyAlias(query.field), query.value)
     override fun transformMatchQuery(query: MatchQuery) = MatchQuery(applyAlias(query.field), query.value, query.operator)
     override fun transformPhraseQuery(query: PhraseQuery) = PhraseQuery(applyAlias(query.field), query.value)
     override fun transformPrefixQuery(query: PrefixQuery) = PrefixQuery(applyAlias(query.field), query.value)

@@ -82,6 +82,10 @@ class EsTermQuery(field: String, value: String, boost: Double? = null) : EsQuery
     val term = mapOf(field to mapOf("value" to value, "boost" to boost).filter { it.value != null })
 }
 
+class EsTermsQuery(field: String, value: List<String>, boost: Double? = null) : EsQuery() {
+    val terms = mapOf(field to value, "boost" to boost).filter { it.value != null }
+}
+
 class EsMatchQuery(field: String, value: String, operator: String? = "or", boost: Double? = null) : EsQuery() {
     val match = mapOf(field to mapOf("query" to value, "boost" to boost).filter { it.value != null })
 }

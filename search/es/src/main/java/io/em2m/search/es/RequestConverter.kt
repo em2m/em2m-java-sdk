@@ -42,6 +42,9 @@ class RequestConverter(val objectMapper: ObjectMapper = jacksonObjectMapper(), v
         is TermQuery -> {
             EsTermQuery(query.field, query.value.toString())
         }
+        is TermsQuery -> {
+            EsTermsQuery(query.field, query.value.map { it.toString() })
+        }
         is MatchQuery -> {
             EsMatchQuery(query.field, query.value, query.operator)
         }
