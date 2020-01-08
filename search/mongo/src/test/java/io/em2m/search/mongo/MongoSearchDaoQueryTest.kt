@@ -70,6 +70,17 @@ class MongoSearchDaoQueryTest : FeaturesTestBase() {
     }
 
     @Test
+    fun testTerms() {
+        val sub = TestSubscriber<Any>()
+        val request = SearchRequest(0, 0, TermsQuery("properties.mag", value = listOf("2.5", "2.7")))
+        searchDao.search(request).doOnNext { result ->
+            assertEquals(6, result.totalItems)
+        }.subscribe(sub)
+        sub.awaitTerminalEvent()
+        sub.assertNoErrors()
+    }
+
+    @Test
     fun testMatch() {
         val sub = TestSubscriber<Any>()
         val request = SearchRequest(0, 0, MatchQuery("properties.place", value = "alaska"))

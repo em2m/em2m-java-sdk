@@ -57,6 +57,11 @@ class RequestConverter(private val schemaMapper: SchemaMapper, val objectMapper:
                 val value = convertValue(field, query.value)
                 Filters.eq<Any>(field, value)
             }
+            is TermsQuery -> {
+                val field = query.field
+                val values = query.value.map { convertValue(field, it) }
+                Filters.`in`<Any>(field, values)
+            }
             is WildcardQuery -> {
                 val field = schemaMapper.mapPath(query.field)
                 when {

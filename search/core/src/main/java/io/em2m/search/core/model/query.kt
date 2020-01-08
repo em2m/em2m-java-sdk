@@ -49,7 +49,7 @@ class NativeQuery(var value: Any? = null) : Query()
 class NamedQuery(var name: String, var value: Any? = null) : Query()
 
 class TermQuery(field: String, val value: Any?) : FieldedQuery(field)
-class TermsQuery(field: String, val value: Array<Any?>) : FieldedQuery(field)
+class TermsQuery(field: String, val value: List<Any?>) : FieldedQuery(field)
 
 class MatchQuery(field: String, val value: String, val operator: String? = null) : FieldedQuery(field)
 

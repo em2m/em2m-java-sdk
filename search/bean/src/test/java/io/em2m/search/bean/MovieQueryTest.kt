@@ -87,6 +87,11 @@ class MovieQueryTest {
     }
 
     @Test
+    fun testGenreTerms() {
+        assertEquals(1394, find(TermsQuery("fields.genres", listOf("Action", "Sci-Fi"))).size.toLong())
+    }
+
+    @Test
     fun testGenrePrefix() {
         assertEquals(1595, find("fields.genres:A*").size.toLong())
     }
