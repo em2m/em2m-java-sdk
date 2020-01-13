@@ -17,9 +17,13 @@
  */
 package io.em2m.search.bean
 
+import com.fasterxml.jackson.module.kotlin.convertValue
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.scaleset.utils.Coerce
 import io.em2m.search.core.model.*
 import io.em2m.simplex.evalPath
+import io.em2m.simplex.parser.DateMathParser
+import org.joda.time.DateTimeZone
 import java.util.*
 import java.util.regex.Matcher
 import java.util.regex.Pattern
@@ -37,6 +41,9 @@ fun <T> List<T>.page(offset: Int, limit: Int): List<T> {
 class Functions {
 
     companion object {
+
+        private val objectMapper = jacksonObjectMapper()
+        private val dateParser: DateMathParser = DateMathParser(DateTimeZone.UTC)
 
         private fun term(path: String, term: Any?): (Any) -> Boolean {
             val fieldGetter = field(path)
@@ -267,10 +274,11 @@ class Functions {
         private fun toPredicate(query: DateRangeQuery): (Any) -> Boolean {
             val field = query.field
             val expr = ArrayList<(Any) -> Boolean>()
-            query.lt?.let { expr.add(lt(field, it)) }
-            query.lte?.let { expr.add(lte(field, it)) }
-            query.gt?.let { expr.add(gt(field, it)) }
-            query.gte?.let { expr.add(gte(field, it)) }
+            val now = Date().time
+            query.lt?.let { expr.add(lt(field, parseDate(it, now, query.timeZone, false) ?: it)) }
+            query.lte?.let { expr.add(lte(field, parseDate(it, now, query.timeZone, true) ?: it)) }
+            query.gt?.let { expr.add(gt(field, parseDate(it, now, query.timeZone,true) ?: it)) }
+            query.gte?.let { expr.add(gte(field, parseDate(it, now, query.timeZone,false) ?: it)) }
             return all(expr)
         }
 
@@ -346,5 +354,15 @@ class Functions {
                     ?: first.toString().compareTo(second.toString())
         }
 
+        private fun parseDate(value: Any?, now: Long, timeZone: String?, roundUp: Boolean): Long? {
+            return if (value is String) {
+                try {
+                    Date(dateParser.parse(value, now, roundUp, DateTimeZone.forID(timeZone) ?: DateTimeZone.UTC)).time
+                } catch (ex: Exception) {
+                    objectMapper.convertValue<Date>(value).time
+                }
+            } else if (value != null) objectMapper.convertValue<Date>(value).time
+            else null
+        }
     }
 }
