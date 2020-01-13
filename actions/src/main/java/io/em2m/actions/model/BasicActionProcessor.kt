@@ -3,7 +3,7 @@ package io.em2m.actions.model
 open class BasicActionProcessor(private val flowResolver: ActionFlowResolver, private val standardXforms: List<ActionTransformer> = emptyList()) : ActionProcessor {
 
     override fun process(context: ActionContext) {
-        val flow = flowResolver.findFlow(context) ?: throw FlowNotFound("")
+        val flow = flowResolver.findFlow(context) ?: throw FlowNotFound(context.actionName)
         context.flow = flow
         val transformers = flow.transformers
                 .plus(standardXforms)
