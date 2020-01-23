@@ -19,11 +19,7 @@ class RequestConverter(val objectMapper: ObjectMapper = jacksonObjectMapper(), v
         val aggs = convertAggs(request.aggs, request.params)
         val sort = convertSorts(request.sorts)
 
-        return when {
-            es6 -> EsSearchRequest(from, size, query, aggs = aggs, sort = sort, storedFields = fields)
-            else -> EsSearchRequest(from, size, query, fields, aggs, sort)
-        }
-
+        return EsSearchRequest(from = from, size = size, query = query, aggs = aggs, sort = sort, source = fields)
     }
 
     fun convertQuery(query: Query?, params: Map<String, Any>?): EsQuery = when (query) {
