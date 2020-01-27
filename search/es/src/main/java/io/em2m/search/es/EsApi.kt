@@ -1,3 +1,5 @@
+@file:Suppress("unused")
+
 package io.em2m.search.es
 
 import com.fasterxml.jackson.annotation.*
@@ -272,7 +274,8 @@ class EsScrollRequest(@JsonProperty("scroll_id") val scrollId: String,
 class EsSearchRequest(var from: Long = 0,
                       var size: Long = 50,
                       var query: EsQuery = EsMatchAllQuery(),
-                      var fields: List<String>? = null,
+                      @JsonProperty("_source")
+                      var source: List<String>? = null,
                       var aggs: EsAggs? = null,
                       var sort: List<Map<String, String>>? = mutableListOf(),
                       @JsonProperty("stored_fields")
