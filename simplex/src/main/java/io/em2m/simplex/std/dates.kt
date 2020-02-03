@@ -1,5 +1,6 @@
 package io.em2m.simplex.std
 
+import io.em2m.simplex.evalPath
 import io.em2m.simplex.model.*
 import io.em2m.simplex.parser.DateMathParser
 import io.em2m.utils.coerce
@@ -15,14 +16,19 @@ class FormatDatePipe : PipeTransform {
     private val defaultZoneId = ZoneId.of("America/Los_Angeles")
     private var pattern: DateTimeFormatter = DateTimeFormatter.ofPattern("YYYY-mm-dd")
             .withZone(defaultZoneId)
+    private var path: String? = null
 
     override fun args(args: List<String>) {
         if (args.isNotEmpty()) {
             pattern = DateTimeFormatter.ofPattern(args[0])
             if (args.size == 2) {
-                try {
-                    pattern = pattern.withZone(ZoneId.of(args[1]))
-                } catch (ex: Exception) {
+                if (args[1].startsWith("$")) {
+                    path = args[1].removePrefix("$")
+                } else {
+                    try {
+                        pattern = pattern.withZone(ZoneId.of(args[1]))
+                    } catch (ex: Exception) {
+                    }
                 }
             } else {
                 pattern = pattern.withZone(defaultZoneId)
@@ -34,7 +40,15 @@ class FormatDatePipe : PipeTransform {
         val dateInput: Date? = value?.coerce()
         return if (dateInput != null) {
             val date = dateInput.toInstant()
-            pattern.format(date)
+            if (path != null) {
+                val zoneId = context.evalPath(path!!)?.toString()
+                val p = if (zoneId != null) {
+                    pattern.withZone(ZoneId.of(zoneId))
+                } else pattern
+                p.withZone(ZoneId.of(zoneId)).format(date)
+            } else {
+                pattern.format(date)
+            }
         } else value
     }
 }
