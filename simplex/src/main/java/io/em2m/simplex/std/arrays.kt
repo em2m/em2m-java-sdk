@@ -54,12 +54,31 @@ class FirstPipe : PipeTransform {
         }
     }
 }
+class FirstNotBlankPipe : PipeTransform {
+    override fun transform(value: Any?, context: ExprContext): Any? {
+        return when (value) {
+            is List<*> -> value.find { !it?.toString().isNullOrBlank() }
+            is Array<*> -> value.find { !it?.toString().isNullOrBlank() }
+            else -> value
+        }
+    }
+}
 
 class LastPipe : PipeTransform {
     override fun transform(value: Any?, context: ExprContext): Any? {
         return when (value) {
             is List<*> -> value.lastOrNull()
             is Array<*> -> value.lastOrNull()
+            else -> value
+        }
+    }
+}
+
+class LastNotBlankPipe : PipeTransform {
+    override fun transform(value: Any?, context: ExprContext): Any? {
+        return when (value) {
+            is List<*> -> value.findLast { !it?.toString().isNullOrBlank() }
+            is Array<*> -> value.findLast { !it?.toString().isNullOrBlank() }
             else -> value
         }
     }
@@ -76,7 +95,9 @@ object Arrays {
                     "filterNotNull" to FilterNotNullPipe(),
                     "filterNotBlank" to FilterNotBlankPipe(),
                     "first" to FirstPipe(),
-                    "last" to LastPipe()
+                    "firstNotBlank" to FirstNotBlankPipe(),
+                    "last" to LastPipe(),
+                    "lastNotBlank" to LastNotBlankPipe()
             )
     )
 }
