@@ -1,7 +1,7 @@
 package io.em2m.search.es
 
+import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.databind.node.JsonNodeFactory
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.scaleset.geo.geojson.GeoJsonModule
 import com.vividsolutions.jts.geom.Coordinate
@@ -59,24 +59,27 @@ class ResultConverter<T>(private val mapper: DocMapper<T>) {
     }
 
     private fun convertRows(hits: EsHits, request: SearchRequest): List<List<Any?>> {
-        val results = ArrayList<List<Any?>>()
-        for (hit in hits.hits) {
-            if (hit.fields != null) {
-                val row = request.fields.map { field ->
-                    val values = hit.fields[field.name] ?: emptyList()
-                    // TODO: Deal with field aliases
-                    val value = when {
-                        values.isEmpty() -> null
-                        values.size == 1 -> mapper.toObject(values[0])
-                        else -> // definitely a hack!
-                            mapper.toObject(JsonNodeFactory.instance.arrayNode().addAll(values))
-                    }
-                    value
+        return hits.hits.map { hit ->
+            request.fields.map { field ->
+                hit.source?.let {
+                    val node = getFieldFromSource(it, field)
+                    val result = node?.let { mapper.toObject(node) }
+                    result
                 }
-                results.add(row)
             }
         }
-        return results
+    }
+
+    private fun getFieldFromSource(source: JsonNode, field: Field): JsonNode? {
+        var node: JsonNode? = source
+        val fieldName = field.name
+        if (fieldName != null) {
+            for (path in fieldName.split('.')) {
+                node = node?.get(path)
+                if (node == null) break
+            }
+        }
+        return node
     }
 
     private fun convertAggs(aggs: List<Agg>, esAggResults: Map<String, EsAggResult>): Map<String, AggResult> {
@@ -140,7 +143,7 @@ class ResultConverter<T>(private val mapper: DocMapper<T>) {
         // sort keyed buckets first in their original, then preserve resulting order for non-keyed buckets
         val order = ranges.mapIndexed { index, range -> range.key to index }.toMap()
         return buckets.mapIndexed { index, bucket -> index to bucket }.sortedBy {
-            order[it.second.key] ?: buckets.size+it.first
+            order[it.second.key] ?: buckets.size + it.first
         }.map { it.second }
     }
 

@@ -57,6 +57,11 @@ class RequestConverter(private val schemaMapper: SchemaMapper, val objectMapper:
                 val value = convertValue(field, query.value)
                 Filters.eq<Any>(field, value)
             }
+            is TermsQuery -> {
+                val field = query.field
+                val values = query.value.map { convertValue(field, it) }
+                Filters.`in`<Any>(field, values)
+            }
             is WildcardQuery -> {
                 val field = schemaMapper.mapPath(query.field)
                 when {
@@ -97,10 +102,10 @@ class RequestConverter(private val schemaMapper: SchemaMapper, val objectMapper:
                 val expr = ArrayList<Bson>()
                 if (Date::class.java.isAssignableFrom(fieldType)) {
                     val now = Date().time
-                    query.lt?.let { expr.add(Filters.lt(field, parseDate(it.toString(), now, false))) }
-                    query.lte?.let { expr.add(Filters.lte(field, parseDate(it.toString(), now, true))) }
-                    query.gt?.let { expr.add(Filters.gt(field, parseDate(it.toString(), now, true))) }
-                    query.gte?.let { expr.add(Filters.gte(field, parseDate(it.toString(), now, false))) }
+                    query.lt?.let { expr.add(Filters.lt(field, parseDate(it.toString(), now, query.timeZone,false))) }
+                    query.lte?.let { expr.add(Filters.lte(field, parseDate(it.toString(), now, query.timeZone, true))) }
+                    query.gt?.let { expr.add(Filters.gt(field, parseDate(it.toString(), now, query.timeZone, true))) }
+                    query.gte?.let { expr.add(Filters.gte(field, parseDate(it.toString(), now, query.timeZone, false))) }
                 } else {
                     query.lt?.let { expr.add(Filters.lt(field, convertValue(field, it))) }
                     query.lte?.let { expr.add(Filters.lte(field, convertValue(field, it))) }
@@ -113,10 +118,10 @@ class RequestConverter(private val schemaMapper: SchemaMapper, val objectMapper:
                 val field = query.field
                 val expr = ArrayList<Bson>()
                 val now = Date().time
-                query.lt?.let { expr.add(Filters.lt(field, parseDate(it.toString(), now, false))) }
-                query.lte?.let { expr.add(Filters.lte(field, parseDate(it.toString(), now, true))) }
-                query.gt?.let { expr.add(Filters.gt(field, parseDate(it.toString(), now, true))) }
-                query.gte?.let { expr.add(Filters.gte(field, parseDate(it.toString(), now, false))) }
+                query.lt?.let { expr.add(Filters.lt(field, parseDate(it.toString(), now, query.timeZone,false))) }
+                query.lte?.let { expr.add(Filters.lte(field, parseDate(it.toString(), now, query.timeZone, true))) }
+                query.gt?.let { expr.add(Filters.gt(field, parseDate(it.toString(), now, query.timeZone, true))) }
+                query.gte?.let { expr.add(Filters.gte(field, parseDate(it.toString(), now, query.timeZone, false))) }
                 and(expr)
             }
             is PhraseQuery -> {
@@ -254,10 +259,10 @@ class RequestConverter(private val schemaMapper: SchemaMapper, val objectMapper:
         return Aggregates.facet(facets)
     }
 
-    private fun parseDate(value: Any?, now: Long, roundUp: Boolean): Long? {
+    private fun parseDate(value: Any?, now: Long, timeZone: String?, roundUp: Boolean): Long? {
         return if (value is String) {
             try {
-                Date(dateParser.parse(value, now, roundUp)).time
+                Date(dateParser.parse(value, now, roundUp, DateTimeZone.forID(timeZone ?: "UTC"))).time
             } catch (ex: Exception) {
                 objectMapper.convertValue<Date>(value).time
             }

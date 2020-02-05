@@ -1,3 +1,5 @@
+@file:Suppress("unused")
+
 package io.em2m.search.es
 
 import com.fasterxml.jackson.annotation.*
@@ -80,6 +82,10 @@ class EsRangeQuery(field: String, gte: Any? = null, gt: Any? = null, lte: Any? =
 
 class EsTermQuery(field: String, value: String, boost: Double? = null) : EsQuery() {
     val term = mapOf(field to mapOf("value" to value, "boost" to boost).filter { it.value != null })
+}
+
+class EsTermsQuery(field: String, value: List<String>, boost: Double? = null) : EsQuery() {
+    val terms = mapOf(field to value, "boost" to boost).filter { it.value != null }
 }
 
 class EsMatchQuery(field: String, value: String, operator: String? = "or", boost: Double? = null) : EsQuery() {
@@ -268,7 +274,8 @@ class EsScrollRequest(@JsonProperty("scroll_id") val scrollId: String,
 class EsSearchRequest(var from: Long = 0,
                       var size: Long = 50,
                       var query: EsQuery = EsMatchAllQuery(),
-                      var fields: List<String>? = null,
+                      @JsonProperty("_source")
+                      var source: List<String>? = null,
                       var aggs: EsAggs? = null,
                       var sort: List<Map<String, String>>? = mutableListOf(),
                       @JsonProperty("stored_fields")

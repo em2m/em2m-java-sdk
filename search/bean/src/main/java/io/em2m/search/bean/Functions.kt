@@ -17,10 +17,13 @@
  */
 package io.em2m.search.bean
 
+import com.fasterxml.jackson.module.kotlin.convertValue
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.scaleset.utils.Coerce
 import io.em2m.search.core.model.*
 import io.em2m.simplex.evalPath
-import java.lang.reflect.Array
+import io.em2m.simplex.parser.DateMathParser
+import org.joda.time.DateTimeZone
 import java.util.*
 import java.util.regex.Matcher
 import java.util.regex.Pattern
@@ -39,25 +42,52 @@ class Functions {
 
     companion object {
 
+        private val objectMapper = jacksonObjectMapper()
+        private val dateParser: DateMathParser = DateMathParser(DateTimeZone.UTC)
+
         private fun term(path: String, term: Any?): (Any) -> Boolean {
             val fieldGetter = field(path)
             return { obj ->
                 val values = fieldGetter.invoke(obj)
                 var result = false
                 for (value in values) {
-                    if (value is Number || value is Boolean) {
+                    result = if (value is Number || value is Boolean) {
                         val termVal = Coerce.to(term, value.javaClass)
-                        result = termVal == value
+                        termVal == value
                     } else if (value != null) {
-                        result = value.toString() == term.toString()
+                        value.toString() == term.toString()
                     } else {
-                        result = (term == value)
+                        (term == value)
                     }
                     if (result) break
                 }
                 result
             }
         }
+
+        private fun terms(path: String, terms: List<Any?>): (Any) -> Boolean {
+            val fieldGetter = field(path)
+            return { obj ->
+                val values = fieldGetter.invoke(obj)
+                var result = false
+                for (term in terms) {
+                    for (value in values) {
+                        result = if (value is Number || value is Boolean) {
+                            val termVal = Coerce.to(term, value.javaClass)
+                            termVal == value
+                        } else if (value != null) {
+                            value.toString() == term.toString()
+                        } else {
+                            (term == value)
+                        }
+                        if (result) break
+                    }
+                    if (result) break
+                }
+                result
+            }
+        }
+
 
         private fun all(predicates: List<(Any) -> Boolean>): (Any) -> Boolean {
             return { obj ->
@@ -109,15 +139,15 @@ class Functions {
                 obj == null -> emptyList()
                 obj is List<*> -> obj.map { it }
                 obj.javaClass.isArray -> {
-                    val length = Array.getLength(obj)
+                    val length = java.lang.reflect.Array.getLength(obj)
                     val result = ArrayList<Any>(length)
                     for (i in 0 until length) {
-                        val item = Array.get(obj, i)
+                        val item = java.lang.reflect.Array.get(obj, i)
                         result.add(item)
                     }
                     result
                 }
-                else -> Arrays.asList(obj)
+                else -> listOf(obj)
             }
         }
 
@@ -244,10 +274,11 @@ class Functions {
         private fun toPredicate(query: DateRangeQuery): (Any) -> Boolean {
             val field = query.field
             val expr = ArrayList<(Any) -> Boolean>()
-            query.lt?.let { expr.add(lt(field, it)) }
-            query.lte?.let { expr.add(lte(field, it)) }
-            query.gt?.let { expr.add(gt(field, it)) }
-            query.gte?.let { expr.add(gte(field, it)) }
+            val now = Date().time
+            query.lt?.let { expr.add(lt(field, parseDate(it, now, query.timeZone, false) ?: it)) }
+            query.lte?.let { expr.add(lte(field, parseDate(it, now, query.timeZone, true) ?: it)) }
+            query.gt?.let { expr.add(gt(field, parseDate(it, now, query.timeZone,true) ?: it)) }
+            query.gte?.let { expr.add(gte(field, parseDate(it, now, query.timeZone,false) ?: it)) }
             return all(expr)
         }
 
@@ -255,6 +286,12 @@ class Functions {
             val field = expr.field
             val value = expr.value
             return term(field, value)
+        }
+
+        private fun toPredicate(expr: TermsQuery): (Any) -> Boolean {
+            val field = expr.field
+            val terms = expr.value
+            return terms(field, terms)
         }
 
         private fun toPredicate(expr: MatchAllQuery): (Any) -> Boolean {
@@ -294,6 +331,9 @@ class Functions {
                 is TermQuery -> {
                     toPredicate(query)
                 }
+                is TermsQuery -> {
+                    toPredicate(query)
+                }
                 is MatchAllQuery -> {
                     toPredicate(query)
                 }
@@ -314,5 +354,15 @@ class Functions {
                     ?: first.toString().compareTo(second.toString())
         }
 
+        private fun parseDate(value: Any?, now: Long, timeZone: String?, roundUp: Boolean): Long? {
+            return if (value is String) {
+                try {
+                    Date(dateParser.parse(value, now, roundUp, DateTimeZone.forID(timeZone) ?: DateTimeZone.UTC)).time
+                } catch (ex: Exception) {
+                    objectMapper.convertValue<Date>(value).time
+                }
+            } else if (value != null) objectMapper.convertValue<Date>(value).time
+            else null
+        }
     }
 }

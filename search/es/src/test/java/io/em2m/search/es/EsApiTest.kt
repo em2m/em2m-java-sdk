@@ -80,16 +80,14 @@ class EsApiTest : FeatureTestBase() {
 
     @Test
     fun testFields() {
-        val request = if (FeatureTestBase.es6) {
-            EsSearchRequest(from = 0, size = 10, query = EsMatchAllQuery(), storedFields = listOf("id", "properties.time"))
-        } else {
-            EsSearchRequest(from = 0, size = 10, query = EsMatchAllQuery(), fields = listOf("id", "properties.time"))
-        }
+        val request = EsSearchRequest(from = 0, size = 10, query = EsMatchAllQuery(), source = listOf("id", "properties.time"))
         val result = esClient.search(index, type, request)
 
         Assert.assertEquals(46, result.hits.total)
         Assert.assertEquals(10, result.hits.hits.size)
-        Assert.assertEquals(2, result.hits.hits[0].fields?.values?.size)
+        val esHit: EsHit = result.hits.hits[0]
+        Assert.assertNotNull(esHit.source?.get("id"))
+        Assert.assertNotNull(esHit.source?.get("properties")?.get("time"))
     }
 
     @Test

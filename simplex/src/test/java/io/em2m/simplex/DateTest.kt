@@ -67,6 +67,15 @@ class DateTest : Assert() {
         assertEquals("2015-04-21 17:31", result)
     }
 
+    @Test
+    fun testFormatDateWithTimeZoneReference() {
+        val exprString = "\${ns:dateKey | formatDate:yyyy-MM-dd HH\\:mm:\$timeZone}"
+        val expr = requireNotNull(simplex.parser.parse(exprString))
+        val result = expr.call(mapOf("timeZone" to "America/Los_Angeles"))
+        assertEquals("2015-04-21 17:31", result)
+    }
+
+
     /*
     @Test
     fun testFormatDateZulu() {
