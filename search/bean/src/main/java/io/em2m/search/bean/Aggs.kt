@@ -5,7 +5,9 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.em2m.search.core.model.*
 import io.em2m.simplex.parser.DateMathParser
 import org.joda.time.DateTimeZone
-import java.text.SimpleDateFormat
+import java.time.ZoneId
+import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 
@@ -14,7 +16,7 @@ class Aggs {
     companion object {
 
         val parsers = ConcurrentHashMap<String, DateMathParser>()
-        val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
+        val dateFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withZone(ZoneId.of("UTC"))
         val objectMapper = jacksonObjectMapper()
 
         fun <T> processAggs(aggs: List<Agg>, matches: List<T>): Map<String, AggResult> {
@@ -141,7 +143,7 @@ class Aggs {
             val interval = agg.interval
             val now = Date().time
 
-            val keyFormat = SimpleDateFormat(when (interval) {
+            val keyFormat = DateTimeFormatter.ofPattern(when (interval) {
                 "year" -> "yyyy-01-01 00:00:00"
                 "month" -> "yyyy-MM-01 00:00:00"
                 "day" -> "yyyy-MM-dd 00:00:00"
@@ -149,7 +151,7 @@ class Aggs {
                 "minute" -> "yyyy-MM-dd HH:mm:00"
                 "second" -> "yyyy-MM-dd HH:mm:ss"
                 else -> throw IllegalArgumentException("Interval '$interval' not supported")
-            })
+            }).withZone(ZoneId.of("UTC"))
 
             matches.forEach { match ->
                 val fieldValues = fieldGetter.invoke(match as Any).mapNotNull { parseDate(it, now, false) }
@@ -158,9 +160,9 @@ class Aggs {
                     ++missingCount
                 }
                 // only count each match once for each value
-                fieldValues.distinct().forEach { value ->
+                fieldValues.distinct().forEach { value: Date ->
 
-                    val key = keyFormat.format(value)
+                    val key = keyFormat.format(value.toInstant())
 
                     var count = countMap[key] ?: 0
                     count += 1
@@ -180,7 +182,8 @@ class Aggs {
             val sortedBuckets = sortAndFilter(agg, buckets, Agg.Sort(Agg.Sort.Type.Lexical, Direction.Ascending))
 
             sortedBuckets.map {
-                Bucket(key = dateFormat.parse(it.key as String).time, count = it.count, label = it.label,
+                val key = ZonedDateTime.parse(it.key as String, dateFormat).toInstant().toEpochMilli()
+                Bucket(key = key, count = it.count, label = it.label,
                         stats = it.stats, from = it.from, to = it.to, query = it.query, aggs = it.aggs)
             }
 
