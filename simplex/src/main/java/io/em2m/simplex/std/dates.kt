@@ -43,9 +43,13 @@ class FormatDatePipe : PipeTransform {
             if (path != null) {
                 val zoneId = context.evalPath(path!!)?.toString()
                 val p = if (zoneId != null) {
-                    pattern.withZone(ZoneId.of(zoneId))
+                    try {
+                        pattern.withZone(ZoneId.of(zoneId))
+                    } catch( ex: Throwable) {
+                        pattern
+                    }
                 } else pattern
-                p.withZone(ZoneId.of(zoneId)).format(date)
+                p.format(date)
             } else {
                 pattern.format(date)
             }
