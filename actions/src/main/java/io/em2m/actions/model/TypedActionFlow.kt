@@ -5,7 +5,7 @@ import org.slf4j.LoggerFactory
 open class TypedActionFlow<T, R>(val requestType: Class<out Any>, val resultType: Class<out Any>) : ActionFlow {
 
     override val transformers = ArrayList<ActionTransformer>()
-    val log = LoggerFactory.getLogger(javaClass)
+    private val log = LoggerFactory.getLogger(javaClass)
 
     @Suppress("UNCHECKED_CAST")
     fun request(context: ActionContext): T {
