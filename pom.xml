@@ -30,6 +30,7 @@
 
     <modules>
         <module>utils</module>
+        <module>geo</module>
         <module>flows</module>
         <module>actions</module>
         <module>simplex</module>
