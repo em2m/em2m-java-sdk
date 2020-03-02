@@ -33,6 +33,12 @@ class SearchResultsConverter<T> {
     }
 
     fun Stats.toScaleset(): ScalesetStats {
-        return ScalesetStats(count, sum, min, max, avg)
+        return ScalesetStats(
+                count,
+                sum,
+                min ?: Double.MAX_VALUE,
+                max ?: Double.MIN_VALUE,
+                avg ?: 0.0
+        )
     }
 }

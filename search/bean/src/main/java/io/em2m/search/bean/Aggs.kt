@@ -247,8 +247,12 @@ class Aggs {
                 }
             }
 
-            val avg = if (count == 0L) 0.0 else sum / count
-            val bucket = Bucket(stats = Stats(count = count, sum = sum, min = min, max = max, avg = avg), count = count)
+            val stats = when (count) {
+                0L -> Stats(count = count, sum = sum, min = null, max = null, avg = null)
+                else -> Stats(count = count, sum = sum, min = min, max = max, avg = sum / count)
+            }
+
+            val bucket = Bucket(stats = stats, count = count)
             return AggResult(key = agg.key, buckets = listOf(bucket), op = agg.op(), field = agg.field)
         }
 
