@@ -10,7 +10,7 @@ abstract class ActionServlet() : HttpServlet() {
 
     open fun actionName(req: HttpServletRequest): String {
         // assume a pattern /actions/{actionName} mapped to /action/*
-        return req.pathInfo.substring(1)
+        return req.pathInfo.substring(1).removeSuffix("/")
     }
 
     override fun doPost(req: HttpServletRequest, resp: HttpServletResponse) {
