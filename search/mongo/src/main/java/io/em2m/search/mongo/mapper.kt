@@ -2,7 +2,7 @@ package io.em2m.search.mongo
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import com.scaleset.geo.geojson.GeoJsonModule
+import io.em2m.geo.geojson.GeoJsonModule
 import org.bson.Document
 
 interface DocumentMapper<T> {
@@ -10,7 +10,7 @@ interface DocumentMapper<T> {
     fun fromDocument(document: Document): T
 }
 
-class JacksonDocumentMapper<T>(val tClass: Class<T>, val idField: String = "_id", val objectMapper: ObjectMapper = jacksonObjectMapper().registerModule(GeoJsonModule())) : DocumentMapper<T> {
+class JacksonDocumentMapper<T>(private val tClass: Class<T>, private val idField: String = "_id", private val objectMapper: ObjectMapper = jacksonObjectMapper().registerModule(GeoJsonModule())) : DocumentMapper<T> {
 
     override fun toDocument(item: T): Document {
         val result = objectMapper.convertValue(item, Document::class.java)

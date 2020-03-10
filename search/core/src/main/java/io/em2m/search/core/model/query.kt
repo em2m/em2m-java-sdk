@@ -2,7 +2,7 @@ package io.em2m.search.core.model
 
 import com.fasterxml.jackson.annotation.*
 import com.fasterxml.jackson.annotation.JsonSubTypes.Type
-import com.vividsolutions.jts.geom.Envelope
+import org.locationtech.jts.geom.Envelope
 
 @JsonPropertyOrder("op")
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "op")

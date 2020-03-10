@@ -11,11 +11,11 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 import com.fasterxml.jackson.databind.node.JsonNodeFactory.instance
 import com.fasterxml.jackson.databind.node.ObjectNode
-import com.vividsolutions.jts.geom.Envelope
 import feign.Headers
 import feign.Param
 import feign.RequestLine
 import io.em2m.utils.coerce
+import org.locationtech.jts.geom.Envelope
 import java.util.*
 
 

@@ -17,13 +17,13 @@
  */
 package io.em2m.search.mongo
 
-import com.vividsolutions.jts.geom.Coordinate
-import com.vividsolutions.jts.geom.Envelope
 import io.em2m.search.core.model.*
 import org.junit.Ignore
 import org.junit.Test
 import rx.observers.TestSubscriber
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import org.locationtech.jts.geom.Coordinate
+import org.locationtech.jts.geom.Envelope
 
 
 @Ignore

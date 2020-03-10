@@ -1,7 +1,7 @@
 package io.em2m.search.core.model
 
 import com.fasterxml.jackson.annotation.*
-import com.vividsolutions.jts.geom.Coordinate
+import org.locationtech.jts.geom.Coordinate
 
 @JsonPropertyOrder("type")
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "op")

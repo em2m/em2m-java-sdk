@@ -1,10 +1,10 @@
 package io.em2m.search.es
 
-import com.scaleset.geo.Feature
-import com.vividsolutions.jts.geom.Envelope
+import io.em2m.geo.feature.Feature
 import io.em2m.search.core.model.*
 import org.junit.Before
 import org.junit.Test
+import org.locationtech.jts.geom.Envelope
 import rx.observers.TestSubscriber
 import kotlin.properties.Delegates
 

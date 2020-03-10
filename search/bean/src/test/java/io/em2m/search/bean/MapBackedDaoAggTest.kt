@@ -1,27 +1,27 @@
 package io.em2m.search.bean
 
-import com.scaleset.geo.Feature
-import com.scaleset.geo.FeatureCollection
-import com.scaleset.geo.FeatureCollectionHandler
-import com.scaleset.geo.geojson.GeoJsonParser
-import com.vividsolutions.jts.geom.Coordinate
-import com.vividsolutions.jts.geom.Envelope
+import io.em2m.geo.feature.Feature
+import io.em2m.geo.feature.FeatureCollection
+import io.em2m.geo.feature.FeatureCollectionHandler
+import io.em2m.geo.geojson.GeoJsonParser
 import io.em2m.search.core.model.*
 import org.junit.Assert
 import org.junit.Before
 import org.junit.Ignore
 import org.junit.Test
+import org.locationtech.jts.geom.Coordinate
+import org.locationtech.jts.geom.Envelope
 import rx.observers.TestSubscriber
 import java.io.FileInputStream
 import kotlin.properties.Delegates
 
 class MapBackedDaoAggTest : Assert() {
 
-    var searchDao: SearchDao<Feature> by Delegates.notNull()
+    private var searchDao: SearchDao<Feature> by Delegates.notNull()
 
     @Before
     fun before() {
-        val featureMap = earthquakes().features.associateBy { it.id }.toMutableMap()
+        val featureMap = earthquakes().features.associateBy { it.id!! }.toMutableMap()
         searchDao = MapBackedSearchDao(FeatureMapper(), featureMap)
     }
 
@@ -284,7 +284,7 @@ class MapBackedDaoAggTest : Assert() {
         sub.assertNoErrors()
     }
 
-    fun earthquakes(): FeatureCollection {
+    private fun earthquakes(): FeatureCollection {
         val handler = FeatureCollectionHandler();
         val parser = GeoJsonParser();
         parser.handler(handler);
@@ -301,7 +301,7 @@ class MapBackedDaoAggTest : Assert() {
         override val idField = "id"
 
         override fun getId(obj: Feature): String {
-            return obj.id
+            return obj.id!!
         }
 
         override fun setId(obj: Feature, id: String): Feature {

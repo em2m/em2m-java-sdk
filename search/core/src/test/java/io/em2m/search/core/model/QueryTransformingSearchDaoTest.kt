@@ -1,11 +1,11 @@
 package io.em2m.search.core.model
 
 import com.nhaarman.mockito_kotlin.*
-import com.vividsolutions.jts.geom.Envelope
 import io.em2m.search.core.daos.QueryTransformingSearchDao
 import org.junit.Assert
 import org.junit.Ignore
 import org.junit.Test
+import org.locationtech.jts.geom.Envelope
 import org.mockito.Mockito.verify
 import rx.Observable
 
