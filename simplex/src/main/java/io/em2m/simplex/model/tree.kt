@@ -18,6 +18,36 @@ class FieldExpr(val field: String, val value: Expr) : TreeExpr {
     }
 }
 
+private class ObjectExprContext(val delegate: ExprContext) : ExprContext {
+    override val entries: Set<Map.Entry<String, Any?>>
+        get() = delegate.entries
+    override val keys: Set<String>
+        get() = delegate.keys
+    override val size: Int
+        get() = delegate.size
+    override val values: Collection<Any?>
+        get() = delegate.values
+
+    override fun containsKey(key: String): Boolean {
+        return delegate.containsKey(key)
+    }
+
+    override fun containsValue(value: Any?): Boolean {
+        return delegate.containsValue(value)
+    }
+
+    override fun get(key: String): Any? {
+        return delegate[key]
+    }
+
+    override fun isEmpty(): Boolean {
+        return delegate.isEmpty()
+    }
+
+    var vars: Map<String, Any?> = emptyMap()
+
+}
+
 class ObjectExpr(val fields: List<FieldExpr>) : TreeExpr {
 
     private val fieldMap = fields.associateBy { it.field }
