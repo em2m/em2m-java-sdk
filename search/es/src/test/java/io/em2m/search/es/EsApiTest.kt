@@ -1,8 +1,8 @@
 package io.em2m.search.es
 
-import com.vividsolutions.jts.geom.Envelope
 import org.junit.Assert
 import org.junit.Test
+import org.locationtech.jts.geom.Envelope
 
 
 class EsApiTest : FeatureTestBase() {

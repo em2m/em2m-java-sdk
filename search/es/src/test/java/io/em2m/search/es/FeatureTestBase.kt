@@ -4,15 +4,15 @@ import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.databind.node.ObjectNode
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import com.scaleset.geo.Feature
-import com.scaleset.geo.FeatureCollection
-import com.scaleset.geo.FeatureCollectionHandler
-import com.scaleset.geo.geojson.GeoJsonModule
-import com.scaleset.geo.geojson.GeoJsonParser
 import feign.Feign
 import feign.jackson.JacksonDecoder
 import feign.jackson.JacksonEncoder
 import feign.slf4j.Slf4jLogger
+import io.em2m.geo.feature.Feature
+import io.em2m.geo.feature.FeatureCollection
+import io.em2m.geo.feature.FeatureCollectionHandler
+import io.em2m.geo.geojson.GeoJsonModule
+import io.em2m.geo.geojson.GeoJsonParser
 import io.em2m.search.core.model.FnIdMapper
 import org.junit.Assert
 import org.junit.Before
@@ -33,7 +33,7 @@ abstract class FeatureTestBase : Assert() {
         esClient.putMapping("features", "doc", mapping)
         flush();
         for (feature in earthquakes().features) {
-            esClient.put("features", "doc", feature.id, feature);
+            esClient.put("features", "doc", feature.id!!, feature);
         }
         flush()
     }
@@ -49,7 +49,7 @@ abstract class FeatureTestBase : Assert() {
                 .enable(SerializationFeature.INDENT_OUTPUT)
                 .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
 
-        val idMapper = FnIdMapper<Feature>("id", { it.id }, { f, id -> f.id = id; f })
+        val idMapper = FnIdMapper<Feature>("id", { it.id!! }, { f, id -> f.id = id; f })
 
         fun earthquakes(): FeatureCollection {
             val handler = FeatureCollectionHandler();

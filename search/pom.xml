@@ -37,7 +37,6 @@
         <module>mongo</module>
         <module>bean</module>
         <module>es</module>
-        <module>scaleset</module>
     </modules>
 
     <dependencies>

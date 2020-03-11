@@ -3,10 +3,10 @@ package io.em2m.search.es
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import com.scaleset.geo.geojson.GeoJsonModule
-import com.vividsolutions.jts.geom.Coordinate
-import com.vividsolutions.jts.geom.Envelope
+import io.em2m.geo.geojson.GeoJsonModule
 import io.em2m.search.core.model.*
+import org.locationtech.jts.geom.Coordinate
+import org.locationtech.jts.geom.Envelope
 import java.util.*
 import kotlin.collections.HashMap
 
