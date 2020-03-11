@@ -6,12 +6,16 @@ import org.locationtech.jts.geom.Envelope
 import org.locationtech.jts.geom.Geometry
 import org.locationtech.jts.geom.impl.CoordinateArraySequence
 import org.locationtech.jts.geom.util.GeometryTransformer
+import kotlin.math.atan
+import kotlin.math.exp
+import kotlin.math.ln
+import kotlin.math.tan
 
 class WebMapMath {
 
     companion object {
         // 20037508.342789244
-        val originShift = 2.0 * Math.PI * 6378137.0 / 2.0
+        private const val originShift = 2.0 * Math.PI * 6378137.0 / 2.0
 
         /**
          * Converts given coordinate in WGS84 Datum to XY in Spherical Mercator
@@ -22,7 +26,7 @@ class WebMapMath {
          */
         fun lngLatToMeters(coord: Coordinate): Coordinate {
             val mx = coord.x * originShift / 180.0
-            var my = Math.log(Math.tan((90 + coord.y) * Math.PI / 360.0)) / (Math.PI / 180.0)
+            var my = ln(tan((90 + coord.y) * Math.PI / 360.0)) / (Math.PI / 180.0)
             my *= originShift / 180.0
             return Coordinate(mx, my)
         }
@@ -34,8 +38,7 @@ class WebMapMath {
          * @param geometry the geometry to convert
          * @return the geometry transformed to EPSG:3857
          */
-        fun lngLatToMeters(geometry: Geometry?): Geometry? {
-            if (geometry == null) return null
+        fun lngLatToMeters(geometry: Geometry): Geometry {
             val transformer = object : GeometryTransformer() {
                 override fun transformCoordinates(coords: CoordinateSequence, parent: Geometry?): CoordinateSequence {
                     val newCoords = arrayOfNulls<Coordinate>(coords.size())
@@ -50,8 +53,7 @@ class WebMapMath {
         }
 
         /**
-         * Transforms given lat/lon in WGS84 Datum to XY in Spherical Mercator
-         * EPSG:3857
+         * Transforms given envelope in Spherical Mercator to EPSG:3857
          *
          * @param env The envelope to transform
          * @return The envelope transformed to EPSG:3857
@@ -59,6 +61,18 @@ class WebMapMath {
         fun lngLatToMeters(env: Envelope): Envelope {
             val min = lngLatToMeters(env.minX, env.minY)
             val max = lngLatToMeters(env.maxX, env.maxY)
+            return Envelope(min.x, max.x, min.y, max.y)
+        }
+
+        /**
+         * Transforms given envelope in  Spherical Mercator to EPSG:4326
+         *
+         * @param env The envelope to transform
+         * @return The envelope transformed to EPSG:4326
+         */
+        fun metersToLngLat(env: Envelope): Envelope {
+            val min = metersToLngLat(env.minX, env.minY)
+            val max = metersToLngLat(env.maxX, env.maxY)
             return Envelope(min.x, max.x, min.y, max.y)
         }
 
@@ -73,7 +87,7 @@ class WebMapMath {
          */
         fun lngLatToMeters(lng: Double, lat: Double): Coordinate {
             val mx = lng * originShift / 180.0
-            var my = Math.log(Math.tan((90 + lat) * Math.PI / 360.0)) / (Math.PI / 180.0)
+            var my = ln(tan((90 + lat) * Math.PI / 360.0)) / (Math.PI / 180.0)
 
             my *= originShift / 180.0
 
@@ -93,7 +107,7 @@ class WebMapMath {
             val lon = mx / originShift * 180.0
             var lat = my / originShift * 180.0
 
-            lat = 180 / Math.PI * (2 * Math.atan(Math.exp(lat * Math.PI / 180.0)) - Math.PI / 2.0)
+            lat = 180 / Math.PI * (2 * atan(exp(lat * Math.PI / 180.0)) - Math.PI / 2.0)
 
             return Coordinate(lon, lat)
         }
@@ -116,8 +130,7 @@ class WebMapMath {
          * @param geometry the geometry to convert
          * @return the geometry transformed to EPSG:4326
          */
-        fun metersToLngLat(geometry: Geometry?): Geometry? {
-            if (geometry == null) return null
+        fun metersToLngLat(geometry: Geometry): Geometry {
             val transformer = object : GeometryTransformer() {
                 override fun transformCoordinates(coords: CoordinateSequence, parent: Geometry?): CoordinateSequence {
                     val newCoords = arrayOfNulls<Coordinate>(coords.size())
@@ -130,5 +143,12 @@ class WebMapMath {
             }
             return transformer.transform(geometry)
         }
+
+        fun Coordinate.toLngLat(): Coordinate = metersToLngLat(this)
+        fun Coordinate.toMeters(): Coordinate = lngLatToMeters(this)
+        fun Envelope.toLngLat(): Envelope = metersToLngLat(this)
+        fun Envelope.toMeters(): Envelope = lngLatToMeters(this)
+        fun Geometry.toLngLat(): Geometry = metersToLngLat(this)
+        fun Geometry.toMeters(): Geometry = lngLatToMeters(this)
     }
 }
