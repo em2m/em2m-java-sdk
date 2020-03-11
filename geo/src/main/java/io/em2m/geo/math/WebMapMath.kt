@@ -26,7 +26,7 @@ class WebMapMath {
             my *= originShift / 180.0
             return Coordinate(mx, my)
         }
-        
+
         /**
          * Converts geometry from lat/lon (EPSG:4326)) to Spherical Mercator
          * (EPSG:3857)
@@ -34,7 +34,8 @@ class WebMapMath {
          * @param geometry the geometry to convert
          * @return the geometry transformed to EPSG:3857
          */
-        fun lngLatToMeters(geometry: Geometry): Geometry {
+        fun lngLatToMeters(geometry: Geometry?): Geometry? {
+            if (geometry == null) return null
             val transformer = object : GeometryTransformer() {
                 override fun transformCoordinates(coords: CoordinateSequence, parent: Geometry?): CoordinateSequence {
                     val newCoords = arrayOfNulls<Coordinate>(coords.size())
@@ -115,7 +116,8 @@ class WebMapMath {
          * @param geometry the geometry to convert
          * @return the geometry transformed to EPSG:4326
          */
-        fun metersToLngLat(geometry: Geometry): Geometry {
+        fun metersToLngLat(geometry: Geometry?): Geometry? {
+            if (geometry == null) return null
             val transformer = object : GeometryTransformer() {
                 override fun transformCoordinates(coords: CoordinateSequence, parent: Geometry?): CoordinateSequence {
                     val newCoords = arrayOfNulls<Coordinate>(coords.size())
