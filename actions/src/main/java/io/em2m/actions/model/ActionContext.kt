@@ -37,12 +37,11 @@ data class ActionContext(val actionName: String,
                 response: Response) : this(actionName, Claims(claims), environment, requestId, resource, inputStream, request, multipart, scope, debug, error, response)
 
     val keyHandlers = HashMap<Key, KeyHandler>()
-    private val keyResolver = BasicKeyResolver(keyHandlers)
 
     override var flow: ActionFlow? = null
 
     fun toPolicyContext(): PolicyContext {
-
+        val keyResolver = BasicKeyResolver(keyHandlers)
         return PolicyContext(mapOf("actionContext" to this), claims, Environment(environment), resource, keyResolver)
     }
 
