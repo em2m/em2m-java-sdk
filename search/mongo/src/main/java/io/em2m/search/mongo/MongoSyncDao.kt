@@ -186,23 +186,21 @@ class MongoSyncDao<T>(idMapper: IdMapper<T>, val documentMapper: DocumentMapper<
             if (key.contains(":")) key.split(":")[0] else key
         }
 
-        request.aggs.map { agg ->
-            keyIndex.keys.forEach { key ->
-                val buckets = ArrayList<Bucket>()
-                keyIndex[key]?.forEach { mongoKey ->
-                    val altKey = if (mongoKey.contains(":")) mongoKey.split(":")[1] else mongoKey
-                    val values = document[mongoKey] as List<*>
-                    values.forEach { value ->
-                        if (value is Document) {
-                            val id = value.getString("_id") ?: altKey
-                            val count = value.getInteger("count")
-                            buckets.add(Bucket(id, count.toLong()))
-                        }
+        keyIndex.keys.forEach { key ->
+            val buckets = ArrayList<Bucket>()
+            keyIndex[key]?.forEach { mongoKey ->
+                val altKey = if (mongoKey.contains(":")) mongoKey.split(":")[1] else mongoKey
+                val values = document[mongoKey] as List<*>
+                values.forEach { value ->
+                    if (value is Document) {
+                        val id = value.getString("_id") ?: altKey
+                        val count = value.getInteger("count")
+                        buckets.add(Bucket(id, count.toLong()))
                     }
                 }
-                val op = aggIndex[key]?.op()
-                result[key] = AggResult(key, buckets, op = op)
             }
+            val op = aggIndex[key]?.op()
+            result[key] = AggResult(key, buckets, op = op)
         }
 
         return result

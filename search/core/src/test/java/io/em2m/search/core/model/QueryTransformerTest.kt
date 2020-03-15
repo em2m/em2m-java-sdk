@@ -9,11 +9,11 @@ import org.junit.Test
 
 class QueryTransformerTest {
 
-    val xform = SimplifyQueryTransformer()
-    val notXform = PushDownNotQueryTransformer()
+    private val xform = SimplifyQueryTransformer()
+    private val notXform = PushDownNotQueryTransformer()
 
-    fun Query.simplify() = xform.transform(this)
-    fun Query.pushDownNot() = notXform.transform(this)
+    private fun Query.simplify() = xform.transform(this)
+    private fun Query.pushDownNot() = notXform.transform(this)
 
     @Test
     fun testSimplifyBool() {
@@ -38,7 +38,7 @@ class QueryTransformerTest {
         val q2 = q1.pushDownNot().simplify() as BoolQuery
         assertTrue((q2 is AndQuery))
         assertTrue(q2.of.first() is NotQuery)
-        assertTrue(q2 is BoolQuery && q2.of.first() is NotQuery)
+        assertTrue(q2.of.first() is NotQuery)
         val mapper = jacksonObjectMapper()
         println(mapper.writeValueAsString(q1))
         println(mapper.writeValueAsString(q2))

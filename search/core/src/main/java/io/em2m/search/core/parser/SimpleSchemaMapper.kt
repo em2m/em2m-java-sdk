@@ -2,7 +2,6 @@ package io.em2m.search.core.parser
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import io.em2m.simplex.parser.DateMathParser
 import java.util.*
 
 class SimpleSchemaMapper(private val defaultField: String, val objectMapper: ObjectMapper = jacksonObjectMapper()) : SchemaMapper {
@@ -13,13 +12,13 @@ class SimpleSchemaMapper(private val defaultField: String, val objectMapper: Obj
 
     override fun typeOf(field: String): Class<out Any>? {
         val f = aliases.getOrDefault(field, field)
-        return types.get(f)
+        return types[f]
     }
 
-    override fun mapPath(path: String): String {
-        var result: String? = aliases[path]
+    override fun mapPath(field: String): String {
+        var result: String? = aliases[field]
         if (result == null || result.isEmpty()) {
-            result = path
+            result = field
         }
         return result
     }
@@ -36,21 +35,18 @@ class SimpleSchemaMapper(private val defaultField: String, val objectMapper: Obj
         return convertValue(str, type)
     }
 
-    fun <T> convertValue(from: Any?, typeRef: Class<T>): T {
+    private fun <T> convertValue(from: Any?, typeRef: Class<T>): T {
         return objectMapper.convertValue(from, typeRef)
     }
 
     fun withMapping(field: String, type: Class<*>): SimpleSchemaMapper {
-        types.put(field, type)
+        types[field] = type
         return this
     }
 
     fun withAlias(alias: String, value: String): SimpleSchemaMapper {
-        aliases.put(alias, value)
+        aliases[alias] = value
         return this
     }
 
-    companion object {
-        private val dateParser = DateMathParser()
-    }
 }

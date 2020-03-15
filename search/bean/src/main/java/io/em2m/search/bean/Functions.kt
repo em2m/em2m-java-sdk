@@ -244,8 +244,8 @@ class Functions {
 
         private fun toPredicate(expr: WildcardQuery): (Any) -> Boolean {
             val field = expr.field
-            return when {
-                expr.value == "*" -> not(term(field, null))
+            return when (expr.value) {
+                "*" -> not(term(field, null))
                 else -> {
                     var value = expr.value.replace("?", "_QUESTION_MARK_").replace("*", "_STAR_")
                     value = Matcher.quoteReplacement(value)
@@ -295,6 +295,7 @@ class Functions {
             return terms(field, terms)
         }
 
+        @Suppress("UNUSED_PARAMETER")
         private fun toPredicate(expr: MatchAllQuery): (Any) -> Boolean {
             return { true }
         }

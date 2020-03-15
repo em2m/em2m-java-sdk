@@ -2,8 +2,6 @@ package io.em2m.search.mongo
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.em2m.search.core.model.*
-import org.junit.Assert
-import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.locationtech.jts.geom.Envelope
 
@@ -81,7 +79,7 @@ class MongoSyncDaoQueryTest : FeaturesTestBase() {
     fun testFields() {
         val request = SearchRequest(0, 1, query = TermQuery("properties.mag", 5.2), fields = listOf(Field("properties.mag")))
         val result = syncDao.search(request)
-        val mag = requireNotNull(result?.rows?.get(0)?.get(0)) as Double
+        val mag = requireNotNull(result.rows?.get(0)?.get(0)) as Double
         assertEquals(5.2, mag, 0.01)
     }
 
@@ -91,7 +89,7 @@ class MongoSyncDaoQueryTest : FeaturesTestBase() {
         val mongoQuery = jacksonObjectMapper().readTree(""" { "properties.nst": { "$type": 10 } } """)
         val request = SearchRequest(0, 1, query = NativeQuery(mongoQuery), fields = listOf(Field("properties.nst")))
         val result = syncDao.search(request)
-        val nst = result?.rows?.get(0)?.get(0)
+        val nst = result.rows?.get(0)?.get(0)
         assertEquals(null, nst)
         assertEquals(27, result.totalItems)
     }
@@ -100,7 +98,7 @@ class MongoSyncDaoQueryTest : FeaturesTestBase() {
     fun testNullTermQuery() {
         val request = SearchRequest(0, 1, query = TermQuery("properties.nst", null), fields = listOf(Field("properties.nst")))
         val result = syncDao.search(request)
-        val nst = result?.rows?.get(0)?.get(0)
+        val nst = result.rows?.get(0)?.get(0)
         assertEquals(null, nst)
         assertEquals(27, result.totalItems)
     }

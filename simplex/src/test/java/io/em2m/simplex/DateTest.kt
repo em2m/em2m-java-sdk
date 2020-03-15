@@ -96,7 +96,6 @@ class DateTest : Assert() {
 
     @Test
     fun testDateMath() {
-        val pattern: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd").withZone(ZoneId.of("America/New_York"))
         val expected = "2015-05-21"
         val exprString = "\${ns:dateKey | dateMath:now+30d/d}"
         val expr = requireNotNull(simplex.parser.parse(exprString))

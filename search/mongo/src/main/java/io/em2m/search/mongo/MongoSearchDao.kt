@@ -110,10 +110,10 @@ class MongoSearchDao<T>(idMapper: IdMapper<T>, val documentMapper: DocumentMappe
         val mongoAggs = queryConverter.convertAggs(request.aggs)
         try {
             return Observable.zip(
-                    doSearch(request, mongoQuery), doCount(request, mongoQuery), doAggs(request, mongoQuery, mongoAggs)
-            ) { docs, totalItems, aggs ->
-                handleResult(request, docs, totalItems, aggs)
-            }
+                            doSearch(request, mongoQuery), doCount(request, mongoQuery), doAggs(request, mongoQuery, mongoAggs)
+                    ) { docs, totalItems, aggs ->
+                        handleResult(request, docs, totalItems, aggs)
+                    }
                     .doOnError { err -> log.error("Error searching mongo", err) }
                     .doOnNext { results -> log.debug("results: " + results) }
         } catch (e: Exception) {
@@ -159,7 +159,7 @@ class MongoSearchDao<T>(idMapper: IdMapper<T>, val documentMapper: DocumentMappe
     override fun save(id: String, entity: T): Observable<T> {
         return collection.replaceOne(Document("_id", id), encode(entity), UpdateOptions().upsert(true))
                 /*.timeout(timeout, TimeUnit.SECONDS)*/
-                .map { it -> entity }
+                .map { entity }
     }
 
     fun bulkSave(entities: List<T>): Observable<BulkWriteResult> {
@@ -207,23 +207,21 @@ class MongoSearchDao<T>(idMapper: IdMapper<T>, val documentMapper: DocumentMappe
             if (key.contains(":")) key.split(":")[0] else key
         }
 
-        request.aggs.map { agg ->
-            keyIndex.keys.forEach { key ->
-                val buckets = ArrayList<Bucket>()
-                keyIndex[key]?.forEach { mongoKey ->
-                    val altKey = if (mongoKey.contains(":")) mongoKey.split(":")[1] else mongoKey
-                    val values = document[mongoKey] as List<*>
-                    values.forEach { value ->
-                        if (value is Document) {
-                            val id = value.getString("_id") ?: altKey
-                            val count = value.getInteger("count")
-                            buckets.add(Bucket(id, count.toLong()))
-                        }
+        keyIndex.keys.forEach { key ->
+            val buckets = ArrayList<Bucket>()
+            keyIndex[key]?.forEach { mongoKey ->
+                val altKey = if (mongoKey.contains(":")) mongoKey.split(":")[1] else mongoKey
+                val values = document[mongoKey] as List<*>
+                values.forEach { value ->
+                    if (value is Document) {
+                        val id = value.getString("_id") ?: altKey
+                        val count = value.getInteger("count")
+                        buckets.add(Bucket(id, count.toLong()))
                     }
                 }
-                val op = aggIndex[key]?.op()
-                result[key] = AggResult(key, buckets, op = op)
             }
+            val op = aggIndex[key]?.op()
+            result[key] = AggResult(key, buckets, op = op)
         }
 
         return result

@@ -2,7 +2,6 @@ package io.em2m.actions.model
 
 import org.slf4j.LoggerFactory
 import java.io.InputStream
-import javax.servlet.http.Part
 
 data class MultipartData(val files: Map<String, File>, val form: Map<String, String>) {
 
@@ -10,7 +9,7 @@ data class MultipartData(val files: Map<String, File>, val form: Map<String, Str
 
     companion object {
 
-        val log = LoggerFactory.getLogger(javaClass)
+        val log = LoggerFactory.getLogger(MultipartData::class.java)
 
     }
 }

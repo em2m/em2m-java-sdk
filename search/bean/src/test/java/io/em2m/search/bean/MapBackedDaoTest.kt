@@ -94,7 +94,7 @@ class MapBackedDaoTest {
     }
 
     companion object {
-        private var movies: MutableMap<String, Movie> = Movie.load()
+        private var movies = Movie.load()
     }
 
     class MovieMapper : IdMapper<Movie> {
@@ -102,8 +102,7 @@ class MapBackedDaoTest {
         override val idField: String = "id"
 
         override fun setId(obj: Movie, id: String): Movie {
-            obj.id = id
-            return obj
+            return obj.copy(id = id)
         }
 
         override fun getId(obj: Movie): String {

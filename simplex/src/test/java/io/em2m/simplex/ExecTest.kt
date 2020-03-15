@@ -4,15 +4,16 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import io.em2m.simplex.model.*
 import org.junit.Test
+import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.net.HttpURLConnection
 import java.net.URL
+import kotlin.test.assertNotNull
 
 
 class ExecTest {
 
-    val simplex = Simplex()
-    val parser = simplex.parser
+    private val simplex = Simplex()
     private val mapper = jacksonObjectMapper()
 
     init {
@@ -20,10 +21,6 @@ class ExecTest {
                 .handler("log") { LogHandler() }
                 .handler("http") { HttpHandler() }
         )
-    }
-
-    fun parse(expr: String): Expr {
-        return parser.parse(expr)
     }
 
     @Test
@@ -54,12 +51,13 @@ class ExecTest {
                  }   
                 """)
         val result = simplex.exec(exec, emptyMap())
+        assertNotNull(result)
     }
 
     class LogHandler : ExecHandler {
 
-        var log = LoggerFactory.getLogger(javaClass)
-        var level = "info"
+        private var log: Logger = LoggerFactory.getLogger(javaClass)
+        private var level = "info"
 
         override fun configure(config: Map<String, Any?>) {
             val configLevel = (config["level"] as? String)?.toLowerCase()
@@ -85,7 +83,7 @@ class ExecTest {
 
     class HttpHandler : ExecHandler {
 
-        var method = "POST"
+        private var method = "POST"
 
         override fun configure(config: Map<String, Any?>) {
             (config["method"] as? String)?.also {
@@ -98,7 +96,7 @@ class ExecTest {
 
         override fun call(context: ExprContext, op: String, params: Map<String, Any?>): ExecResult {
             val url = URL(params["url"].toString())
-            var value: Any? = null
+            var value: Any?
             with(url.openConnection() as HttpURLConnection) {
                 println("\nSent 'GET' request to URL : $url; Response Code : $responseCode")
                 value = inputStream.bufferedReader().readText()
