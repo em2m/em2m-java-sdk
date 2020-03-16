@@ -20,7 +20,6 @@
  */
 package io.em2m.simplex.parser
 
-import io.em2m.utils.coerce
 import io.em2m.utils.coerceNonNull
 import org.joda.time.DateTimeZone
 import org.joda.time.MutableDateTime
@@ -37,16 +36,14 @@ import java.util.*
  * `||[+-/](\d+)?[yMwdhHms]`.
  */
 class DateMathParser(private val dateTimeFormatter: FormatDateTimeFormatter = FormatDateTimeFormatter("dateOptionalTime",
-        ISODateTimeFormat.dateOptionalTimeParser().withZone(DateTimeZone.UTC),
-        ISODateTimeFormat.dateTime().withZone(DateTimeZone.UTC), Locale.ROOT)) {
+        ISODateTimeFormat.dateOptionalTimeParser().withZone(DateTimeZone.UTC), Locale.ROOT)) {
 
     init {
         Objects.requireNonNull(dateTimeFormatter)
     }
 
     constructor(timeZone: DateTimeZone) : this(FormatDateTimeFormatter("dateOptionalTime",
-            ISODateTimeFormat.dateOptionalTimeParser().withZone(timeZone),
-            ISODateTimeFormat.dateTime().withZone(timeZone), Locale.ROOT))
+            ISODateTimeFormat.dateOptionalTimeParser().withZone(timeZone), Locale.ROOT))
 
     // Note: we take a callable here for the timestamp in order to be able to figure out
     // if it has been used. For instance, the request cache does not cache requests that make
@@ -92,35 +89,38 @@ class DateMathParser(private val dateTimeFormatter: FormatDateTimeFormatter = Fo
                 sign = 1
             } else {
                 round = false
-                if (c == '+') {
-                    sign = 1
-                } else if (c == '-') {
-                    sign = -1
-                } else {
-                    throw RuntimeException("operator not supported for date math [{}]" + mathString)
+                sign = when (c) {
+                    '+' -> {
+                        1
+                    }
+                    '-' -> {
+                        -1
+                    }
+                    else -> {
+                        throw RuntimeException("operator not supported for date math [{}]$mathString")
+                    }
                 }
             }
 
             if (i >= mathString.length) {
-                throw RuntimeException("truncated date math [{}]" + mathString)
+                throw RuntimeException("truncated date math [{}]$mathString")
             }
 
-            val num: Int
-            if (!Character.isDigit(mathString[i])) {
-                num = 1
+            val num = if (!Character.isDigit(mathString[i])) {
+                1
             } else {
                 val numFrom = i
                 while (i < mathString.length && Character.isDigit(mathString[i])) {
                     i++
                 }
                 if (i >= mathString.length) {
-                    throw RuntimeException("truncated date math [{}]" + mathString)
+                    throw RuntimeException("truncated date math [{}]$mathString")
                 }
-                num = Integer.parseInt(mathString.substring(numFrom, i))
+                Integer.parseInt(mathString.substring(numFrom, i))
             }
             if (round) {
                 if (num != 1) {
-                    throw RuntimeException("rounding `/` can only be used on single unit types [{}]" + mathString)
+                    throw RuntimeException("rounding `/` can only be used on single unit types [{}]$mathString")
                 }
             }
             val unit = mathString[i++]
@@ -188,19 +188,14 @@ class DateMathParser(private val dateTimeFormatter: FormatDateTimeFormatter = Fo
         } catch (e: IllegalArgumentException) {
             throw RuntimeException("failed to parse date field [$value] with format [${dateTimeFormatter.format}]")
         }
-
     }
 
     /**
      * A simple wrapper around [DateTimeFormatter] that retains the
      * format that was used to create it.
      */
-    class FormatDateTimeFormatter(val format: String, parser: DateTimeFormatter, printer: DateTimeFormatter, locale: java.util.Locale? = null) {
-
+    class FormatDateTimeFormatter(val format: String, parser: DateTimeFormatter, locale: Locale? = null) {
         val parser: DateTimeFormatter = if (locale == null) parser.withDefaultYear(1970) else parser.withLocale(locale).withDefaultYear(1970)
-
-        val printer: DateTimeFormatter = if (locale == null) printer.withDefaultYear(1970) else printer.withLocale(locale).withDefaultYear(1970)
-
     }
 
 }

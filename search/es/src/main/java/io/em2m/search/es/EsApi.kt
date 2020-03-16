@@ -88,15 +88,15 @@ class EsTermsQuery(field: String, value: List<String>, boost: Double? = null) : 
     val terms = mapOf(field to value, "boost" to boost).filter { it.value != null }
 }
 
-class EsMatchQuery(field: String, value: String, operator: String? = "or", boost: Double? = null) : EsQuery() {
-    val match = mapOf(field to mapOf("query" to value, "boost" to boost).filter { it.value != null })
+class EsMatchQuery(field: String, value: String, operator: String? = null, boost: Double? = null) : EsQuery() {
+    val match = mapOf(field to mapOf("query" to value, "boost" to boost, "operator" to operator).filter { it.value != null })
 }
 
 class EsWildcardQuery(field: String, value: String) : EsQuery() {
     val wildcard = mapOf(field to mapOf("value" to value))
 }
 
-class EsRegexpQuery(field: String, value: String, operator: String? = "regexp", boost: Double? = null) : EsQuery() {
+class EsRegexpQuery(field: String, value: String, boost: Double? = null) : EsQuery() {
     val regexp = mapOf(field to mapOf("value" to value, "boost" to boost).filter { it.value != null })
 }
 
@@ -311,10 +311,10 @@ class EsAggResult(@JsonDeserialize(using = EsBucketListDeserializer::class) val 
     val sum: Double? = null
 
     @JsonIgnore
-    val other: MutableMap<String, Object> = HashMap()
+    val other: MutableMap<String, Any> = HashMap()
 
     @JsonAnySetter
-    fun set(name: String, value: Object) {
+    fun set(name: String, value: Any) {
         other[name] = value
     }
 }
@@ -451,7 +451,7 @@ interface EsApi {
     */
 }
 
-class EsScrollIterator(val client: EsApi, result: EsSearchResult, val scroll: String = "1m") : Iterator<EsHit> {
+class EsScrollIterator(private val client: EsApi, result: EsSearchResult, private val scroll: String = "1m") : Iterator<EsHit> {
 
     var queue: ArrayDeque<EsHit> = ArrayDeque(result.hits.hits)
     var scrollId = result.scrollId

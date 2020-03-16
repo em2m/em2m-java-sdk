@@ -112,7 +112,7 @@ class RequestConverter(val objectMapper: ObjectMapper = jacksonObjectMapper(), v
         val result = EsAggs()
         val timeZone = DateTimeZone.forID(params["timeZone"] as? String)
         aggs.forEach {
-            val subAggs = if (it.aggs?.isNotEmpty()) {
+            val subAggs = if (it.aggs.isNotEmpty()) {
                 convertAggs(it.aggs, params)
             } else {
                 null

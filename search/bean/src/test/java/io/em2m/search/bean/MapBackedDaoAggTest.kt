@@ -277,6 +277,7 @@ class MapBackedDaoAggTest : Assert() {
         val sub = TestSubscriber<Any>()
         searchDao.search(request).doOnNext { result ->
             val agg = result.aggs["test"] ?: error("agg should not be null")
+            assertNotNull(agg)
             //val value = agg.value as Map<*, *>? ?: error("Envelope should not be null")
             //assertTrue("Should contain key 'values'", value.containsKey("values"))
         }.subscribe(sub)

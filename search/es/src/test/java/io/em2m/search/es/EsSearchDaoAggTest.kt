@@ -16,7 +16,7 @@ class EsSearchDaoAggTest : FeatureTestBase() {
     @Before
     override fun before() {
         super.before()
-        searchDao = EsSearchDao(esClient, index, FeatureTestBase.type, Feature::class.java, idMapper, es6 = FeatureTestBase.es6)
+        searchDao = EsSearchDao(esClient, index, type, Feature::class.java, idMapper, es6 = es6)
     }
 
     @Test
@@ -294,6 +294,7 @@ class EsSearchDaoAggTest : FeatureTestBase() {
             val agg = result.aggs["test"] ?: error("agg should not be null")
             //val value = agg.value as Map<*, *>? ?: error("Envelope should not be null")
             //assertTrue("Should contain key 'values'", value.containsKey("values"))
+            assertNotNull(agg)
         }.subscribe(sub)
         sub.awaitTerminalEvent()
         sub.assertNoErrors()

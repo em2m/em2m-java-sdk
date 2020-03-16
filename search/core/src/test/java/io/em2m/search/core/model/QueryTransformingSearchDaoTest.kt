@@ -49,8 +49,8 @@ class QueryTransformingSearchDaoTest : Assert() {
 
     @Test
     fun testQueryFieldAlias() {
-        val ACTUAL = "geometry.coordinates"
-        val xformDao = QueryTransformingSearchDao(aliases = mapOf("coord" to Field(ACTUAL)), delegate = mock)
+        val actual = "geometry.coordinates"
+        val xformDao = QueryTransformingSearchDao(aliases = mapOf("coord" to Field(actual)), delegate = mock)
 
         xformDao.search(SearchRequest(fields = listOf(Field("coord"), Field("other"))))
         xformDao.search(SearchRequest(query = BboxQuery("coord", Envelope(-180.0, 180.0, -90.0, 90.0))))
@@ -63,24 +63,23 @@ class QueryTransformingSearchDaoTest : Assert() {
             assertEquals(2, firstValue.fields.size)
 
             // first
-            assertTrue(firstValue.fields.contains(Field(ACTUAL)))
+            assertTrue(firstValue.fields.contains(Field(actual)))
             assertFalse(firstValue.fields.contains(Field("coord")))
             assertTrue(firstValue.fields.contains(Field("other")))
 
             allValues.forEach {
-                val q = it.query
-                when (q) {
+                when (val q = it.query) {
                     is FieldedQuery -> {
-                        assertEquals(ACTUAL, q.field)
+                        assertEquals(actual, q.field)
                     }
                     is TermQuery -> {
-                        assertEquals(ACTUAL, q.field)
+                        assertEquals(actual, q.field)
                         // from lucene, so value is string since we don't have a schema yet
                         assertEquals("70", q.value)
                     }
                     is AndQuery -> {
                         val term = q.of[0] as TermQuery
-                        assertEquals(ACTUAL, term.field)
+                        assertEquals(actual, term.field)
                     }
                 }
             }
@@ -111,8 +110,8 @@ class QueryTransformingSearchDaoTest : Assert() {
     @Test
     fun testNamedAgg() {
         val format = "#{bucket:key | upperCase}".replace("#", "$")
-        val status = TermsAgg("status", format = format, ext = mapOf("icon" to "fa-key"))
-        val xformDao = QueryTransformingSearchDao   (namedAggs = mapOf("statusAgg" to status), delegate = mock)
+        val statusQuery = TermsAgg("status", format = format, ext = mapOf("icon" to "fa-key"))
+        val xformDao = QueryTransformingSearchDao   (namedAggs = mapOf("statusAgg" to statusQuery), delegate = mock)
         xformDao.search(SearchRequest(aggs = listOf(NamedAgg(name = "statusAgg", key = "key").setAny("size", 5))))
 
         argumentCaptor <SearchRequest>().apply {

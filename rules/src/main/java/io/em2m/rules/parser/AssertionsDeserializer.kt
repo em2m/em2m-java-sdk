@@ -21,7 +21,7 @@ class AssertionsDeserializer(val simplex: Simplex) : JsonDeserializer<Assertions
             is POJONode -> node.pojo
             is TextNode -> node.textValue()
             is NumericNode -> node.numberValue()
-        // TODO - Unwrap arrays
+            // TODO - Unwrap arrays
             else -> throw IllegalArgumentException("Unexpected condition value type")
         }
     }
@@ -38,7 +38,7 @@ class AssertionsDeserializer(val simplex: Simplex) : JsonDeserializer<Assertions
 
         return try {
             val tree = parser.readValueAsTree<TreeNode>()
-            return if (tree is ObjectNode) {
+            if (tree is ObjectNode) {
                 Assertions(tree.fields().asSequence().map {
                     Assertion(it.key, parseValueList(it.value))
                 }.toList())

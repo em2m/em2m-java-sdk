@@ -269,18 +269,22 @@ class Aggs {
             return AggResult(agg.key, buckets, op = agg.op(), field = agg.field)
         }
 
+        @Suppress("UNUSED_PARAMETER")
         private fun <T> processGeoHashAgg(agg: GeoHashAgg, matches: List<T>): AggResult {
             throw NotImplementedError("Aggregation GeoHash not yet supported")
         }
 
+        @Suppress("UNUSED_PARAMETER")
         private fun <T> processGeoBoundsAgg(agg: GeoBoundsAgg, matches: List<T>): AggResult {
             throw NotImplementedError("Aggregation GeoBounds not yet supported")
         }
 
+        @Suppress("UNUSED_PARAMETER")
         private fun <T> processGeoCentroidAgg(agg: GeoCentroidAgg, matches: List<T>): AggResult {
             throw NotImplementedError("Aggregation GeoCentroid not yet supported")
         }
 
+        @Suppress("UNUSED_PARAMETER")
         private fun <T> processGeoDistanceAgg(agg: GeoDistanceAgg, matches: List<T>): AggResult {
             throw NotImplementedError("Aggregation GeoDistance not yet supported")
         }
