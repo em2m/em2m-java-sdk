@@ -15,7 +15,7 @@ import java.util.*
 
 class PolicyEngineTest : Assert() {
 
-    val simplex: Simplex = Simplex()
+    private val simplex: Simplex = Simplex()
             .keys(BasicKeyResolver(mapOf(
                     Key("ident", "orgPath") to OrgPathKey(),
                     Key("ident", "organization") to OrgPathKey(),
@@ -24,8 +24,8 @@ class PolicyEngineTest : Assert() {
                     Key("ident", "role") to ConstKeyHandler("sales"))
             ))
 
-    val policySource = LocalPolicySource(File("src/test/data"), simplex)
-    val policyEngine = BasicPolicyEngine(policySource, simplex)
+    private val policySource = LocalPolicySource(File("src/test/data"), simplex)
+    private val policyEngine = BasicPolicyEngine(policySource, simplex)
 
     @Test
     fun testFindAllowedActions() {
