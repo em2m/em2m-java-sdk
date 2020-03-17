@@ -155,52 +155,32 @@ class Functions {
         private fun lte(path: String, term: Any): (Any) -> Boolean {
             val fieldGetter = field(path)
             return { obj ->
-                var result = false
                 val values = fieldGetter.invoke(obj)
-                for (value in values) {
-                    result = compareTo(value, term) <= 0
-                    if (result) break
-                }
-                result
+                values.any { it != null && compareTo(it, term) <= 0 }
             }
         }
 
         private fun gte(path: String, term: Any): (Any) -> Boolean {
             val fieldGetter = field(path)
             return { obj ->
-                var result = false
                 val values = fieldGetter.invoke(obj)
-                for (value in values) {
-                    result = compareTo(value, term) >= 0
-                    if (result) break
-                }
-                result
+                values.any { it != null && compareTo(it, term) >= 0 }
             }
         }
 
         private fun gt(path: String, term: Any): (Any) -> Boolean {
             val fieldGetter = field(path)
             return { obj ->
-                var result = false
                 val values = fieldGetter.invoke(obj)
-                for (value in values) {
-                    result = compareTo(value, term) > 0
-                    if (result) break
-                }
-                result
+                values.any { it != null && compareTo(it, term) > 0 }
             }
         }
 
         private fun lt(path: String, term: Any): (Any) -> Boolean {
             val fieldGetter = field(path)
             return { obj ->
-                var result = false
                 val values = fieldGetter.invoke(obj)
-                for (value in values) {
-                    result = compareTo(value, term) < 0
-                    if (result) break
-                }
-                result
+                values.any { it != null && compareTo(it, term) < 0 }
             }
         }
 
@@ -345,14 +325,12 @@ class Functions {
             }
         }
 
-        fun compareTo(first: Any?, second: Any?): Int {
-            return if (first == null) {
-                return -1
-            } else (first as? String)?.compareTo(second.toString())
+        fun compareTo(first: Any, second: Any): Int {
+            return (first as? String)?.compareTo(second.toString())
                     ?: (first as? Int)?.compareTo(second.coerce() ?: 0)
-                    ?: (first as? Long)?.compareTo(second.coerce() ?: 0)
-                    ?: (first as? Float)?.compareTo(second.coerce() ?: 0F)
-                    ?: (first as? Double)?.compareTo(second.coerce() ?: 0)
+                    ?: (first as? Long)?.compareTo(second.coerce() ?: 0.toLong())
+                    ?: (first as? Float)?.compareTo(second.coerce() ?: 0.toFloat())
+                    ?: (first as? Double)?.compareTo(second.coerce() ?: 0.toDouble())
                     ?: first.toString().compareTo(second.toString())
         }
 
