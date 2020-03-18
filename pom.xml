@@ -48,6 +48,7 @@
         <kotlin.compiler.jvmTarget>1.8</kotlin.compiler.jvmTarget>
         <jackson.version>2.10.0</jackson.version>
         <aws.version>1.11.642</aws.version>
+        <jts.version>1.16.1</jts.version>
         <jetty.version>9.4.21.v20190926</jetty.version>
     </properties>
 
