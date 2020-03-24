@@ -35,12 +35,6 @@
     <dependencies>
 
         <dependency>
-            <groupId>io.reactivex</groupId>
-            <artifactId>rxjava</artifactId>
-            <version>1.2.0</version>
-        </dependency>
-
-        <dependency>
             <groupId>io.em2m.sdk</groupId>
             <artifactId>em2m-java-sdk-simplex</artifactId>
             <version>${project.version}</version>
