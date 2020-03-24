@@ -50,7 +50,6 @@
         <jts.version>1.16.1</jts.version>
         <jetty.version>9.4.27.v20200227</jetty.version>
     </properties>
-
     <dependencies>
 
         <dependency>
