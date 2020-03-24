@@ -25,6 +25,7 @@ class Simplex {
             .delegate(Dates.pipes)
             .delegate(Arrays.pipes)
             .delegate(Bytes.pipes)
+            .delegate(Arrays.pipes)
             .delegate(Bools.pipes(this))
 
     private val conditions = BasicConditionResolver()

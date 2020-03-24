@@ -1,7 +1,6 @@
 package io.em2m.simplex.std
 
 import io.em2m.simplex.model.*
-import io.em2m.utils.coerce
 
 class NotNullPipe : PipeTransform {
 
@@ -54,6 +53,7 @@ class FirstPipe : PipeTransform {
         }
     }
 }
+
 class FirstNotBlankPipe : PipeTransform {
     override fun transform(value: Any?, context: ExprContext): Any? {
         return when (value) {
@@ -84,6 +84,18 @@ class LastNotBlankPipe : PipeTransform {
     }
 }
 
+class SizePipe : PipeTransform {
+    override fun transform(value: Any?, context: ExprContext): Any? {
+        return when (value) {
+            is List<*> -> value.size
+            is Array<*> -> value.size
+            is String -> value.length
+            else -> null
+        }
+    }
+}
+
+
 val StandardArrayConditions = emptyMap<String, ConditionHandler>()
 
 object Arrays {
@@ -97,7 +109,8 @@ object Arrays {
                     "first" to FirstPipe(),
                     "firstNotBlank" to FirstNotBlankPipe(),
                     "last" to LastPipe(),
-                    "lastNotBlank" to LastNotBlankPipe()
+                    "lastNotBlank" to LastNotBlankPipe(),
+                    "size" to SizePipe()
             )
     )
 }

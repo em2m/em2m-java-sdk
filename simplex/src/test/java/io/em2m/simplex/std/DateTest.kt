@@ -1,20 +1,18 @@
-package io.em2m.simplex
+package io.em2m.simplex.std
 
+import io.em2m.simplex.Simplex
 import io.em2m.simplex.model.BasicKeyResolver
 import io.em2m.simplex.model.ConstKeyHandler
 import io.em2m.simplex.model.Key
-import io.em2m.simplex.std.Dates
-import io.em2m.simplex.std.Numbers
 import io.em2m.utils.coerceNonNull
-import org.junit.Assert
 import org.junit.Test
 import java.text.SimpleDateFormat
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
 import java.util.*
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 
-class DateTest : Assert() {
+class DateTest {
 
     private val keyResolver = BasicKeyResolver(mapOf(
             Key("ns", "dateKey") to ConstKeyHandler("2015-04-21T17:31:06-07"),
