@@ -7,7 +7,8 @@ import io.em2m.simplex.model.ConditionExpr
 import io.em2m.simplex.model.ConstKeyHandler
 import io.em2m.simplex.model.Key
 import io.em2m.simplex.parser.SimplexModule
-import org.junit.Assert.*
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.io.File
 
@@ -36,6 +37,15 @@ class ConditionDeserializerTest {
     @Test
     fun parseConditions2() {
         val holder: ConditionHolder = jacksonObjectMapper().registerModule(SimplexModule(simplex)).readValue(File("src/test/resources/conditions2.json"))
+        assertNotNull(holder)
+        val result = holder.condition.call(emptyMap())
+        assertTrue(result)
+    }
+
+    @Test
+    fun parseConditions3() {
+        val data = "{ \"condition\": \"\${Bool:true}\"}"
+        val holder: ConditionHolder = jacksonObjectMapper().registerModule(SimplexModule(simplex)).readValue(data)
         assertNotNull(holder)
         val result = holder.condition.call(emptyMap())
         assertTrue(result)

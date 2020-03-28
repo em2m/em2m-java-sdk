@@ -22,7 +22,8 @@ class ExprTransformingSearchDao<T>(simplex: Simplex, delegate: SearchDao<T>) : S
         }
         val exprFields = rowExprs.filterNotNull().flatMap { FieldKeyHandler.fields(it) }
         val delegateFields = exprFields.plus(rowNames).filterNotNull().map { Field(name = it) }
-        val req = request.copy(fields = delegateFields, aggs = transformAggs(request.aggs), sorts = transformSorts(request.sorts))
+        val query = request.query?.let { transformQuery(it) }
+        val req = request.copy(query = query, fields = delegateFields, aggs = transformAggs(request.aggs), sorts = transformSorts(request.sorts))
         return delegate.search(req).map { results ->
             val rows = transformRows(request, results.rows, delegateFields, rowExprs)
             val aggs = transformAggResults(request, results.aggs)
@@ -42,6 +43,10 @@ class ExprTransformingSearchDao<T>(simplex: Simplex, delegate: SearchDao<T>) : S
                 listOf(sort)
             }
         }
+    }
+
+    private fun transformQuery(query: Query, timeZone: String? = null): Query {
+        return query.let { ExprQueryTransformer(parser).transform(it) }
     }
 
     private fun transformAggs(aggs: List<Agg>): List<Agg> {

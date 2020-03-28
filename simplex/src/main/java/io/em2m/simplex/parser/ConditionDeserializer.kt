@@ -73,15 +73,15 @@ class ConditionsDeserializer(val simplex: Simplex) : JsonDeserializer<ConditionE
             is ObjectNode -> conditions.addAll(parseConditionObject(tree))
             is ValueNode -> conditions.add(parseConditionValue(tree))
         }
-        return when {
-            conditions.size == 0 -> {
+        return when (conditions.size) {
+            0 -> {
                 if (booleanOp == BooleanOp.Not) {
                     ConstConditionExpr(false)
                 } else {
                     ConstConditionExpr(true)
                 }
             }
-            conditions.size == 1 -> {
+            1 -> {
                 if (booleanOp == BooleanOp.Not) {
                     NotConditionExpr(conditions)
                 } else conditions.first()
@@ -97,8 +97,7 @@ class ConditionsDeserializer(val simplex: Simplex) : JsonDeserializer<ConditionE
     }
 
     override fun deserialize(parser: JsonParser, context: DeserializationContext): ConditionExpr {
-        return try {
-            val tree = parser.readValueAsTree<TreeNode>()
+        return try { val tree = parser.readValueAsTree<TreeNode>()
             parseCondition(tree, BooleanOp.And)
         } catch (e: RuntimeException) {
             throw JsonParseException(parser, e.message)
