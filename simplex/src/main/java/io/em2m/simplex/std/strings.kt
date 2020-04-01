@@ -115,6 +115,32 @@ class EmptyToNull : PipeTransform {
 
 }
 
+class Split : PipeTransform {
+
+    var separator = ","
+
+    override fun args(args: List<String>) {
+        if (args.isNotEmpty()) {
+            separator = args[0]
+        }
+    }
+
+    override fun transform(value: Any?, context: ExprContext): Any? {
+        return when (value) {
+            is List<*> -> {
+                value.flatMap { it?.toString()?.split(separator) ?: emptyList() }
+            }
+            is Array<*> -> {
+                value.flatMap { it?.toString()?.split(separator) ?: emptyList() }
+            }
+            else -> {
+                value?.toString()?.split(separator)
+            }
+        }
+    }
+
+}
+
 open class SingleStringHandler(private val op: (String?, String?) -> Boolean) : ConditionHandler {
 
     override fun test(keyValue: Any?, conditionValue: Any?): Boolean {
@@ -220,14 +246,15 @@ val StandardStringConditions = mapOf(
 
 object Strings {
 
-    val pipes = BasicPipeTransformResolver(mapOf(
-            "upperCase" to UpperCasePipe(),
-            "capitalize" to CapitalizePipe(),
-            "trim" to TrimPipe(),
-            "append" to AppendPipe(),
-            "prepend" to PrependPipe(),
-            "join" to JoinPipe(),
-            "emptyToNull" to EmptyToNull()))
+    val pipes = BasicPipeTransformResolver()
+            .transform("upperCase") { UpperCasePipe() }
+            .transform("capitalize" ) { CapitalizePipe() }
+            .transform("trim" ) { TrimPipe() }
+            .transform("append" ) { AppendPipe() }
+            .transform("prepend" ) { PrependPipe() }
+            .transform("join" ) { JoinPipe() }
+            .transform("emptyToNull" ) { EmptyToNull() }
+            .transform("split" ){ Split() }
     val keys = BasicKeyResolver()
     val conditions = BasicConditionResolver(StandardStringConditions)
 
