@@ -57,6 +57,37 @@ val StandardBoolConditions = mapOf(
         "Bool" to Bool()
 )
 
+class BooleanLabelPipe : PipeTransform {
+    var trueLabel: String? = null
+    var falseLabel: String? = null
+    var nullLabel: String? = null
+
+    override fun args(args: List<String>) {
+        if (args.isNotEmpty() && args.size >= 2) {
+            trueLabel = args[0]
+            falseLabel = args[1]
+            if (args.size >= 3) {
+                nullLabel = args[2]
+            }
+        }
+    }
+
+    override fun transform(value: Any?, context: ExprContext): Any? {
+        return when {
+            value == true -> {
+                trueLabel
+            }
+            value == false -> {
+                falseLabel
+            }
+            nullLabel != null -> {
+                nullLabel
+            }
+            else -> ""
+        }
+    }
+}
+
 
 object Bools {
 
@@ -70,5 +101,6 @@ object Bools {
         return BasicPipeTransformResolver()
                 .transform("condition") { ConditionTransform(simplex) }
                 .transform("cond") { ConditionTransform(simplex) }
+                .transform("boolLabel") { BooleanLabelPipe() }
     }
 }
