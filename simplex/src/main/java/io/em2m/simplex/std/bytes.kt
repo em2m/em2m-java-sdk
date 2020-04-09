@@ -2,6 +2,7 @@ package io.em2m.simplex.std
 
 import io.em2m.simplex.model.*
 import io.em2m.utils.coerce
+import java.nio.ByteBuffer
 import java.util.*
 
 private val decoder = Base64.getDecoder()
@@ -38,10 +39,18 @@ class EncodeHex : PipeTransform {
     private fun ByteArray.toHexString() = joinToString("") { "%02x".format(it) }
 
     override fun transform(value: Any?, context: ExprContext): Any? {
-        val bytes: ByteArray? = if (value is String) {
-            value.toByteArray()
-        } else value?.coerce()
-        return bytes?.toHexString() ?: value
+        val bytes: ByteArray? = when (value) {
+            is String -> value.toByteArray()
+            is Short -> ByteBuffer.allocate(java.lang.Short.BYTES).putShort(value).array()
+            is Int -> ByteBuffer.allocate(java.lang.Integer.BYTES).putInt(value).array()
+            is Long -> ByteBuffer.allocate(java.lang.Long.BYTES).putLong(value).array()
+            else -> value?.coerce()
+        }
+        return bytes?.toHexString()
+                ?.removePrefix("00000000")
+                ?.removePrefix("0000")
+                ?.removePrefix("00")
+                ?: value
     }
 
 }

@@ -15,6 +15,7 @@ class ByteTest : Assert() {
             Key("ns", "key2") to ConstKeyHandler("value2"),
             Key("ns", "pie") to ConstKeyHandler(3.14),
             Key("ns", "duration") to ConstKeyHandler(210_000),
+            Key("ns", "21") to ConstKeyHandler(21),
             Key("ns", "five") to ConstKeyHandler(5)))
             .delegate(Numbers.keys)
 
@@ -43,6 +44,22 @@ class ByteTest : Assert() {
     fun testHexEncode() {
         val exprString = "\${ns:key1 | encodeHex}"
         val expected = "76616c756531"
+        val actual = simplex.eval(exprString, emptyMap())
+        assertEquals(expected, actual)
+    }
+
+    @Test
+    fun testHexEncode21() {
+        val exprString = "\${ns:21 | encodeHex}"
+        val expected = "15"
+        val actual = simplex.eval(exprString, emptyMap())
+        assertEquals(expected, actual)
+    }
+
+    @Test
+    fun testHexEncode5() {
+        val exprString = "\${ns:five | encodeHex}"
+        val expected = "05"
         val actual = simplex.eval(exprString, emptyMap())
         assertEquals(expected, actual)
     }
