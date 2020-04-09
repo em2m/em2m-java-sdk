@@ -50,6 +50,7 @@ class EncodeHex : PipeTransform {
                 ?.removePrefix("00000000")
                 ?.removePrefix("0000")
                 ?.removePrefix("00")
+                ?.let { if (it == "") "00" else it }
                 ?: value
     }
 
