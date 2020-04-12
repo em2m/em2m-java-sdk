@@ -12,6 +12,13 @@ import java.util.concurrent.ConcurrentHashMap
 
 class Simplex {
 
+    constructor(delegate: Simplex) {
+        keys(delegate.keys)
+        pipes(delegate.pipes)
+        conditions(delegate.conditions)
+        execs(delegate.execs)
+    }
+
     private val keys = BasicKeyResolver()
             .delegate(Numbers.keys)
             .delegate(Dates.keys)
