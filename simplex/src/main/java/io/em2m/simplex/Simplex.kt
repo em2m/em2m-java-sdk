@@ -10,13 +10,15 @@ import io.em2m.utils.coerce
 import java.util.concurrent.ConcurrentHashMap
 
 
-class Simplex {
+class Simplex(delegate: Simplex? = null) {
 
-    constructor(delegate: Simplex) {
-        keys(delegate.keys)
-        pipes(delegate.pipes)
-        conditions(delegate.conditions)
-        execs(delegate.execs)
+    init {
+        if (delegate != null) {
+            keys(delegate.keys)
+            pipes(delegate.pipes)
+            conditions(delegate.conditions)
+            execs(delegate.execs)
+        }
     }
 
     private val keys = BasicKeyResolver()
