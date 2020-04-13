@@ -8,6 +8,7 @@ import com.fasterxml.jackson.databind.JsonDeserializer
 import com.fasterxml.jackson.databind.node.*
 import io.em2m.simplex.Simplex
 import io.em2m.simplex.model.*
+import io.em2m.utils.coerce
 import java.util.*
 
 class ConditionsDeserializer(val simplex: Simplex) : JsonDeserializer<ConditionExpr>() {
@@ -55,24 +56,32 @@ class ConditionsDeserializer(val simplex: Simplex) : JsonDeserializer<ConditionE
         }
     }
 
+    private fun parseConditionValue(node: ValueNode): ConditionExpr {
+        return when (node) {
+            is TextNode -> ValueConditionExpr(simplex.parser.parse(node.asText()))
+            !is NullNode -> ConstConditionExpr(node.coerce<Boolean>() ?: false)
+            else -> ConstConditionExpr(false)
+        }
+    }
+
     fun parseCondition(tree: TreeNode, booleanOp: BooleanOp = BooleanOp.And): ConditionExpr {
         val conditions = ArrayList<ConditionExpr>()
-        if (tree is ArrayNode) {
-            tree.forEach {
-                conditions.addAll(parseConditionObject(it as ObjectNode))
+        when (tree) {
+            is ArrayNode -> tree.forEach {
+                conditions.add(parseCondition(it))
             }
-        } else if (tree is ObjectNode) {
-            conditions.addAll(parseConditionObject(tree))
+            is ObjectNode -> conditions.addAll(parseConditionObject(tree))
+            is ValueNode -> conditions.add(parseConditionValue(tree))
         }
-        return when {
-            conditions.size == 0 -> {
+        return when (conditions.size) {
+            0 -> {
                 if (booleanOp == BooleanOp.Not) {
                     ConstConditionExpr(false)
                 } else {
                     ConstConditionExpr(true)
                 }
             }
-            conditions.size == 1 -> {
+            1 -> {
                 if (booleanOp == BooleanOp.Not) {
                     NotConditionExpr(conditions)
                 } else conditions.first()
@@ -88,8 +97,7 @@ class ConditionsDeserializer(val simplex: Simplex) : JsonDeserializer<ConditionE
     }
 
     override fun deserialize(parser: JsonParser, context: DeserializationContext): ConditionExpr {
-        return try {
-            val tree = parser.readValueAsTree<TreeNode>()
+        return try { val tree = parser.readValueAsTree<TreeNode>()
             parseCondition(tree, BooleanOp.And)
         } catch (e: RuntimeException) {
             throw JsonParseException(parser, e.message)

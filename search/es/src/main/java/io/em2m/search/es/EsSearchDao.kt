@@ -3,7 +3,7 @@ package io.em2m.search.es
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import com.scaleset.geo.geojson.GeoJsonModule
+import io.em2m.geo.geojson.GeoJsonModule
 import io.em2m.search.core.daos.AbstractSearchDao
 import io.em2m.search.core.model.*
 import rx.Observable

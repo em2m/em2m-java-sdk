@@ -25,7 +25,7 @@
     <parent>
         <groupId>io.em2m.sdk</groupId>
         <artifactId>em2m-java-sdk-pom</artifactId>
-        <version>2.35.1</version>
+        <version>2.36.0</version>
         <relativePath>../../pom.xml</relativePath>
     </parent>
 
@@ -38,6 +38,12 @@
         <dependency>
             <groupId>io.em2m.sdk</groupId>
             <artifactId>em2m-java-sdk-simplex</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>io.em2m.sdk</groupId>
+            <artifactId>em2m-java-sdk-geo</artifactId>
             <version>${project.version}</version>
         </dependency>
 
@@ -69,18 +75,6 @@
         </dependency>
 
         <dependency>
-            <groupId>com.scaleset</groupId>
-            <artifactId>scaleset-utils</artifactId>
-            <version>0.2.0</version>
-        </dependency>
-
-        <dependency>
-            <groupId>com.scaleset</groupId>
-            <artifactId>scaleset-geo</artifactId>
-            <version>0.19.0</version>
-        </dependency>
-
-        <dependency>
             <groupId>org.jetbrains.kotlin</groupId>
             <artifactId>kotlin-test</artifactId>
             <version>${kotlin.version}</version>
@@ -91,11 +85,6 @@
             <groupId>joda-time</groupId>
             <artifactId>joda-time</artifactId>
             <version>2.9.3</version>
-        </dependency>
-
-        <dependency>
-            <groupId>com.fasterxml.jackson.datatype</groupId>
-            <artifactId>jackson-datatype-joda</artifactId>
         </dependency>
 
     </dependencies>

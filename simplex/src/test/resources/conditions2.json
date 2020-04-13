@@ -22,6 +22,7 @@
       "StringEquals": {
         "ns:key4": "value4a"
       }
-    }
+    },
+    "${Bool:true}"
   ]
 }

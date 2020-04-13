@@ -1,22 +1,22 @@
 package io.em2m.search.es
 
-import com.scaleset.geo.Feature
-import com.vividsolutions.jts.geom.Coordinate
-import com.vividsolutions.jts.geom.Envelope
+import io.em2m.geo.feature.Feature
 import io.em2m.search.core.model.*
 import org.junit.Before
 import org.junit.Test
+import org.locationtech.jts.geom.Coordinate
+import org.locationtech.jts.geom.Envelope
 import rx.observers.TestSubscriber
 import kotlin.properties.Delegates
 
 class EsSearchDaoAggTest : FeatureTestBase() {
 
-    var searchDao: SearchDao<Feature> by Delegates.notNull()
+    private var searchDao: SearchDao<Feature> by Delegates.notNull()
 
     @Before
     override fun before() {
         super.before()
-        searchDao = EsSearchDao(esClient, FeatureTestBase.index, FeatureTestBase.type, Feature::class.java, idMapper, es6 = FeatureTestBase.es6)
+        searchDao = EsSearchDao(esClient, index, type, Feature::class.java, idMapper, es6 = es6)
     }
 
     @Test
@@ -294,6 +294,7 @@ class EsSearchDaoAggTest : FeatureTestBase() {
             val agg = result.aggs["test"] ?: error("agg should not be null")
             //val value = agg.value as Map<*, *>? ?: error("Envelope should not be null")
             //assertTrue("Should contain key 'values'", value.containsKey("values"))
+            assertNotNull(agg)
         }.subscribe(sub)
         sub.awaitTerminalEvent()
         sub.assertNoErrors()

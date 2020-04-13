@@ -72,6 +72,7 @@ class ExampleServer {
     class Upload : TypedActionFlow<Any, Any>(UploadRequest::class.java, Any::class.java) {
         override fun main(context: ActionContext) {
             val filePart = context.multipart?.files?.get("file")
+            println("FilePart: $filePart")
         }
     }
 

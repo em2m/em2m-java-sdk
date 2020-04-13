@@ -219,7 +219,7 @@ class RequestConverter(private val schemaMapper: SchemaMapper, val objectMapper:
                     agg.ranges.forEach { range ->
                         val facetKey = "$key:${range.key}"
                         facets.add(Facet(facetKey,
-                                Aggregates.match(convertInternal(RangeQuery(agg.field, gte = range.from, lt = range.to))),
+                                Aggregates.match(convertInternal(DateRangeQuery(agg.field, gte = range.from, lt = range.to))),
                                 Document(mapOf("\$group" to mapOf("_id" to null, "count" to mapOf("\$sum" to 1))))
                         ))
                     }

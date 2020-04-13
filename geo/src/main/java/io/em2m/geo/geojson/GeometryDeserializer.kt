@@ -14,7 +14,7 @@ class GeometryDeserializer<T : Geometry?> : JsonDeserializer<T>() {
     override fun deserialize(jsonParser: JsonParser, arg1: DeserializationContext): T? {
         val oc = jsonParser.codec
         val node = oc.readTree<JsonNode>(jsonParser)
-        return geometry(node) as T?
+        return geometry(node) as? T?
     }
 
     private fun geometry(node: JsonNode): Geometry? {
@@ -43,7 +43,7 @@ class GeometryDeserializer<T : Geometry?> : JsonDeserializer<T>() {
 
     private fun multiPoint(nodes: ArrayNode): Geometry {
         val coordinates = toCoordinateArray(nodes)
-        return factory.createMultiPoint(coordinates)
+        return factory.createMultiPointFromCoords(coordinates)
     }
 
     private fun lineString(nodes: ArrayNode): LineString {

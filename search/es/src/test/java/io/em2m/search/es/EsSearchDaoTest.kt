@@ -1,6 +1,6 @@
 package io.em2m.search.es
 
-import com.scaleset.geo.Feature
+import io.em2m.geo.feature.Feature
 import io.em2m.search.core.model.*
 import io.em2m.search.core.model.Direction.Ascending
 import org.junit.Before
@@ -29,7 +29,7 @@ class EsSearchDaoTest : FeatureTestBase() {
             assertNotNull("Id should not be null", created.id)
         }.flatMap { created ->
             esClient.flush()
-            searchDao.findById(created.id)
+            searchDao.findById(created.id!!)
         }.doOnNext {
             assertEquals(name, it?.properties?.get("name"))
         }.subscribe(sub)
@@ -89,9 +89,9 @@ class EsSearchDaoTest : FeatureTestBase() {
         val sub = TestSubscriber<Any>()
         val f = Feature()
         f.id = "SAVED_FEATURE"
-        searchDao.save(f.id, f).flatMap {
+        searchDao.save(f.id!!, f).flatMap {
             esClient.flush()
-            searchDao.findById(f.id)
+            searchDao.findById(f.id!!)
         }.doOnNext { feature ->
             assertEquals("Id should match", f.id, feature?.id)
         }.subscribe(sub)

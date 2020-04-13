@@ -17,7 +17,7 @@
  */
 package io.em2m.actions.model
 
-data class ProblemException(val problem: Problem) : Error(problem.title) {
+data class ProblemException(val problem: Problem) : RuntimeException(problem.title) {
 
     constructor(throwable: Throwable) : this(Problem.convert(throwable))
 

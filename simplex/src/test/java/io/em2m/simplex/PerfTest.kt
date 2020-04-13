@@ -15,16 +15,16 @@ import org.junit.Test
 @Ignore
 class PerfTest : Assert() {
 
-    val keyResolver = BasicKeyResolver(mapOf(
+    private val keyResolver = BasicKeyResolver(mapOf(
             Key("ns", "key1") to ConstKeyHandler("value1"),
             Key("ns", "key2") to ConstKeyHandler("value2"),
             Key("ns", "key3") to ConstKeyHandler(Math.PI)))
 
-    val pipeResolver = BasicPipeTransformResolver()
+    private val pipeResolver = BasicPipeTransformResolver()
             .delegate(Strings.pipes)
             .delegate(Numbers.pipes)
 
-    val parser = ExprParser(keyResolver, pipeResolver)
+    private val parser = ExprParser(keyResolver, pipeResolver)
 
     @Test
     fun testContextKey() {
@@ -34,7 +34,7 @@ class PerfTest : Assert() {
         val keys = BasicKeyResolver(mapOf(
                 Key("ns", "key1") to ConstKeyHandler("alt1"),
                 Key("ns", "key2") to ConstKeyHandler("alt2")))
-        (0..1_000_000).forEach {
+        repeat(1_000_000) {
             expr.call(mapOf("keys" to keys))
         }
         val end = System.currentTimeMillis()
@@ -53,7 +53,7 @@ class PerfTest : Assert() {
                 Key("ns", "key1") to ConstKeyHandler("alt1"),
                 Key("ns", "key2") to ConstKeyHandler("alt2")))
         val ctx = mapOf("keys" to keys)
-        (0..1_000_000).forEach {
+        repeat(1_000_000) {
             expr.call(ctx)
         }
         val end = System.currentTimeMillis()
@@ -73,7 +73,7 @@ class PerfTest : Assert() {
                 Key("ns", "key1") to ConstKeyHandler("alt1"),
                 Key("ns", "key2") to ConstKeyHandler("alt2")))
         val ctx = mapOf("keys" to keys)
-        (0..1_000_000).forEach {
+        repeat(1_000_000) {
             simplex.eval(exprStr, ctx)
         }
         val end = System.currentTimeMillis()
@@ -87,15 +87,14 @@ class PerfTest : Assert() {
     fun testParser() {
         val exprStr = "\${ns:key1 | upperCase}/\${ns:key2 | capitalize}"
         val start = System.currentTimeMillis()
-        (0..1_000_000).forEach {
-            val expr = requireNotNull(parser.parse(exprStr))
+        repeat(1_000_000) {
+            assertNotNull(parser.parse(exprStr))
         }
         val end = System.currentTimeMillis()
         val total = end - start
         val timePer = total / 1_000_000.0 * 1000.0
         println("total time: $total")
         println("Time per: $timePer microseconds")
-
     }
 
 }

@@ -120,9 +120,6 @@ class GeometrySerializer(private val precision: Int? = null) : JsonSerializer<Ge
         gen.writeStartArray()
         writeNumber(coordinate.x, gen)
         writeNumber(coordinate.y, gen)
-        if (!java.lang.Double.isNaN(coordinate.z)) {
-            writeNumber(coordinate.z, gen)
-        }
         gen.writeEndArray()
     }
 

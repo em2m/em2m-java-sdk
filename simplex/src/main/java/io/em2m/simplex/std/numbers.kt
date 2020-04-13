@@ -2,7 +2,6 @@ package io.em2m.simplex.std
 
 import io.em2m.simplex.model.*
 import io.em2m.utils.coerce
-import java.lang.Exception
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.text.DecimalFormat

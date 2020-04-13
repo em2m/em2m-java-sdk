@@ -10,7 +10,16 @@ import io.em2m.utils.coerce
 import java.util.concurrent.ConcurrentHashMap
 
 
-class Simplex {
+class Simplex(delegate: Simplex? = null) {
+
+    init {
+        if (delegate != null) {
+            keys(delegate.keys)
+            pipes(delegate.pipes)
+            conditions(delegate.conditions)
+            execs(delegate.execs)
+        }
+    }
 
     private val keys = BasicKeyResolver()
             .delegate(Numbers.keys)
@@ -26,6 +35,7 @@ class Simplex {
             .delegate(Arrays.pipes)
             .delegate(Bytes.pipes)
             .delegate(Bools.pipes(this))
+            .delegate(Objects.pipes)
 
     private val conditions = BasicConditionResolver()
             .delegate(Strings.conditions)

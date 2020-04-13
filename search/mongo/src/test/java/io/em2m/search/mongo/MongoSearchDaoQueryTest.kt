@@ -1,10 +1,10 @@
 package io.em2m.search.mongo
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import com.vividsolutions.jts.geom.Envelope
 import io.em2m.search.core.model.*
 import org.junit.Assert
 import org.junit.Test
+import org.locationtech.jts.geom.Envelope
 import rx.observers.TestSubscriber
 
 class MongoSearchDaoQueryTest : FeaturesTestBase() {

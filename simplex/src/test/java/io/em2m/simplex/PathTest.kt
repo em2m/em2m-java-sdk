@@ -5,7 +5,6 @@ import io.em2m.simplex.model.BasicKeyResolver
 import io.em2m.simplex.model.Key
 import io.em2m.simplex.model.PathExpr
 import io.em2m.simplex.model.PathKeyHandler
-import io.em2m.utils.coerce
 import io.em2m.utils.coerceNonNull
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
@@ -89,7 +88,7 @@ class PathTest {
         simplex.keys(BasicKeyResolver().key(Key("field", "*"), PathKeyHandler(simplex)))
         val expr = "\${a.b.c,d,e}"
         val context = map
-        assertArrayEquals(arrayOf("value", "dval", "eval"), (simplex.eval(expr, context) as List<*>)?.toTypedArray())
+        assertArrayEquals(arrayOf("value", "dval", "eval"), (simplex.eval(expr, context) as List<*>).toTypedArray())
     }
 
 
