@@ -25,11 +25,11 @@ subprojects {
     }
 
     dependencies {
-        "implementation"("org.slf4j:slf4j-api:1.8.0-beta4")
+        "implementation"("org.slf4j:slf4j-api:1.7.30")
         "implementation"("io.reactivex:rxjava:1.3.8")
         "implementation"("io.reactivex:rxkotlin:1.0.0")
         "implementation"("com.typesafe:config:1.3.3")
-        "testImplementation"("org.apache.logging.log4j:log4j-slf4j18-impl:2.12.1")
+        "testImplementation"("org.apache.logging.log4j:log4j-slf4j-impl:2.13.1")
         "testImplementation"("org.jetbrains.kotlin:kotlin-test:1.3.70")
         "testImplementation"("org.jetbrains.kotlin:kotlin-test-junit:1.3.70")
         "testImplementation"("junit:junit:4.12")

@@ -7,7 +7,7 @@ import io.em2m.search.core.model.*
  */
 class SourceFormatAggTransformer : AggTransformer() {
 
-    fun sourceFormat(format: String?, agg: Agg): String? {
+    private fun sourceFormat(format: String?, agg: Agg): String? {
         val sourceFormat = agg.extensions["sourceFormat"]
         return if (sourceFormat is String) {
             sourceFormat

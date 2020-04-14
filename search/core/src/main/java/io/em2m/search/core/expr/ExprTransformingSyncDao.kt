@@ -2,7 +2,6 @@ package io.em2m.search.core.expr
 
 import io.em2m.search.core.daos.SyncDaoWrapper
 import io.em2m.search.core.model.*
-import io.em2m.search.core.xform.AggResultTransformer
 import io.em2m.search.core.xform.SourceFormatAggTransformer
 import io.em2m.simplex.Simplex
 import io.em2m.simplex.model.Expr
@@ -47,7 +46,6 @@ open class ExprTransformingSyncDao<T>(simplex: Simplex, delegate: SyncDao<T>) : 
     private fun transformQuery(query: Query, timeZone: String? = null): Query {
         return query.let { ExprQueryTransformer(parser).transform(it) }
     }
-
 
     private fun transformAggs(aggs: List<Agg>): List<Agg> {
         val sourceFormatXform = SourceFormatAggTransformer()

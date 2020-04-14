@@ -11,8 +11,6 @@ import com.mongodb.client.model.Sorts
 import io.em2m.search.core.model.*
 import io.em2m.search.core.parser.LuceneExprParser
 import io.em2m.search.core.parser.SchemaMapper
-import io.em2m.search.core.xform.PushDownNotQueryTransformer
-import io.em2m.search.core.xform.SimplifyQueryTransformer
 import io.em2m.simplex.parser.DateMathParser
 import org.bson.Document
 import org.bson.conversions.Bson
@@ -21,13 +19,11 @@ import java.util.*
 import java.util.regex.Matcher
 import java.util.regex.Pattern
 
-class RequestConverter(private val schemaMapper: SchemaMapper, val objectMapper: ObjectMapper = jacksonObjectMapper(), val dateParser: DateMathParser = DateMathParser(DateTimeZone.UTC)) {
+class RequestConverter(private val schemaMapper: SchemaMapper, private val objectMapper: ObjectMapper = jacksonObjectMapper(), private val dateParser: DateMathParser = DateMathParser(DateTimeZone.UTC)) {
 
     private val notXform = PushDownNotQueryTransformer()
-    private val simplifyXform = SimplifyQueryTransformer()
 
     private fun Query.fixNot() = notXform.transform(this)
-    private fun Query.simplify() = simplifyXform.transform(this)
 
     fun convertQuery(query: Query): Bson {
         return convertInternal(query.fixNot().simplify())
@@ -268,6 +264,14 @@ class RequestConverter(private val schemaMapper: SchemaMapper, val objectMapper:
             }
         } else if (value != null) objectMapper.convertValue<Date>(value).time
         else null
+    }
+
+    class PushDownNotQueryTransformer : QueryTransformer() {
+
+        override fun transformNotQuery(query: NotQuery): Query {
+            return AndQuery(query.of.map { it.negate() })
+        }
+
     }
 
 }

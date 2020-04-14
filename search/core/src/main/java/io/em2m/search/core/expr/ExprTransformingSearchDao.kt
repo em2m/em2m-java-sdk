@@ -2,7 +2,6 @@ package io.em2m.search.core.expr
 
 import io.em2m.search.core.daos.SearchDaoWrapper
 import io.em2m.search.core.model.*
-import io.em2m.search.core.xform.AggResultTransformer
 import io.em2m.search.core.xform.SourceFormatAggTransformer
 import io.em2m.simplex.Simplex
 import io.em2m.simplex.model.Expr

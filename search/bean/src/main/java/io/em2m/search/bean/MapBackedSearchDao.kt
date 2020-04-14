@@ -19,7 +19,6 @@ package io.em2m.search.bean
 
 import io.em2m.search.core.daos.AbstractSearchDao
 import io.em2m.search.core.model.*
-import io.em2m.search.core.xform.SimplifyQueryTransformer
 import rx.Observable
 import rx.Observable.just
 import java.util.*
@@ -70,14 +69,8 @@ class MapBackedSearchDao<T>(idMapper: IdMapper<T>, private val items: MutableMap
     }
 
     private fun findMatches(query: Query?): List<T> {
-        val predicate: (Any) -> Boolean = Functions.toPredicate(simplifyQuery(query))
+        val predicate: (Any) -> Boolean = Functions.toPredicate(query?.simplify() ?: MatchAllQuery())
         return items.values.filter { predicate.invoke(it as Any) }
-    }
-
-    private fun simplifyQuery(query: Query?): Query {
-        return if (query != null) {
-            SimplifyQueryTransformer().transform(query)
-        } else MatchAllQuery()
     }
 
     private fun buildRows(matches: List<T>, fields: List<Field>): List<List<Any?>> {
