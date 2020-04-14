@@ -1,6 +1,7 @@
 package io.em2m.search.core.expr
 
 import io.em2m.search.core.model.BucketContext
+import io.em2m.search.core.model.Field
 import io.em2m.search.core.model.RowContext
 import io.em2m.simplex.model.*
 
@@ -72,6 +73,8 @@ class FieldKeyHandler : KeyHandler, Fielded {
                     val fields = mutableListOf<String>()
                     if (handler is Fielded) {
                         fields.addAll(handler.fields(part.key))
+                    } else if (handler == null && (part.key.namespace == "field" || part.key.namespace == "f")) {
+                        part.key.name.split(",").map { it.trim() }.forEach { fields.add(it) }
                     }
                     part.transforms.map { transform ->
                         if (transform is Fielded) {

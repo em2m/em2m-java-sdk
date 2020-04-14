@@ -37,10 +37,10 @@ data class SearchRequest(var offset: Long = 0, var limit: Long = 10, var query: 
 }
 
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
-data class Field(val name: String? = null, val label: String? = null, val expr: String? = null, val settings: Map<String, Any> = emptyMap()) {
+data class Field(val name: String? = null, val label: String? = null, val expr: String? = null, val settings: Map<String, Any?> = emptyMap()) {
 
     init {
-        require(name == null || expr == null, { "Cannot specify both name and expr" })
+        require(name == null || expr == null) { "Cannot specify both name and expr" }
     }
 }
 

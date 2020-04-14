@@ -19,7 +19,6 @@ package io.em2m.search.bean
 
 import io.em2m.search.core.daos.AbstractSyncDao
 import io.em2m.search.core.model.*
-import io.em2m.search.core.xform.SimplifyQueryTransformer
 import java.util.*
 
 class MapBackedSyncDao<T>(idMapper: IdMapper<T>, val items: MutableMap<String, T> = HashMap()) : AbstractSyncDao<T>(idMapper) {
@@ -68,14 +67,8 @@ class MapBackedSyncDao<T>(idMapper: IdMapper<T>, val items: MutableMap<String, T
     }
 
     private fun findMatches(query: Query?): List<T> {
-        val predicate: (Any) -> Boolean = Functions.toPredicate(simplifyQuery(query))
+        val predicate: (Any) -> Boolean = Functions.toPredicate(query?.simplify() ?: MatchAllQuery())
         return items.values.filter { predicate.invoke(it as Any) }
-    }
-
-    private fun simplifyQuery(query: Query?): Query {
-        return if (query != null) {
-            SimplifyQueryTransformer().transform(query)
-        } else MatchAllQuery()
     }
 
     fun buildRows(matches: List<T>, fields: List<Field>): List<List<Any?>> {
