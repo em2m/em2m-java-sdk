@@ -77,7 +77,7 @@ class FieldTransformerTest {
                 listOf("Name 1", "Type 1", "Summary 1"),
                 listOf("Name 2", "Type 2", "Summary 2")
         )
-        val res = SearchResult<Any>(rows = rows, totalItems = 2)
+        val res = SearchResult<Any>(rows = rows, totalItems = 2, fields = listOf(Field(name="name"), Field(name="type"), Field(name="summary")))
         val res2 = xform.transformResult(req, res)
         val rows2 = res2.rows ?: emptyList()
         assertEquals("Name 1 / Type 1:Summary 1", rows2[0][0])

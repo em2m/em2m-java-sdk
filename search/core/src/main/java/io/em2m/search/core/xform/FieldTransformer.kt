@@ -23,7 +23,7 @@ class FieldTransformer<T>(val simplex: Simplex, fields: List<FieldModel>) : Tran
         val aggResults = transformAggResults(request, result.aggs)
         val models = reqModels(request.fields)
         val fields = delegateFields(models)
-        val rows = transformRows(request, models, fields, result.rows)
+        val rows = transformRows(request, result, models, fields)
         return result.copy(aggs = aggResults, rows = rows, fields = request.fields)
     }
 
@@ -125,11 +125,14 @@ class FieldTransformer<T>(val simplex: Simplex, fields: List<FieldModel>) : Tran
         }.distinct()
     }
 
-    private fun transformRows(req: SearchRequest, models: List<FieldModel>, delegates: List<Field>, rows: List<List<Any?>>?): List<List<Any?>>? {
-        return rows?.map { row ->
+    private fun transformRows(req: SearchRequest, result: SearchResult<T>, models: List<FieldModel>, delegates: List<Field>): List<List<Any?>>? {
+
+        val lookup = result.fields.mapIndexed { index, field -> field.name to index}
+
+        return result.rows?.map { row ->
             val values = HashMap<String, Any?>()
 
-            delegates.forEachIndexed { index, field ->
+            result.fields.forEachIndexed { index, field ->
                 values[field.name ?: field.expr!!] = row[index]
             }
 
