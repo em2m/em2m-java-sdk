@@ -24,7 +24,7 @@ class FieldTransformer<T>(val simplex: Simplex, fields: List<FieldModel>) : Tran
         val models = reqModels(request.fields)
         val fields = delegateFields(models)
         val rows = transformRows(request, models, fields, result.rows)
-        return result.copy(aggs = aggResults, rows = rows)
+        return result.copy(aggs = aggResults, rows = rows, fields = request.fields)
     }
 
     override fun transformQuery(query: Query?): Query? {
@@ -57,7 +57,7 @@ class FieldTransformer<T>(val simplex: Simplex, fields: List<FieldModel>) : Tran
             } else {
                 listOf(field)
             }
-        }
+        }.distinct()
     }
 
     private fun transformSorts(sorts: List<DocSort>): List<DocSort> {
@@ -75,18 +75,24 @@ class FieldTransformer<T>(val simplex: Simplex, fields: List<FieldModel>) : Tran
             val agg = reqAggs[key]
             val missing = (agg as? TermsAgg)?.missing
             val expr = (agg as? TermsAgg)?.format
+            val field = (agg as? Fielded)
             val scope: Map<String, Any?> = agg?.extensions ?: emptyMap()
-            if (key != missing && expr != null) {
-                object : AggResultTransformer() {
-                    override fun transformBucket(bucket: Bucket): Bucket {
+            object : AggResultTransformer() {
+
+                override fun transformBucket(bucket: Bucket): Bucket {
+                    return if (key != missing && expr != null) {
                         val context = BucketContext(req, scope, bucket)
-                        val label = simplex.eval(expr, context.map.plus(scope)).toString()
-                        return bucket.copy(label = label)
-                    }
-                }.transform(aggResult)
-            } else {
-                aggResult
-            }
+                        val label = simplex.eval(expr, context.toMap().plus(scope)).toString()
+                        bucket.copy(label = label)
+                    } else bucket
+                }
+
+                override fun transform(aggResult: AggResult): AggResult {
+                    return if (agg is Fielded) {
+                        aggResult.copy(field = agg.field)
+                    } else aggResult
+                }
+            }.transform(aggResult)
         }
     }
 
@@ -96,7 +102,7 @@ class FieldTransformer<T>(val simplex: Simplex, fields: List<FieldModel>) : Tran
                 field.expr != null -> {
                     val expr = simplex.parser.parse(field.expr)
                     FieldKeyHandler.fields(expr).map { delegate ->
-                        fieldModels[delegate] ?: FieldModel(name = delegate)
+                        fieldModels[delegate] ?: FieldModel(name = delegate, delegateField = delegate)
                     }
                 }
                 field.name != null -> {
@@ -110,7 +116,7 @@ class FieldTransformer<T>(val simplex: Simplex, fields: List<FieldModel>) : Tran
     private fun delegateFields(models: List<FieldModel>): List<Field> {
         return models.flatMap { model ->
             if (model.delegateExpr != null) {
-                listOf(Field(name = model.name, expr = model.delegateExpr))
+                listOf(Field(expr = model.delegateExpr))
             } else {
                 model.delegateFields.map { delegate ->
                     Field(name = delegate)
@@ -132,7 +138,7 @@ class FieldTransformer<T>(val simplex: Simplex, fields: List<FieldModel>) : Tran
             models.forEach { model ->
                 val exprContext = RowContext(req, emptyMap(), values)
                 modelValues[model.name] = when {
-                    model.expr != null -> model.expr.call(exprContext.map.plus(model.settings))
+                    model.expr != null -> model.expr.call(exprContext.toMap().plus(model.settings))
                     model.delegateField != null -> values[model.delegateField]
                     else -> null
                 }
@@ -140,7 +146,7 @@ class FieldTransformer<T>(val simplex: Simplex, fields: List<FieldModel>) : Tran
             req.fields.map { field ->
                 val exprContext = RowContext(req, emptyMap(), modelValues)
                 if (field.expr != null) {
-                    simplex.eval(field.expr, exprContext.map.plus(field.settings))
+                    simplex.eval(field.expr, exprContext.toMap().plus(field.settings))
                 } else {
                     modelValues[field.name]
                 }
@@ -190,12 +196,15 @@ class FieldTransformer<T>(val simplex: Simplex, fields: List<FieldModel>) : Tran
         private val queryTransformer = FieldQueryTransformer(fields)
 
         private fun applyAlias(field: String): String {
-            return fields.getOrElse(field, { null })?.delegateFields?.first() ?: field
+            return fields.getOrElse(field, { null })?.delegateFields?.firstOrNull() ?: field
         }
 
         override fun transformDateHistogramAgg(agg: DateHistogramAgg) = DateHistogramAgg(applyAlias(agg.field), agg.format, agg.interval, agg.offset, agg.timeZone, agg.missing, agg.key, agg.aggs, agg.extensions, agg.minDocCount)
         override fun transformDateRangeAgg(agg: DateRangeAgg) = DateRangeAgg(applyAlias(agg.field), agg.format, agg.timeZone, agg.ranges, agg.key, agg.aggs, agg.extensions, agg.minDocCount)
-        override fun transformFiltersAgg(agg: FiltersAgg) = FiltersAgg(agg.filters.mapValues { queryTransformer.transform(it.value) ?: MatchAllQuery()}, agg.key, agg.aggs, agg.extensions, agg.minDocCount)
+        override fun transformFiltersAgg(agg: FiltersAgg) = FiltersAgg(agg.filters.mapValues {
+            queryTransformer.transform(it.value) ?: MatchAllQuery()
+        }, agg.key, agg.aggs, agg.extensions, agg.minDocCount)
+
         override fun transformGeoBoundsAgg(agg: GeoBoundsAgg) = GeoBoundsAgg(applyAlias(agg.field), agg.key, agg.aggs, agg.extensions, agg.minDocCount)
         override fun transformGeoCentroidAgg(agg: GeoCentroidAgg) = GeoCentroidAgg(applyAlias(agg.field), agg.key, agg.aggs, agg.extensions, agg.minDocCount)
         override fun transformGeoDistanceAgg(agg: GeoDistanceAgg) = GeoDistanceAgg(applyAlias(agg.field), agg.origin, agg.unit, agg.ranges, agg.key, agg.aggs, agg.extensions, agg.minDocCount)
