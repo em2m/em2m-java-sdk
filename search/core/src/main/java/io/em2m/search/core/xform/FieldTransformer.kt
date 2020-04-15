@@ -152,6 +152,7 @@ class FieldTransformer<T>(val simplex: Simplex, fields: List<FieldModel>) : Tran
                 modelValues[model.name] = when {
                     model.expr != null -> model.expr.call(exprContext.toMap().plus(model.settings))
                     model.delegateField != null -> values[model.delegateField]
+                    model.delegateExpr != null -> values[model.delegateExpr]
                     else -> null
                 }
             }
