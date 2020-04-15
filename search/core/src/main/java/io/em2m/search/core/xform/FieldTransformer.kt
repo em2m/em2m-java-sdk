@@ -24,7 +24,7 @@ class FieldTransformer<T>(val simplex: Simplex, fields: List<FieldModel>) : Tran
         val models = reqModels(request.fields)
         val fields = delegateFields(models)
         val rows = transformRows(request, models, fields, result.rows)
-        return result.copy(aggs = aggResults, rows = rows)
+        return result.copy(aggs = aggResults, rows = rows, fields = request.fields)
     }
 
     override fun transformQuery(query: Query?): Query? {
@@ -57,7 +57,7 @@ class FieldTransformer<T>(val simplex: Simplex, fields: List<FieldModel>) : Tran
             } else {
                 listOf(field)
             }
-        }
+        }.distinct()
     }
 
     private fun transformSorts(sorts: List<DocSort>): List<DocSort> {
@@ -80,7 +80,7 @@ class FieldTransformer<T>(val simplex: Simplex, fields: List<FieldModel>) : Tran
                 object : AggResultTransformer() {
                     override fun transformBucket(bucket: Bucket): Bucket {
                         val context = BucketContext(req, scope, bucket)
-                        val label = simplex.eval(expr, context.map.plus(scope)).toString()
+                        val label = simplex.eval(expr, context.toMap().plus(scope)).toString()
                         return bucket.copy(label = label)
                     }
                 }.transform(aggResult)
@@ -96,7 +96,7 @@ class FieldTransformer<T>(val simplex: Simplex, fields: List<FieldModel>) : Tran
                 field.expr != null -> {
                     val expr = simplex.parser.parse(field.expr)
                     FieldKeyHandler.fields(expr).map { delegate ->
-                        fieldModels[delegate] ?: FieldModel(name = delegate)
+                        fieldModels[delegate] ?: FieldModel(name = delegate, delegateField = delegate)
                     }
                 }
                 field.name != null -> {
@@ -110,7 +110,7 @@ class FieldTransformer<T>(val simplex: Simplex, fields: List<FieldModel>) : Tran
     private fun delegateFields(models: List<FieldModel>): List<Field> {
         return models.flatMap { model ->
             if (model.delegateExpr != null) {
-                listOf(Field(name = model.name, expr = model.delegateExpr))
+                listOf(Field(expr = model.delegateExpr))
             } else {
                 model.delegateFields.map { delegate ->
                     Field(name = delegate)
@@ -132,7 +132,7 @@ class FieldTransformer<T>(val simplex: Simplex, fields: List<FieldModel>) : Tran
             models.forEach { model ->
                 val exprContext = RowContext(req, emptyMap(), values)
                 modelValues[model.name] = when {
-                    model.expr != null -> model.expr.call(exprContext.map.plus(model.settings))
+                    model.expr != null -> model.expr.call(exprContext.toMap().plus(model.settings))
                     model.delegateField != null -> values[model.delegateField]
                     else -> null
                 }
@@ -140,7 +140,7 @@ class FieldTransformer<T>(val simplex: Simplex, fields: List<FieldModel>) : Tran
             req.fields.map { field ->
                 val exprContext = RowContext(req, emptyMap(), modelValues)
                 if (field.expr != null) {
-                    simplex.eval(field.expr, exprContext.map.plus(field.settings))
+                    simplex.eval(field.expr, exprContext.toMap().plus(field.settings))
                 } else {
                     modelValues[field.name]
                 }
@@ -190,7 +190,7 @@ class FieldTransformer<T>(val simplex: Simplex, fields: List<FieldModel>) : Tran
         private val queryTransformer = FieldQueryTransformer(fields)
 
         private fun applyAlias(field: String): String {
-            return fields.getOrElse(field, { null })?.delegateFields?.first() ?: field
+            return fields.getOrElse(field, { null })?.delegateFields?.firstOrNull() ?: field
         }
 
         override fun transformDateHistogramAgg(agg: DateHistogramAgg) = DateHistogramAgg(applyAlias(agg.field), agg.format, agg.interval, agg.offset, agg.timeZone, agg.missing, agg.key, agg.aggs, agg.extensions, agg.minDocCount)

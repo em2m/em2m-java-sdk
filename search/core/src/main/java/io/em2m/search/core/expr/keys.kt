@@ -1,8 +1,8 @@
 package io.em2m.search.core.expr
 
 import io.em2m.search.core.model.BucketContext
-import io.em2m.search.core.model.Field
 import io.em2m.search.core.model.RowContext
+import io.em2m.search.core.model.SearchRequest
 import io.em2m.simplex.model.*
 
 class ConstKeyHandler(val value: Any?) : KeyHandlerSupport() {

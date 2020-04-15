@@ -7,8 +7,8 @@ class TransformingDao<T>(private val transformer: Transformer<T>, delegate: Sync
 
     override fun search(request: SearchRequest): SearchResult<T> {
         val req = transformer.transformRequest(request)
-        val result = super.search(req)
-        return transformer.transformResult(req, result).transformItems { transformer.transformItem(it) }
+        val result = delegate.search(req)
+        return transformer.transformResult(request, result).transformItems { transformer.transformItem(it) }
     }
 
     override fun count(query: Query): Long {
