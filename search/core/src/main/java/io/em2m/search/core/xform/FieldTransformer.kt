@@ -52,8 +52,17 @@ class FieldTransformer<T>(val simplex: Simplex, fields: List<FieldModel>) : Tran
             }
         }.flatMap { field ->
             val name = field.name
-            if (name != null && fieldModels.containsKey(name)) {
-                fieldModels[name]?.delegateFields?.map { Field(it) } ?: listOf(field)
+            if (name != null) {
+                val model = fieldModels[name]
+                if (model != null) {
+                    if (model.delegateExpr != null) {
+                        listOf(Field(expr = model.delegateExpr))
+                    } else {
+                        model.delegateFields.map { Field(it) } ?: listOf(field)
+                    }
+                } else {
+                    listOf(field)
+                }
             } else {
                 listOf(field)
             }
