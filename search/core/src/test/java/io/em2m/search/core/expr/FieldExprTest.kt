@@ -17,27 +17,27 @@ import org.junit.Test
 
 class FieldExprTest : Assert() {
 
-    val keyResolver = BasicKeyResolver(mapOf(
+    private val keyResolver = BasicKeyResolver(mapOf(
             Key("ns", "key1") to ConstKeyHandler("value1"),
             Key("ns", "key2") to ConstKeyHandler("value2"),
             Key("bucket", "key") to BucketKeyKeyHandler(),
             Key("field", "*") to FieldKeyHandler()))
 
-    val pipeResolver = BasicPipeTransformResolver()
+    private val pipeResolver = BasicPipeTransformResolver()
             .delegate(Numbers.pipes)
             .delegate(Strings.pipes)
             .delegate(Arrays.pipes)
 
-    val request = SearchRequest()
+    private val request = SearchRequest()
 
-    val parser = ExprParser(keyResolver, pipeResolver)
+    private val parser = ExprParser(keyResolver, pipeResolver)
 
     @Test
     fun testParse() {
         val exprStr = "#{ns:key1 | upperCase}/#{ns:key2 | capitalize}".replace("#", "$")
         val expr = parser.parse(exprStr)
         assertNotNull(expr)
-        val result = expr.call(RowContext(mapOf("request" to request, "scope" to emptyMap<String, Any?>())).map)
+        val result = expr.call(RowContext(request, emptyMap(), emptyMap()).toMap())
         assertNotNull(result)
         assertEquals("VALUE1/Value2", result)
     }
@@ -53,7 +53,7 @@ class FieldExprTest : Assert() {
                 mapOf(
                         "fieldValues" to mapOf("fieldName" to "fieldValue"),
                         "request" to request,
-                        "scope" to emptyMap<String, Any?>())).map)
+                        "scope" to emptyMap<String, Any?>())).toMap())
         assertNotNull(result)
         assertEquals("Label: FieldValue", result)
     }
@@ -64,7 +64,7 @@ class FieldExprTest : Assert() {
         val expr = parser.parse(exprStr)
         assertNotNull(expr)
         val bucket = Bucket(key = "ford", count = 5)
-        val result = expr.call(BucketContext(request, emptyMap(), bucket).map)
+        val result = expr.call(BucketContext(request, emptyMap(), bucket).toMap())
         assertNotNull(result)
         assertEquals("Ford", result)
     }
@@ -80,7 +80,7 @@ class FieldExprTest : Assert() {
                 mapOf(
                         "fieldValues" to mapOf("key1" to "value1", "key2" to "value2"),
                         "request" to request,
-                        "scope" to emptyMap<String, Any?>())).map)
+                        "scope" to emptyMap<String, Any?>())).toMap())
         assertNotNull(result)
         assertEquals("value1, value2", result)
     }

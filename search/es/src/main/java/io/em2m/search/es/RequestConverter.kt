@@ -204,7 +204,7 @@ class RequestConverter(val objectMapper: ObjectMapper = jacksonObjectMapper(), v
                     }
                 }
                 else -> {
-                    throw NotImplementedError()
+                    throw NotImplementedError("Unmsupported aggregation type: key = ${it.key}, op = ${it.op()}")
                 }
             }
         }

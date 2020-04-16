@@ -1,7 +1,6 @@
 package io.em2m.search.core.expr
 
 import io.em2m.search.core.model.*
-import io.em2m.search.core.xform.QueryTransformer
 import io.em2m.simplex.parser.ExprParser
 
 class ExprQueryTransformer(private val parser: ExprParser) : QueryTransformer() {

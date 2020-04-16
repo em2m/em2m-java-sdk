@@ -25,7 +25,11 @@ import org.locationtech.jts.geom.Envelope
         Type(value = NativeQuery::class, name = "native"),
         Type(value = NamedQuery::class, name = "named")
 )
-abstract class Query
+abstract class Query {
+    open fun simplify() = this
+
+    open fun negate(): Query = NotQuery(this)
+}
 
 abstract class FieldedQuery(val field: String) : Query()
 
@@ -35,14 +39,55 @@ class MatchAllQuery : Query()
 
 class AndQuery(of: List<Query>) : BoolQuery(of) {
     constructor(vararg of: Query) : this(of.asList())
+
+    override fun simplify(): Query {
+        val ofx = of.map { it.simplify() }.filter { it !is MatchAllQuery }
+
+        return when {
+            ofx.isEmpty() -> MatchAllQuery()
+            ofx.size == 1 -> ofx.first()
+            else -> {
+                AndQuery(ofx)
+            }
+        }
+    }
+
+    override fun negate(): OrQuery {
+        return OrQuery(of.map { it.negate() })
+    }
 }
 
 class OrQuery(of: List<Query>) : BoolQuery(of) {
     constructor(vararg of: Query) : this(of.asList())
+
+    override fun simplify(): Query {
+        val ofx = of.map { it.simplify() }
+        val matchAllCount = ofx.count { it is MatchAllQuery }
+
+        return when {
+            matchAllCount > 0 -> MatchAllQuery()
+            ofx.isEmpty() -> MatchAllQuery()
+            ofx.size == 1 -> ofx.first()
+            else -> OrQuery(ofx)
+        }
+    }
+
+    override fun negate(): AndQuery {
+        return AndQuery(of.map { it.negate() })
+    }
 }
 
 class NotQuery(of: List<Query>) : BoolQuery(of) {
     constructor(vararg of: Query) : this(of.asList())
+
+    override fun simplify(): Query {
+        val ofx = of.map { it.simplify() }
+        return NotQuery(ofx)
+    }
+
+    override fun negate(): Query {
+        return AndQuery(of)
+    }
 }
 
 class NativeQuery(var value: Any? = null) : Query()

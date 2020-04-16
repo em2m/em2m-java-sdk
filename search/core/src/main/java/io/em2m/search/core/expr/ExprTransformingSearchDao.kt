@@ -2,7 +2,6 @@ package io.em2m.search.core.expr
 
 import io.em2m.search.core.daos.SearchDaoWrapper
 import io.em2m.search.core.model.*
-import io.em2m.search.core.xform.AggResultTransformer
 import io.em2m.search.core.xform.SourceFormatAggTransformer
 import io.em2m.simplex.Simplex
 import io.em2m.simplex.model.Expr
@@ -73,7 +72,7 @@ class ExprTransformingSearchDao<T>(simplex: Simplex, delegate: SearchDao<T>) : S
                     val expr = exprs[index]
                     val settings = it.value.settings
                     when {
-                        expr != null -> expr.call(exprContext.map.plus(settings))
+                        expr != null -> expr.call(exprContext.toMap().plus(settings))
                         name != null -> values[name]
                         else -> null
                     }
@@ -109,7 +108,7 @@ class ExprTransformingSearchDao<T>(simplex: Simplex, delegate: SearchDao<T>) : S
                     override fun transformBucket(bucket: Bucket): Bucket {
                         val context = BucketContext(request, scope, bucket)
                         // temporarily move scope up a level until we have a better fix
-                        val label = expr.call(context.map.plus(scope)).toString()
+                        val label = expr.call(context.toMap().plus(scope)).toString()
                         return bucket.copy(label = label)
                     }
                 }

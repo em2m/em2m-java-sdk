@@ -1,29 +1,33 @@
 package io.em2m.search.core.model
 
-import io.em2m.simplex.model.ExprContext
-
-
-open class SearchExprContext(val map: Map<String, Any?>) {
-    val request: SearchRequest by map
-    val scope: Map<String, Any?> by map
+open class SearchExprContext(val request: SearchRequest?, val scope: Map<String, Any?>?) {
+    open fun toMap(): Map<String, Any?> {
+        return mapOf("request" to request, "scope" to scope)
+    }
 }
 
-class RowContext(exprContext: ExprContext) : SearchExprContext(exprContext) {
-    val fieldValues: Map<String, Any?> by exprContext
+class RowContext(request: SearchRequest, scope: Map<String, Any?>, val fieldValues: Map<String, Any?>) : SearchExprContext(request, scope) {
 
-    constructor(request: SearchRequest, scope: Map<String, Any?>, fieldValues: Map<String, Any?>)
-            : this(mapOf(
-            "request" to request,
-            "scope" to scope,
-            "fieldValues" to fieldValues))
+    constructor(context: Map<String, Any?>) : this(
+            context["request"] as? SearchRequest ?: SearchRequest(),
+            context["scope"] as? Map<String, Any?> ?: emptyMap(),
+            context["fieldValues"] as? Map<String, Any?> ?: emptyMap())
+
+    override fun toMap(): Map<String, Any?> {
+        return mapOf("request" to request, "scope" to scope, "fieldValues" to fieldValues)
+    }
 }
 
-class BucketContext(exprContext: ExprContext) : SearchExprContext(exprContext) {
-    val bucket: Bucket by exprContext
+class BucketContext(request: SearchRequest, scope: Map<String, Any?>, val bucket: Bucket) : SearchExprContext(request, scope) {
 
-    constructor(request: SearchRequest, scope: Map<String, Any?>, bucket: Bucket)
-            : this(mapOf(
-            "request" to request,
-            "scope" to scope,
-            "bucket" to bucket))
+    constructor(context: Map<String, Any?>) : this(
+            context["request"] as? SearchRequest ?: SearchRequest(),
+            context["scope"] as? Map<String, Any?> ?: emptyMap(),
+            context["bucket"] as? Bucket ?: Bucket(null, 0))
+
+    override fun toMap(): Map<String, Any?> {
+        return mapOf("request" to request, "scope" to scope, "bucket" to bucket)
+    }
+
 }
+

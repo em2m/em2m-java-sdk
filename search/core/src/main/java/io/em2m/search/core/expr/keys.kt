@@ -16,6 +16,10 @@ interface Fielded {
     fun fields(key: Key): List<String>
 }
 
+interface FieldedExpr {
+    fun fields(): List<String>
+}
+
 class FieldKeyHandler : KeyHandler, Fielded {
 
     override fun fields(key: Key): List<String> {
@@ -39,6 +43,7 @@ class FieldKeyHandler : KeyHandler, Fielded {
                 is TreeExpr -> treeFields(expr)
                 is ValueExpr -> valueFields(expr)
                 is ConditionExpr -> conditionFields(expr)
+                is FieldedExpr -> expr.fields()
                 else -> emptyList()
             }
         }
@@ -72,6 +77,8 @@ class FieldKeyHandler : KeyHandler, Fielded {
                     val fields = mutableListOf<String>()
                     if (handler is Fielded) {
                         fields.addAll(handler.fields(part.key))
+                    } else if (handler == null && (part.key.namespace == "field" || part.key.namespace == "f")) {
+                        part.key.name.split(",").map { it.trim() }.forEach { fields.add(it) }
                     }
                     part.transforms.map { transform ->
                         if (transform is Fielded) {

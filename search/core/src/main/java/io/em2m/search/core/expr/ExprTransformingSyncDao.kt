@@ -2,7 +2,6 @@ package io.em2m.search.core.expr
 
 import io.em2m.search.core.daos.SyncDaoWrapper
 import io.em2m.search.core.model.*
-import io.em2m.search.core.xform.AggResultTransformer
 import io.em2m.search.core.xform.SourceFormatAggTransformer
 import io.em2m.simplex.Simplex
 import io.em2m.simplex.model.Expr
@@ -48,7 +47,6 @@ open class ExprTransformingSyncDao<T>(simplex: Simplex, delegate: SyncDao<T>) : 
         return query.let { ExprQueryTransformer(parser).transform(it) }
     }
 
-
     private fun transformAggs(aggs: List<Agg>): List<Agg> {
         val sourceFormatXform = SourceFormatAggTransformer()
         return aggs.map {
@@ -73,7 +71,7 @@ open class ExprTransformingSyncDao<T>(simplex: Simplex, delegate: SyncDao<T>) : 
                     val expr = exprs[index]
                     val settings = it.value.settings
                     when {
-                        expr != null -> expr.call(exprContext.map.plus(settings))
+                        expr != null -> expr.call(exprContext.toMap().plus(settings))
                         name != null -> values[name]
                         else -> null
                     }
@@ -111,7 +109,7 @@ open class ExprTransformingSyncDao<T>(simplex: Simplex, delegate: SyncDao<T>) : 
                     override fun transformBucket(bucket: Bucket): Bucket {
                         val context = BucketContext(request, scope, bucket)
                         // temporarily move scope up a level until we have a better fix
-                        val label = expr.call(context.map.plus(scope)).toString()
+                        val label = expr.call(context.toMap().plus(scope)).toString()
                         return bucket.copy(label = label)
                     }
                 }

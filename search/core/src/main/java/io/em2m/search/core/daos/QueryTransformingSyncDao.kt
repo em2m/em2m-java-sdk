@@ -49,7 +49,7 @@ class QueryTransformingSyncDao<T>(
     }
 
     private fun transformRequest(request: SearchRequest): SearchRequest {
-        val timeZone: String? = request.params.get("timeZone") as String?
+        val timeZone: String? = request.params["timeZone"] as String?
         val fields = request.fields
                 .plus(fieldSets[request.fieldSet] ?: emptyList())
                 .map {
@@ -79,8 +79,7 @@ class QueryTransformingSyncDao<T>(
         return request.aggs.mapNotNull { agg ->
             val aggResult = aggResults[agg.key]
             if (agg is NamedAgg) {
-                val named = namedAggs[agg.name]
-                when (named) {
+                when (val named = namedAggs[agg.name]) {
                     is Fielded -> aggResult?.copy(field = named.field)
                     is FiltersAgg -> aggResult?.copy(buckets = transformFilterBuckets(named, aggResult.buckets))
                     else -> aggResult
