@@ -2,7 +2,6 @@ package io.em2m.search.core.expr
 
 import io.em2m.search.core.model.BucketContext
 import io.em2m.search.core.model.RowContext
-import io.em2m.search.core.model.SearchRequest
 import io.em2m.simplex.model.*
 
 class ConstKeyHandler(val value: Any?) : KeyHandlerSupport() {
@@ -15,6 +14,10 @@ class ConstKeyHandler(val value: Any?) : KeyHandlerSupport() {
 
 interface Fielded {
     fun fields(key: Key): List<String>
+}
+
+interface FieldedExpr {
+    fun fields(): List<String>
 }
 
 class FieldKeyHandler : KeyHandler, Fielded {
@@ -40,6 +43,7 @@ class FieldKeyHandler : KeyHandler, Fielded {
                 is TreeExpr -> treeFields(expr)
                 is ValueExpr -> valueFields(expr)
                 is ConditionExpr -> conditionFields(expr)
+                is FieldedExpr -> expr.fields()
                 else -> emptyList()
             }
         }
