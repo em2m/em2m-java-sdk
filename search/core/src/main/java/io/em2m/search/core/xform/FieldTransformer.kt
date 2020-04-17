@@ -5,7 +5,7 @@ import io.em2m.search.core.model.*
 import io.em2m.simplex.Simplex
 import io.em2m.simplex.model.Expr
 
-class FieldTransformer<T>(val simplex: Simplex, fields: List<FieldModel>) : Transformer<T> {
+class FieldTransformer<T> (val simplex: Simplex, fields: List<FieldModel>) : Transformer<T> {
 
     private val fieldModels = fields.associateBy { it.name }
     private val queryXform = FieldQueryTransformer(fieldModels)
@@ -97,9 +97,10 @@ class FieldTransformer<T>(val simplex: Simplex, fields: List<FieldModel>) : Tran
                 }
 
                 override fun transform(aggResult: AggResult): AggResult {
+                    val buckets = aggResult.buckets?.map { transformBucket(it) }
                     return if (agg is Fielded) {
-                        aggResult.copy(field = agg.field)
-                    } else aggResult
+                        aggResult.copy(field = agg.field, buckets = aggResult.buckets)
+                    } else aggResult.copy(buckets = buckets)
                 }
             }.transform(aggResult)
         }
