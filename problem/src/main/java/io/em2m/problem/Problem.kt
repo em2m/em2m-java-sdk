@@ -1,11 +1,10 @@
-package io.em2m.actions.model
+package io.em2m.problem
 
 import com.fasterxml.jackson.annotation.JsonAnyGetter
 import com.fasterxml.jackson.annotation.JsonAnySetter
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonInclude
 
-@Deprecated("Moved to problem sdk", replaceWith = ReplaceWith("io.em2m.problem.Problem"))
 @JsonInclude(JsonInclude.Include.NON_NULL)
 class Problem(val type: String? = null,
               val title: String,
@@ -69,7 +68,6 @@ class Problem(val type: String? = null,
         fun convert(throwable: Throwable): Problem {
             return when (throwable) {
                 is ProblemException -> throwable.problem
-                is FlowNotFound -> Problem(status = Status.NOT_FOUND, title = "Action ${throwable.name} not found.")
                 is IllegalStateException -> Problem(status = Status.CONFLICT, title = "Conflict", detail = throwable.message)
                 is IllegalArgumentException -> Problem(status = Status.BAD_REQUEST, title = "Bad Request", detail = throwable.message)
                 else -> Problem(status = Status.INTERNAL_SERVER_ERROR, title = "Internal Server Error", detail = throwable.message)

@@ -3,8 +3,7 @@ package io.em2m.actions.lambda
 import com.amazonaws.services.lambda.runtime.Context
 import com.amazonaws.services.lambda.runtime.RequestStreamHandler
 import com.fasterxml.jackson.databind.ObjectMapper
-import io.em2m.actions.model.Problem
-import io.em2m.actions.model.Problem.Companion.notFound
+import io.em2m.problem.Problem.Companion.notFound
 import java.io.InputStream
 import java.io.OutputStream
 
