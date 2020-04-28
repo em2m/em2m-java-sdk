@@ -5,7 +5,7 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.em2m.actions.model.ActionContext
 import io.em2m.actions.model.ActionProcessor
 import io.em2m.actions.model.MultipartData
-import io.em2m.actions.model.Problem
+import io.em2m.problem.Problem
 import io.em2m.policy.model.Claims
 import java.util.*
 

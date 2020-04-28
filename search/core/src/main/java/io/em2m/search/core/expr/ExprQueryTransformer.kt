@@ -3,6 +3,7 @@ package io.em2m.search.core.expr
 import io.em2m.search.core.model.*
 import io.em2m.simplex.parser.ExprParser
 
+@Deprecated("Use FieldTransformerDao instead")
 class ExprQueryTransformer(private val parser: ExprParser) : QueryTransformer() {
 
     private fun <T : Query> mapExpr(field: String, query: T, fn: (String, T) -> Query): Query {

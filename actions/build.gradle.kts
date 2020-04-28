@@ -1,4 +1,5 @@
 dependencies {
+    implementation(project(":problem"))
     implementation(project(":policy"))
     implementation(project(":simplex"))
     implementation("com.google.inject:guice:4.2.1")

@@ -6,6 +6,7 @@ import io.em2m.search.core.xform.SourceFormatAggTransformer
 import io.em2m.simplex.Simplex
 import io.em2m.simplex.model.Expr
 
+@Deprecated("Use FieldTransformerDao instead")
 open class ExprTransformingSyncDao<T>(simplex: Simplex, delegate: SyncDao<T>) : SyncDaoWrapper<T>(delegate) {
 
     val parser = simplex.parser

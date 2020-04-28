@@ -3,6 +3,7 @@ package io.em2m.search.core.daos
 import io.em2m.search.core.model.*
 import io.em2m.search.core.xform.*
 
+@Deprecated("Use TransformerDao instead")
 class QueryTransformingSyncDao<T>(
         private val aliases: Map<String, Field> = emptyMap(),
         private val fieldSets: Map<String, List<Field>> = emptyMap(),

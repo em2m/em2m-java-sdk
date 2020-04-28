@@ -1,5 +1,6 @@
 package io.em2m.actions.model
 
+import io.em2m.problem.Problem
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
