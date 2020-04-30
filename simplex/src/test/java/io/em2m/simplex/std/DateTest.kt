@@ -16,7 +16,8 @@ class DateTest {
 
     private val keyResolver = BasicKeyResolver(mapOf(
             Key("ns", "dateKey") to ConstKeyHandler("2015-04-21T17:31:06-07"),
-            Key("ns", "duration") to ConstKeyHandler(210_000)))
+            Key("ns", "duration") to ConstKeyHandler(210_000),
+            Key("ns", "milliseconds") to ConstKeyHandler(165642000)))
             .delegate(Numbers.keys)
 
     private val dateKeyResolver = Dates.keys
@@ -55,6 +56,14 @@ class DateTest {
         val expr = requireNotNull(simplex.parser.parse(exprString))
         val result = expr.call(emptyMap())
         assertEquals("3 minutes", result)
+    }
+
+    @Test
+    fun testDurationToDay() {
+        val exprString = "\${ns:milliseconds | durationToDays}"
+        val expr = requireNotNull(simplex.parser.parse(exprString))
+        val result = expr.call(emptyMap())
+        assertEquals(1.9, result)
     }
 
     @Test

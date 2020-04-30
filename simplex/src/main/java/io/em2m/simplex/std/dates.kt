@@ -10,6 +10,7 @@ import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.*
+import java.util.concurrent.TimeUnit
 
 class FormatDatePipe : PipeTransform {
 
@@ -67,6 +68,15 @@ class FormatDurationPipe : PipeTransform {
         } else value
     }
 
+}
+
+class durationToDaysPipe : PipeTransform {
+    override fun transform(value: Any?, context: ExprContext): Any? {
+        val milliseconds: Long? = value?.coerce()
+        return if (milliseconds != null) {
+            Math.round(milliseconds!!/(1000.0*60*60*24)*10)/10.0
+        } else milliseconds
+    }
 }
 
 class FromNowPipe : PipeTransform {
@@ -162,6 +172,7 @@ object Dates {
             .transform("formatDuration") { FormatDurationPipe() }
             .transform("dateMath") { DateMathPipe() }
             .transform("fromNow") { FromNowPipe() }
+            .transform("durationToDays") { durationToDaysPipe() }
 
     val keys = BasicKeyResolver()
             .key(Key("Date", "now")) { _ -> DateNowHandler() }
