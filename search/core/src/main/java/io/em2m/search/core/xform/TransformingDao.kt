@@ -13,7 +13,7 @@ class TransformingDao<T>(private val transformer: Transformer<T>, delegate: Sync
 
     override fun count(query: Query): Long {
         val q = transformer.transformQuery(query) ?: MatchAllQuery()
-        return super.count(q ?: MatchAllQuery())
+        return super.count(q)
     }
 
     override fun findOne(query: Query): T? {

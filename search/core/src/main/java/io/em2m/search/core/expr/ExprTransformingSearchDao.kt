@@ -7,6 +7,7 @@ import io.em2m.simplex.Simplex
 import io.em2m.simplex.model.Expr
 import rx.Observable
 
+@Deprecated("Use FieldTransformerDao instead")
 class ExprTransformingSearchDao<T>(simplex: Simplex, delegate: SearchDao<T>) : SearchDaoWrapper<T>(delegate) {
 
     val parser = simplex.parser

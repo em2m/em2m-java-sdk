@@ -4,6 +4,7 @@ import io.em2m.search.core.model.*
 import io.em2m.search.core.xform.*
 import rx.Observable
 
+@Deprecated("Use TransformerDao instead")
 class QueryTransformingSearchDao<T>(
         val aliases: Map<String, Field> = emptyMap(),
         val fieldSets: Map<String, List<Field>> = emptyMap(),

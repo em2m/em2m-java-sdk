@@ -15,9 +15,10 @@
  * is strictly forbidden unless prior written permission is obtained
  * from Elastic M2M Incorporated.
  */
-package io.em2m.actions.model
+package io.em2m.problem
 
-@Deprecated("Moved to problem sdk", replaceWith = ReplaceWith("io.em2m.problem.ProblemException"))
 data class ProblemException(val problem: Problem) : RuntimeException(problem.title) {
+
     constructor(throwable: Throwable) : this(Problem.convert(throwable))
+
 }

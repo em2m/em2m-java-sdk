@@ -8,9 +8,9 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import io.em2m.actions.model.ActionContext
 import io.em2m.actions.model.ActionTransformer
 import io.em2m.actions.model.Priorities
-import io.em2m.actions.model.Problem
-import io.em2m.actions.model.Problem.Companion.notAuthorized
 import io.em2m.policy.model.Claims
+import io.em2m.problem.Problem
+import io.em2m.problem.Problem.Companion.notAuthorized
 import java.util.*
 
 class JwtTransformer(val secretKey: String, val requireAuth: Boolean = false, override val priority: Int = Priorities.AUTHENTICATE) : ActionTransformer {

@@ -2,6 +2,7 @@ package io.em2m.search.core.xform
 
 import io.em2m.search.core.model.*
 
+@Deprecated("Use FieldTransformerDao instead")
 class FieldAliasAggTransformer(val aliases: Map<String, Field>) : AggTransformer() {
 
     private val queryTransformer = FieldAliasQueryTransformer(aliases)
