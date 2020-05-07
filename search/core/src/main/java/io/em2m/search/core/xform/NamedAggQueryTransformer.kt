@@ -21,7 +21,7 @@ class NamedAggQueryTransformer(private val namedAggs: Map<String, Agg>, val time
             }
             is DateRangeAgg -> {
                 val range = requireNotNull(agg.ranges.find { it.key == query.value?.toString() })
-                RangeQuery(agg.field, gte = range.from, lte = range.to, timeZone = timeZone)
+                RangeQuery(agg.field, gte = range.from, lt = range.to, timeZone = timeZone)
             }
             is GeoBoundsAgg -> {
                 TermQuery(agg.field, value)
