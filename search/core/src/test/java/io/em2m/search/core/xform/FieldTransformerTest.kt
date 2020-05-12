@@ -19,7 +19,6 @@ class FieldTransformerTest {
 
     private val xform = FieldTransformer<Any>(simplex, listOf(
             FieldModel("_title", delegateField = "name"),
-            FieldModel("_title", delegateField = "name"),
             FieldModel("_subtitle", expr = subTitleExpr)))
 
     @Test
