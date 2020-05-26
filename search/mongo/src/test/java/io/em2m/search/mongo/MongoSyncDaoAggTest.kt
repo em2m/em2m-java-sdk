@@ -126,6 +126,8 @@ class MongoSyncDaoAggTest : FeaturesTestBase() {
         assertEquals(1, buckets.size)
         assertEquals(16, buckets.map { it.count }.sum())
         assertEquals("4+", buckets[0].key)
+        assertEquals(4.0, buckets.first().from)
+        assertNull(buckets.first().to)
     }
 
     @Test
@@ -141,13 +143,15 @@ class MongoSyncDaoAggTest : FeaturesTestBase() {
 
     @Test
     fun testDateRange() {
-        val request = SearchRequest(0, 0, MatchAllQuery(), aggs = listOf(DateRangeAgg("properties.time", key = "magnitude",
+        val request = SearchRequest(0, 0, MatchAllQuery(), aggs = listOf(DateRangeAgg("properties.time", key = "time",
                 ranges = listOf(Range(from = "1408447319000", to = "now")))))
         val result = syncDao.search(request)
-        val agg = result.aggs["magnitude"] ?: error("agg should not be null")
+        val agg = result.aggs["time"] ?: error("agg should not be null")
         val buckets = agg.buckets ?: error("buckets should not be null")
         assertEquals(1, buckets.size)
         assertEquals(20, buckets.map { it.count }.sum())
+        assertEquals("now", buckets.first().to)
+        assertEquals("1408447319000", buckets.first().from)
     }
 
     @Test
