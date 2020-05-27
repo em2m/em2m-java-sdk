@@ -144,7 +144,7 @@ class MongoSyncDaoAggTest : FeaturesTestBase() {
     @Test
     fun testDateRange() {
         val request = SearchRequest(0, 0, MatchAllQuery(), aggs = listOf(DateRangeAgg("properties.time", key = "time",
-                ranges = listOf(Range(from = "1408447319000", to = "now")))))
+                ranges = listOf(Range(from = "1408447319000", to = "now", key = "one")))))
         val result = syncDao.search(request)
         val agg = result.aggs["time"] ?: error("agg should not be null")
         val buckets = agg.buckets ?: error("buckets should not be null")

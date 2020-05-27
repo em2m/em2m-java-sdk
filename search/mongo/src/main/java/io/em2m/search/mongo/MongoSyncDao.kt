@@ -190,11 +190,11 @@ class MongoSyncDao<T>(idMapper: IdMapper<T>, val documentMapper: DocumentMapper<
             val buckets = ArrayList<Bucket>()
             val agg = aggIndex[key]
 
-            keyIndex[key]?.forEach { mongoKey ->
+            keyIndex[key]?.forEachIndexed { index, mongoKey ->
                 val altKey = if (mongoKey.contains(":")) mongoKey.split(":")[1] else mongoKey
                 val values = document[mongoKey] as List<*>
 
-                values.forEachIndexed { index, value ->
+                values.forEach { value ->
                     if (value is Document) {
                         val id = value.getString("_id") ?: altKey
                         val count = value.getInteger("count")
