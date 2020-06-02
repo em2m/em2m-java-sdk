@@ -95,7 +95,7 @@ class DateMathPipe : PipeTransform {
 
     override fun args(args: List<String>) {
         if (args.isNotEmpty()) {
-            dateMath = args[0]
+            dateMath = args[0]?.trim()
         }
     }
 
