@@ -105,7 +105,7 @@ class Aggs {
                 val from = parseDate(range.from, now, false, agg.timeZone)
                 val to = parseDate(range.to, now, false, agg.timeZone)
 
-                val predicate = Functions.toPredicate(RangeQuery(field = agg.field, gte = from, lt = to))
+                val predicate = Functions.toPredicate(DateRangeQuery(field = agg.field, gte = from, lt = to, timeZone = agg.timeZone))
                 val bucketMatches = matches.filter { predicate.invoke(it as Any) }
                 val count = bucketMatches.size.toLong()
                 val bucketAggs = processAggs(agg.aggs, bucketMatches)
