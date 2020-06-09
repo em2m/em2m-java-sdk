@@ -5,7 +5,7 @@ import com.fasterxml.jackson.annotation.JsonInclude
 
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonIgnoreProperties(ignoreUnknown = true)
-data class SearchRequest(var offset: Long = 0, var limit: Long = 10, var query: Query? = null,
+data class SearchRequest(var offset: Long = 0, var limit: Long = 0, var query: Query? = null,
                          var params: Map<String, Any> = emptyMap(),
                          var fieldSet: String? = null,
                          var fields: List<Field> = emptyList(),

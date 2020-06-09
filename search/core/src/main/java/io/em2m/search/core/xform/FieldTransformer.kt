@@ -99,7 +99,7 @@ class FieldTransformer<T> (val simplex: Simplex, fields: List<FieldModel>) : Tra
                 override fun transform(aggResult: AggResult): AggResult {
                     val buckets = aggResult.buckets?.map { transformBucket(it) }
                     return if (agg is Fielded) {
-                        aggResult.copy(field = agg.field, buckets = aggResult.buckets)
+                        aggResult.copy(field = agg.field, buckets = buckets)
                     } else aggResult.copy(buckets = buckets)
                 }
             }.transform(aggResult)
