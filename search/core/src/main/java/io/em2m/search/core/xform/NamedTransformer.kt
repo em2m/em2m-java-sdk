@@ -8,8 +8,12 @@ class NamedTransformer<T>(val namedAggs: Map<String, Agg>) : Transformer<T> {
     private val queryXform = NamedAggQueryTransformer(namedAggs, "America/Los_Angeles")
     private val aggXform = NamedAggTransformer(namedAggs)
 
+    override fun transformQuery(query: Query?): Query? {
+        return query?.let { queryXform.transform(it) }
+    }
+
     override fun transformRequest(request: SearchRequest): SearchRequest {
-        val query = request.query?.let { queryXform.transform(it) }
+        val query = transformQuery(request.query)
         val aggs = request.aggs.map { aggXform.transform(it) }
         return request.copy(query = query, aggs = aggs)
     }
