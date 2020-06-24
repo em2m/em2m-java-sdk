@@ -78,7 +78,7 @@ class MapBackedDaoAggTest : Assert() {
 
     @Test
     fun testHistogram() {
-        val request = SearchRequest(0, 0, MatchAllQuery(), aggs = listOf(HistogramAgg("properties.mag", 1.0, key = "magnitude")))
+        val request = SearchRequest(0, 0, MatchAllQuery(), aggs = listOf(HistogramAgg("properties.mag", null,1.0, key = "magnitude")))
         val sub = TestSubscriber<Any>()
         searchDao.search(request).doOnNext { result ->
             val histogram = result.aggs["magnitude"] ?: error("agg should not be null")
