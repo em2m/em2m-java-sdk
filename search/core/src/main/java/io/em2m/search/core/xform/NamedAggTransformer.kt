@@ -37,7 +37,7 @@ class NamedAggTransformer(val namedAggs: Map<String, Agg>) : AggTransformer() {
 
         override fun transformHistogramAgg(agg: HistogramAgg): Agg {
             val interval = (ext["interval"] as? Number)?.toDouble()
-            return HistogramAgg(agg.field, interval
+            return HistogramAgg(agg.field, agg.format,interval
                     ?: agg.interval, agg.offset, agg.key, agg.missing, agg.aggs, agg.extensions, agg.minDocCount)
         }
     }
@@ -51,7 +51,7 @@ class NamedAggTransformer(val namedAggs: Map<String, Agg>) : AggTransformer() {
         override fun transformGeoCentroidAgg(agg: GeoCentroidAgg) = GeoCentroidAgg(agg.field, key, agg.aggs, agg.extensions, agg.minDocCount)
         override fun transformGeoDistanceAgg(agg: GeoDistanceAgg) = GeoDistanceAgg(agg.field, agg.origin, agg.unit, agg.ranges, key, agg.aggs, agg.extensions, agg.minDocCount)
         override fun transformGeoHashAgg(agg: GeoHashAgg) = GeoHashAgg(agg.field, agg.precision, agg.size, key, agg.aggs, agg.extensions, agg.minDocCount)
-        override fun transformHistogramAgg(agg: HistogramAgg) = HistogramAgg(agg.field, agg.interval, agg.offset, key, agg.missing, agg.aggs, agg.extensions, agg.minDocCount)
+        override fun transformHistogramAgg(agg: HistogramAgg) = HistogramAgg(agg.field, agg.format, agg.interval, agg.offset, key, agg.missing, agg.aggs, agg.extensions, agg.minDocCount)
         override fun transformMissingAgg(agg: MissingAgg) = MissingAgg(agg.field, key, agg.aggs, agg.extensions, agg.minDocCount)
         override fun transformRangeAgg(agg: RangeAgg) = RangeAgg(agg.field, agg.ranges, key, agg.aggs, agg.extensions, agg.minDocCount)
         override fun transformStatsAgg(agg: StatsAgg) = StatsAgg(agg.field, key, agg.format, agg.aggs, agg.extensions, agg.minDocCount)

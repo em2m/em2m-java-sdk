@@ -156,6 +156,7 @@ class GeoHashAgg(
 
 class HistogramAgg(
         override val field: String,
+        val format: String? = null,
         val interval: Double,
         val offset: Double? = 0.0,
         key: String? = null,
