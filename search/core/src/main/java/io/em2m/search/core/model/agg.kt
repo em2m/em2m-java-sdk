@@ -1,6 +1,7 @@
 package io.em2m.search.core.model
 
 import com.fasterxml.jackson.annotation.*
+import io.em2m.simplex.model.Expr
 import org.locationtech.jts.geom.Coordinate
 
 @JsonPropertyOrder("type")
@@ -20,7 +21,8 @@ import org.locationtech.jts.geom.Coordinate
         JsonSubTypes.Type(value = NativeAgg::class, name = "native"),
         JsonSubTypes.Type(value = RangeAgg::class, name = "range"),
         JsonSubTypes.Type(value = StatsAgg::class, name = "stats"),
-        JsonSubTypes.Type(value = TermsAgg::class, name = "terms")
+        JsonSubTypes.Type(value = TermsAgg::class, name = "terms"),
+        JsonSubTypes.Type(value = XformAgg::class, name = "xform")
 )
 abstract class Agg(
         val key: String,
@@ -229,10 +231,20 @@ class TermsAgg(
     override fun op() = "terms"
 }
 
+class XformAgg(
+        key: String,
+        val agg: Agg,
+        ext: Map<String, Any?>? = null,
+        minDocCount: Int? = null,
+        val bucket: Expr? = null
+) : Agg(key = key, ext = ext, minDocCount = minDocCount) {
+    override fun op() = "xform"
+}
+
 data class Stats(val count: Long, val sum: Double, val min: Double?, val max: Double?, val avg: Double?)
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
-data class Bucket(val key: Any? = null, val count: Long, val label: String? = null, val stats: Stats? = null, val from: Any? = null, val to: Any? = null, val query: Query? = null, val aggs: Map<String, AggResult>? = null)
+data class Bucket(val key: Any? = null, val count: Long, val label: String? = null, val stats: Stats? = null, val from: Any? = null, val to: Any? = null, val query: Query? = null, val aggs: Map<String, AggResult>? = null, val value: Any? = null)
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 data class AggResult(val key: String, val buckets: List<Bucket>? = null, val stats: Stats? = null, val value: Any? = null, val op: String? = null, val field: String? = null)
