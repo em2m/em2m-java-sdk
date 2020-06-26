@@ -1,7 +1,6 @@
 package io.em2m.search.core.model
 
 import com.fasterxml.jackson.annotation.*
-import io.em2m.simplex.model.Expr
 import org.locationtech.jts.geom.Coordinate
 
 @JsonPropertyOrder("type")
@@ -236,7 +235,7 @@ class XformAgg(
         val agg: Agg,
         ext: Map<String, Any?>? = null,
         minDocCount: Int? = null,
-        val bucket: Expr? = null
+        val bucket: Any? = null
 ) : Agg(key = key ?: agg.key, ext = ext, minDocCount = minDocCount) {
     override fun op() = "xform"
 }
