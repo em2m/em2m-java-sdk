@@ -1,6 +1,7 @@
 package io.em2m.simplex.model
 
 import io.em2m.utils.coerce
+import kotlin.coroutines.coroutineContext
 
 interface TreeExpr : Expr
 
@@ -63,18 +64,29 @@ class ObjectExpr(val fields: List<FieldExpr>) : TreeExpr {
     }
 
     override fun call(context: ExprContext): Any? {
-        val skip = skip(context)
+        val varContext = processVar(context)
+        val skip = skip(varContext)
         return when {
             skip -> null
-            fieldMap.containsKey("@repeat") -> processRepeat(context)
-            fieldMap.containsKey("@when") -> processWhenArray(context)
-            fieldMap.containsKey("@value") -> processValue(context)
-            else -> processFields(context)
+            fieldMap.containsKey("@repeat") -> processRepeat(varContext)
+            fieldMap.containsKey("@when") -> processWhenArray(varContext)
+            fieldMap.containsKey("@value") -> processValue(varContext)
+            else -> processFields(varContext)
         }
     }
 
     private fun processValue(context: ExprContext): Any? {
         return fieldMap["@value"]?.value?.call(context)
+    }
+
+    private fun processVar(context: ExprContext): ExprContext {
+        val varField = fieldMap["@var"]?.value
+        return if (varField != null) {
+            val oldVariables: Map<String, Any> = context["variables"].coerce() ?: emptyMap()
+            val newVariables: Map<String, Any?> = varField.call(context).coerce() ?: emptyMap()
+            val variables = oldVariables.plus(newVariables)
+            return context.plus("variables" to variables)
+        } else context
     }
 
     class RepeatState(val size: Int) {
