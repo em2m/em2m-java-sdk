@@ -38,7 +38,7 @@ class XformTransformer<T>(val objectMapper: ObjectMapper) : Transformer<T> {
         val aggXform = object : AggTransformer() {
 
             override fun transformXformAgg(agg: XformAgg): Agg {
-                return agg.agg
+                return ExtensionsTransformer(agg.extensions).transform(agg.agg)
             }
 
         }
