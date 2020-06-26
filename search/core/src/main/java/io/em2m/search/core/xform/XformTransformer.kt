@@ -1,9 +1,11 @@
 package io.em2m.search.core.xform
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import io.em2m.search.core.model.*
+import io.em2m.simplex.model.Expr
 import io.em2m.utils.coerce
 
-class XformTransformer<T>() : Transformer<T> {
+class XformTransformer<T>(val objectMapper: ObjectMapper) : Transformer<T> {
 
     override fun transformRequest(request: SearchRequest): SearchRequest {
         val aggs = request.aggs.map { aggXform.transform(it) }
@@ -22,10 +24,11 @@ class XformTransformer<T>() : Transformer<T> {
     }
 
     private fun transformAggResult(request: SearchRequest, agg: XformAgg, result: AggResult): AggResult {
+        val expr: Expr? = agg.bucket.coerce(objectMapper = objectMapper)
         val buckets: List<Bucket>? = result.buckets?.mapNotNull { bucket ->
             val fieldValues = mapOf("bucket" to bucket)
             val context = BucketContext(request, emptyMap(), bucket).toMap().plus("fieldValues" to fieldValues)
-            agg.bucket?.call(context).coerce<Bucket>()
+            expr?.call(context).coerce<Bucket>()
         }
         return result.copy(key = agg.key, buckets = buckets)
     }
