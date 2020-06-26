@@ -26,7 +26,7 @@ class NamedAggTransformer(val namedAggs: Map<String, Agg>) : AggTransformer() {
         override fun transformRangeAgg(agg: RangeAgg) = RangeAgg(agg.field, agg.ranges, key, agg.aggs, agg.extensions, agg.minDocCount)
         override fun transformStatsAgg(agg: StatsAgg) = StatsAgg(agg.field, key, agg.format, agg.aggs, agg.extensions, agg.minDocCount)
         override fun transformTermsAgg(agg: TermsAgg) = TermsAgg(agg.field, agg.size, key, agg.sort, agg.format, agg.missing, agg.aggs, agg.extensions, agg.minDocCount)
-        override fun transformXformAgg(agg: XformAgg) = XformAgg(key, agg.agg, agg.extensions, agg.minDocCount, agg.bucket)
+        override fun transformXformAgg(agg: XformAgg) = XformAgg(key, agg.sort, agg.agg, agg.extensions, agg.minDocCount, agg.bucket)
     }
 
 }

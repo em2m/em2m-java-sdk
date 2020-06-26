@@ -25,11 +25,35 @@ class XformTransformer<T>(val objectMapper: ObjectMapper) : Transformer<T> {
 
     private fun transformAggResult(request: SearchRequest, agg: XformAgg, result: AggResult): AggResult {
         val expr: Expr? = agg.bucket.coerce(objectMapper = objectMapper)
-        val buckets: List<Bucket>? = result.buckets?.mapNotNull { bucket ->
+
+        var buckets: List<Bucket>? = result.buckets?.mapNotNull { bucket ->
             val fieldValues = mapOf("bucket" to bucket)
             val context = BucketContext(request, emptyMap(), bucket).toMap().plus("fieldValues" to fieldValues)
             expr?.call(context).coerce<Bucket>()
+        }?.let { buckets ->
+            val sort = agg.sort
+            when (sort?.type) {
+                Agg.Sort.Type.Count -> {
+                    if (sort.direction == Direction.Descending) {
+                        buckets.sortedByDescending { it.count }
+                    } else {
+                        buckets.sortedBy { it.count }
+                    }
+                }
+                Agg.Sort.Type.Lexical -> {
+                    if (sort.direction == Direction.Descending) {
+                        buckets.sortedByDescending { it.key.toString() }
+                    } else {
+                        buckets.sortedBy { it.key.toString() }
+                    }
+                }
+                Agg.Sort.Type.None -> {
+                    buckets.toList()
+                }
+                else -> buckets
+            }
         }
+
         return result.copy(key = agg.key, buckets = buckets)
     }
 

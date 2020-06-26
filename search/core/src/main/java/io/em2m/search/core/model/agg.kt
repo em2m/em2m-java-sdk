@@ -232,11 +232,12 @@ class TermsAgg(
 
 class XformAgg(
         key: String? = null,
+        sort: Sort? = null,
         val agg: Agg,
         ext: Map<String, Any?>? = null,
         minDocCount: Int? = null,
         val bucket: Any? = null
-) : Agg(key = key ?: agg.key, ext = ext, minDocCount = minDocCount) {
+) : Agg(key = key ?: agg.key, ext = ext, minDocCount = minDocCount, sort = sort) {
     override fun op() = "xform"
 }
 
