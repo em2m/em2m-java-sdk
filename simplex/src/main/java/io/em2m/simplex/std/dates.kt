@@ -11,6 +11,18 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.*
 
+private fun Any?.toDate(): Date? {
+    return when (this) {
+        is Date -> {
+            this
+        }
+        is Number -> {
+            Date(this.toLong())
+        }
+        else -> this.coerce()
+    }
+}
+
 class FormatDatePipe : PipeTransform {
 
     private val defaultZoneId = ZoneId.of("America/Los_Angeles")
@@ -37,7 +49,7 @@ class FormatDatePipe : PipeTransform {
     }
 
     override fun transform(value: Any?, context: ExprContext): Any? {
-        val dateInput: Date? = value?.coerce()
+        val dateInput: Date? = value.toDate()
         return if (dateInput != null) {
             val date = dateInput.toInstant()
             if (path != null) {
@@ -45,7 +57,7 @@ class FormatDatePipe : PipeTransform {
                 val p = if (zoneId != null) {
                     try {
                         pattern.withZone(ZoneId.of(zoneId))
-                    } catch( ex: Throwable) {
+                    } catch (ex: Throwable) {
                         pattern
                     }
                 } else pattern
@@ -80,7 +92,7 @@ class FromNowPipe : PipeTransform {
     }
 
     override fun transform(value: Any?, context: ExprContext): Any? {
-        val date: Date? = value.coerce()
+        val date: Date? = value.toDate()
         return if (date != null) {
             Duration.between(Instant.now(), date.toInstant()).fromNow(withoutAffix)
         } else value
@@ -100,7 +112,7 @@ class DateMathPipe : PipeTransform {
     }
 
     override fun transform(value: Any?, context: ExprContext): Any? {
-        val dateInput: Date? = value?.coerce()
+        val dateInput: Date? = value.toDate()
         return if (dateInput != null && dateMath != null) {
             dateMathParser.parse(dateMath.toString(), dateInput.time).coerce<Date>()
         } else value
@@ -125,7 +137,7 @@ open class SingleDateHandler(private val op: (Date?, Date?) -> Boolean) : Condit
             conditionValue[0]
         } else conditionValue
 
-        return op(keyNumber.coerce(), valueNumber.coerce())
+        return op(keyNumber.toDate(), valueNumber.toDate())
     }
 }
 
