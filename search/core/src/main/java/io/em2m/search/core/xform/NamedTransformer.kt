@@ -2,7 +2,7 @@ package io.em2m.search.core.xform
 
 import io.em2m.search.core.model.*
 
-class NamedTransformer<T>(val namedAggs: Map<String, Agg>) : Transformer<T> {
+class NamedTransformer<T>(private val namedAggs: Map<String, Agg>) : Transformer<T> {
 
     // TODO - Timezone needs to propogate down from the request
     private val queryXform = NamedAggQueryTransformer(namedAggs, "America/Los_Angeles")
@@ -13,7 +13,8 @@ class NamedTransformer<T>(val namedAggs: Map<String, Agg>) : Transformer<T> {
     }
 
     override fun transformRequest(request: SearchRequest): SearchRequest {
-        val query = transformQuery(request.query)
+        val tz = request.params["timeZone"]?.toString() ?: "America/Los_Angeles"
+        val query = request.query?.let { NamedAggQueryTransformer(namedAggs, tz).transform(it) } ?: request.query
         val aggs = request.aggs.map { aggXform.transform(it) }
         return request.copy(query = query, aggs = aggs)
     }
