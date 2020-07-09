@@ -152,6 +152,9 @@ open class AggTransformer {
         is TermsAgg -> {
             transformTermsAgg(agg)
         }
+        is XformAgg -> {
+            transformXformAgg(agg)
+        }
         else -> {
             agg
         }
@@ -171,6 +174,7 @@ open class AggTransformer {
     open fun transformRangeAgg(agg: RangeAgg): Agg = agg
     open fun transformStatsAgg(agg: StatsAgg): Agg = agg
     open fun transformTermsAgg(agg: TermsAgg): Agg = agg
+    open fun transformXformAgg(agg: XformAgg): Agg = agg
 }
 
 open class AggResultTransformer {

@@ -70,6 +70,18 @@ class FieldExprTest : Assert() {
     }
 
     @Test
+    fun testBucket() {
+        val exprStr = "#{bucket:key | capitalize}".replace("#", "$")
+        val expr = parser.parse(exprStr)
+        assertNotNull(expr)
+        val bucket = Bucket(key = "ford", count = 5)
+        val result = expr.call(BucketContext(request, emptyMap(), bucket).toMap())
+        assertNotNull(result)
+        assertEquals("Ford", result)
+    }
+
+
+    @Test
     fun testMultipleFields() {
         val exprStr = "\${field:key1,key2 | notNull | join:, }"
         val expr = parser.parse(exprStr)

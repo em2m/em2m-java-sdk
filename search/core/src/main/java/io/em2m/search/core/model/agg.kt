@@ -20,7 +20,8 @@ import org.locationtech.jts.geom.Coordinate
         JsonSubTypes.Type(value = NativeAgg::class, name = "native"),
         JsonSubTypes.Type(value = RangeAgg::class, name = "range"),
         JsonSubTypes.Type(value = StatsAgg::class, name = "stats"),
-        JsonSubTypes.Type(value = TermsAgg::class, name = "terms")
+        JsonSubTypes.Type(value = TermsAgg::class, name = "terms"),
+        JsonSubTypes.Type(value = XformAgg::class, name = "xform")
 )
 abstract class Agg(
         val key: String,
@@ -156,6 +157,7 @@ class GeoHashAgg(
 
 class HistogramAgg(
         override val field: String,
+        val format: String? = null,
         val interval: Double,
         val offset: Double? = 0.0,
         key: String? = null,
@@ -228,10 +230,21 @@ class TermsAgg(
     override fun op() = "terms"
 }
 
+class XformAgg(
+        key: String? = null,
+        sort: Sort? = null,
+        val agg: Agg,
+        ext: Map<String, Any?>? = null,
+        minDocCount: Int? = null,
+        val bucket: Any? = null
+) : Agg(key = key ?: agg.key, ext = ext, minDocCount = minDocCount, sort = sort) {
+    override fun op() = "xform"
+}
+
 data class Stats(val count: Long, val sum: Double, val min: Double?, val max: Double?, val avg: Double?)
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
-data class Bucket(val key: Any? = null, val count: Long, val label: String? = null, val stats: Stats? = null, val from: Any? = null, val to: Any? = null, val query: Query? = null, val aggs: Map<String, AggResult>? = null)
+data class Bucket(val key: Any? = null, val count: Long, val label: String? = null, val stats: Stats? = null, val from: Any? = null, val to: Any? = null, val query: Query? = null, val aggs: Map<String, AggResult>? = null, val value: Any? = null)
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 data class AggResult(val key: String, val buckets: List<Bucket>? = null, val stats: Stats? = null, val value: Any? = null, val op: String? = null, val field: String? = null)

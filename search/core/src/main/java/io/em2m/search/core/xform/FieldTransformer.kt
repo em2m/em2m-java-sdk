@@ -83,7 +83,7 @@ class FieldTransformer<T> (val simplex: Simplex, fields: List<FieldModel>) : Tra
         return aggs.mapValues { (key, aggResult) ->
             val agg = reqAggs[key]
             val missing = (agg as? TermsAgg)?.missing
-            val expr = (agg as? TermsAgg)?.format
+            val expr = (agg as? TermsAgg)?.format ?: (agg as? HistogramAgg)?.format
             val field = (agg as? Fielded)
             val scope: Map<String, Any?> = agg?.extensions ?: emptyMap()
             object : AggResultTransformer() {
@@ -223,7 +223,7 @@ class FieldTransformer<T> (val simplex: Simplex, fields: List<FieldModel>) : Tra
         override fun transformGeoCentroidAgg(agg: GeoCentroidAgg) = GeoCentroidAgg(applyAlias(agg.field), agg.key, agg.aggs, agg.extensions, agg.minDocCount)
         override fun transformGeoDistanceAgg(agg: GeoDistanceAgg) = GeoDistanceAgg(applyAlias(agg.field), agg.origin, agg.unit, agg.ranges, agg.key, agg.aggs, agg.extensions, agg.minDocCount)
         override fun transformGeoHashAgg(agg: GeoHashAgg) = GeoHashAgg(applyAlias(agg.field), agg.precision, agg.size, agg.key, agg.aggs, agg.extensions, agg.minDocCount)
-        override fun transformHistogramAgg(agg: HistogramAgg) = HistogramAgg(applyAlias(agg.field), agg.interval, agg.offset, agg.key, agg.missing, agg.aggs, agg.extensions, agg.minDocCount)
+        override fun transformHistogramAgg(agg: HistogramAgg) = HistogramAgg(applyAlias(agg.field), agg.format, agg.interval, agg.offset, agg.key, agg.missing, agg.aggs, agg.extensions, agg.minDocCount)
         override fun transformMissingAgg(agg: MissingAgg) = MissingAgg(applyAlias(agg.field), agg.key, agg.aggs, agg.extensions, agg.minDocCount)
         override fun transformRangeAgg(agg: RangeAgg) = RangeAgg(applyAlias(agg.field), agg.ranges, agg.key, agg.aggs, agg.extensions, agg.minDocCount)
         override fun transformStatsAgg(agg: StatsAgg) = StatsAgg(applyAlias(agg.field), agg.key, agg.format, agg.aggs, agg.extensions, agg.minDocCount)
