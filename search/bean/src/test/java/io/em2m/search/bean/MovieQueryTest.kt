@@ -40,6 +40,12 @@ class MovieQueryTest {
     }
 
     @Test
+    fun testImageUrlExists() {
+        val results = find(ExistsQuery("fields.image_url", false))
+        assertEquals(259, results.size.toLong())
+    }
+
+    @Test
     fun testTitleProhibitedTerm() {
         val results = find(AndQuery(RegexQuery("fields.title", ".*zen.*"), NotQuery(TermQuery("fields.title", "Frozen"))))
         // term queries do not match whole words inside strings - this is not lucene :-(.  Do we want to support analyzed fields?
