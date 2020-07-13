@@ -111,3 +111,11 @@ class BucketKeyKeyHandler : KeyHandlerSupport() {
     }
 
 }
+
+class BucketCountKeyHandler : KeyHandlerSupport() {
+
+    override fun call(key: Key, context: ExprContext): Any? {
+        return BucketContext(context).bucket.count
+    }
+
+}

@@ -236,6 +236,15 @@ class Functions {
             }
         }
 
+        private fun toPredicate(expr: ExistsQuery): (Any) -> Boolean {
+            val fieldGetter = field(expr.field)
+            val fn = { obj: Any ->
+                val values = fieldGetter.invoke(obj)
+                values.isNotEmpty()
+            }
+            return if (expr.value) fn else not(fn)
+        }
+
         private fun toPredicate(expr: RegexQuery): (Any) -> Boolean {
             val field = expr.field
             val regex = expr.value
@@ -317,6 +326,9 @@ class Functions {
                     toPredicate(query)
                 }
                 is MatchAllQuery -> {
+                    toPredicate(query)
+                }
+                is ExistsQuery -> {
                     toPredicate(query)
                 }
                 else -> {

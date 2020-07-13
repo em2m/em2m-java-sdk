@@ -53,12 +53,7 @@ class RequestConverter(val objectMapper: ObjectMapper = jacksonObjectMapper(), v
         is RangeQuery -> {
             // format support?
             // boost?
-            val timeZone = query.timeZone ?: params?.get("timeZone")?.toString()
-            if (query.gt is String || query.gte is String || query.lt is String || query.lte is String) {
-                EsRangeQuery(query.field, query.gte, query.gt, query.lte, query.lt, timeZone = timeZone)
-            } else {
-                EsRangeQuery(query.field, query.gte, query.gt, query.lte, query.lt)
-            }
+            EsRangeQuery(query.field, query.gte, query.gt, query.lte, query.lt)
         }
         is DateRangeQuery -> {
             // format support?
