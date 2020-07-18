@@ -24,7 +24,7 @@ class ExprParser(private val keyResolver: KeyResolver, private val pipeTransform
 
     private fun merge(splits: List<Part>, patterns: List<Part>): List<Part> {
         val results = ArrayList<Part>()
-        (0 until patterns.size).forEach { i ->
+        (patterns.indices).forEach { i ->
             results.add(splits[i])
             results.add(patterns[i])
         }
@@ -38,15 +38,7 @@ class ExprParser(private val keyResolver: KeyResolver, private val pipeTransform
         val handler = keyResolver.find(key)
 
         val transforms: List<PipeTransform> = if (splits.size > 1) {
-            splits.subList(1, splits.size).map { xformExpr ->
-                val xformParts = xformExpr.replace("\\:", "__COLON__").split(':').map {
-                    it.replace("__COLON__", ":")
-                }
-                require(xformParts.isNotEmpty()) { "Invalid pipe expressions" }
-                val pipeName = xformParts.first().trim()
-                val args = xformParts.drop(1)
-                requireNotNull(pipeTransformResolver.find(pipeName)) { "Unknown pipe: $pipeName" }.apply { args(args) }
-            }
+            splits.drop(1).map(::parseTransform)
         } else emptyList()
 
         return when (transforms.size) {
@@ -54,6 +46,20 @@ class ExprParser(private val keyResolver: KeyResolver, private val pipeTransform
             1 -> SingleTransformPipePart(key, handler, transforms[0])
             else -> MultiTransformPipePart(key, handler, transforms)
         }
+    }
+
+    private fun parseTransform(xformExpr: String): PipeTransform {
+        val xformParts = xformExpr.replace("\\:", "__COLON__").split(':').map {
+            it.replace("__COLON__", ":")
+        }
+        require(xformParts.isNotEmpty()) { "Invalid pipe expressions" }
+        val pipeName = xformParts.first().trim()
+        val args = xformParts.drop(1).map(::parseArg)
+        return requireNotNull(pipeTransformResolver.find(pipeName)) { "Unknown pipe: $pipeName" }.apply { args(args) }
+    }
+
+    private fun parseArg(arg: String): String {
+        return arg
     }
 
     companion object {
