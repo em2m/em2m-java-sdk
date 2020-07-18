@@ -106,36 +106,7 @@ class MongoSyncDao<T>(idMapper: IdMapper<T>, val documentMapper: DocumentMapper<
         val aggs = doAggs(request, mongoQuery, mongoAggs)
         return handleResult(request, docs, totalItems, aggs)
     }
-
-    fun streamItems(request: SearchRequest): List<T> {
-        val mongoQuery = queryConverter.convertQuery(request.query ?: MatchAllQuery())
-        return if (request.limit > 0) {
-            val fields = Document()
-            request.fields.forEach { fields[it.name] = "1" }
-            collection.find(mongoQuery)
-                    .projection(fields)
-                    .sort(queryConverter.convertSorts(request.sorts))
-                    .limit(request.limit.toInt()).skip(request.offset.toInt())
-                    .toList()
-                    .map { decodeItem(it) }
-        } else emptyList()
-    }
-
-    fun streamRows(request: SearchRequest): List<Any?> {
-        val mongoQuery = queryConverter.convertQuery(request.query ?: MatchAllQuery())
-        return if (request.limit > 0) {
-            val fields = Document()
-            request.fields.forEach { fields[it.name] = "1" }
-            collection.find(mongoQuery)
-                    .projection(fields)
-                    .sort(queryConverter.convertSorts(request.sorts))
-                    .limit(request.limit.toInt()).skip(request.offset.toInt())
-                    .toList()
-                    .map { decodeRow(request.fields, it) }
-        } else emptyList()
-    }
-
-
+    
     override fun save(id: String, entity: T): T? {
         collection.replaceOne(Document("_id", id), encode(entity), UpdateOptions().upsert(true))
         return entity

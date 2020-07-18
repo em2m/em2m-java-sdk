@@ -39,6 +39,7 @@ import rx.Observable
 import rx.Observable.just
 import java.util.*
 
+@Deprecated("AsyncDao is no longer supported", replaceWith = ReplaceWith("io.em2m.search.mongo.MongoSyncDao"))
 class MongoSearchDao<T>(idMapper: IdMapper<T>, val documentMapper: DocumentMapper<T>, val collection: MongoCollection<Document>, schemaMapper: SchemaMapper = SimpleSchemaMapper("")) :
         AbstractSearchDao<T>(idMapper) {
 
@@ -110,10 +111,10 @@ class MongoSearchDao<T>(idMapper: IdMapper<T>, val documentMapper: DocumentMappe
         val mongoAggs = queryConverter.convertAggs(request.aggs)
         try {
             return Observable.zip(
-                            doSearch(request, mongoQuery), doCount(request, mongoQuery), doAggs(request, mongoQuery, mongoAggs)
-                    ) { docs, totalItems, aggs ->
-                        handleResult(request, docs, totalItems, aggs)
-                    }
+                    doSearch(request, mongoQuery), doCount(request, mongoQuery), doAggs(request, mongoQuery, mongoAggs)
+            ) { docs, totalItems, aggs ->
+                handleResult(request, docs, totalItems, aggs)
+            }
                     .doOnError { err -> log.error("Error searching mongo", err) }
                     .doOnNext { results -> log.debug("results: " + results) }
         } catch (e: Exception) {
