@@ -63,6 +63,9 @@ open class ServletRuntime(private val actionPrefix: String, private val processo
         val sourceIp = servletRequest.remoteAddr
         val referer = servletRequest.getHeader("referer")
         val token = servletRequest.getHeader("Authorization")?.replace("Bearer ", "")
+                // some special case rewrites to deal with bad clients
+                .let { if (it == "undefined") null else it }
+                .let { if (it == "null") null else it }
         val userAgent = servletRequest.getHeader("user-agent")
         val secureTransport = servletRequest.isSecure
         val contentType = servletRequest.contentType
