@@ -29,7 +29,7 @@ class PathPipe() : PipeTransform {
         val items: List<Any?> = values.coerce() ?: emptyList()
         if (items.isNullOrEmpty()) return null
         val result: MutableList<Any?> = mutableListOf()
-        items.forEach{
+        items.forEach {
             val obj: Map<String, Any?> = it.coerce() ?: emptyMap()
             if (!obj.isNullOrEmpty()) {
                 val value = obj.evalPath(path!!)
@@ -41,7 +41,25 @@ class PathPipe() : PipeTransform {
 
 }
 
+class EntriesPipe : PipeTransform {
+
+    override fun transform(value: Any?, context: ExprContext): Any? {
+        return when {
+            (value is List<*>) -> transformObject(value.firstOrNull())
+            (value is Array<*>) -> transformObject(value.firstOrNull())
+            else -> transformObject(value)
+        }
+    }
+
+    private fun transformObject(value: Any?): Any? {
+        val map: Map<String, Any?> = value.coerce() ?: emptyMap()
+        return map.entries
+    }
+
+}
+
 object Objects {
     val pipes = BasicPipeTransformResolver()
             .transform("path") { PathPipe() }
+            .transform("entries", EntriesPipe())
 }
