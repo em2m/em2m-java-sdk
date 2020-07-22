@@ -6,6 +6,7 @@ import io.em2m.simplex.model.Key
 import io.em2m.simplex.model.KeyHandler
 import io.em2m.simplex.model.PathKeyHandler
 import org.junit.Test
+import java.util.Map
 import kotlin.test.assertEquals
 
 class ObjectsTest {
@@ -92,4 +93,24 @@ class ObjectsTest {
         assertEquals(bar13, "bar1, bar3")
         assertEquals(bar24, "bar2, bar4")
     }
+
+    @Test
+    fun testSingleObjectEntries() {
+        val data = mapOf("foo" to "bar1", "foo2" to "bar2")
+        val context = mapOf("fieldValues" to mapOf("data" to data))
+        val entries = simplex.eval("\${f:data | entries}", context) as List<Map.Entry<*, *>>
+        assertEquals(2, entries.size)
+        assertEquals("foo", entries[0].key)
+        assertEquals("foo2", entries[1].key)
+        //assertEquals(data.entries.toTypedArray(), entries)
+    }
+
+    @Test
+    fun testSingleObjectEntriesJoin() {
+        val data = mapOf("foo" to "bar1", "foo2" to "bar2")
+        val context = mapOf("fieldValues" to mapOf("data" to data))
+        val result = simplex.eval("\${f:data | entries | path:key | join}", context).toString()
+        assertEquals("foo, foo2", result)
+    }
+
 }
