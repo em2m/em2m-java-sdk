@@ -45,4 +45,14 @@ class ArrayTest {
         assertEquals("C", result)
     }
 
+    @Test
+    fun testSlice() {
+        val result1 = simplex.eval("\${ns:key1 | slice:0:0}", emptyMap())
+        val result2 = simplex.eval("\${ns:key1 | slice:0:1}", emptyMap())
+        val result3 = simplex.eval("\${ns:key1 | slice:1:1}", emptyMap())
+        assertEquals(listOf("A"), result1)
+        assertEquals(listOf("A", "B"), result2)
+        assertEquals(listOf("B"), result3)
+    }
+
 }

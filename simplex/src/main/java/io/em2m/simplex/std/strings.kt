@@ -7,12 +7,10 @@ import java.util.regex.Matcher
 
 class UpperCasePipe : PipeTransform {
     override fun transform(value: Any?, context: ExprContext): Any? {
-        return if (value is List<*>) {
-            value.map { it?.toString()?.toUpperCase() }
-        } else if (value is Array<*>) {
-            value.map { it?.toString()?.toUpperCase() }
-        } else {
-            value?.toString()?.toUpperCase()
+        return when (value) {
+            is Iterable<*> ->  value.map { it?.toString()?.toUpperCase() }
+            is Array<*> -> value.map { it?.toString()?.toUpperCase() }
+            else -> value?.toString()?.toUpperCase()
         }
     }
 }
@@ -20,7 +18,7 @@ class UpperCasePipe : PipeTransform {
 
 class CapitalizePipe : PipeTransform {
     override fun transform(value: Any?, context: ExprContext): Any? {
-        return if (value is List<*>) {
+        return if (value is Iterable<*>) {
             value.map { it?.toString()?.capitalize() }
         } else if (value is Array<*>) {
             value.map { it?.toString()?.capitalize() }
@@ -32,7 +30,7 @@ class CapitalizePipe : PipeTransform {
 
 class TrimPipe : PipeTransform {
     override fun transform(value: Any?, context: ExprContext): Any? {
-        return if (value is List<*>) {
+        return if (value is Iterable<*>) {
             value.map { it?.toString()?.trim() }
         } else if (value is Array<*>) {
             value.map { it?.toString()?.trim() }
@@ -90,7 +88,7 @@ class JoinPipe : PipeTransform {
 
     override fun transform(value: Any?, context: ExprContext): Any? {
         return when (value) {
-            is List<*> -> value.joinToString(separator)
+            is Iterable<*> -> value.joinToString(separator)
             is Array<*> -> value.joinToString(separator)
             else -> value
         }
@@ -100,7 +98,7 @@ class JoinPipe : PipeTransform {
 class EmptyToNull : PipeTransform {
 
     override fun transform(value: Any?, context: ExprContext): Any? {
-        return if (value is List<*>) {
+        return if (value is Iterable<*>) {
             value.map {
                 if ((it as? String)?.isEmpty() == true) null else it
             }
@@ -127,7 +125,7 @@ class Split : PipeTransform {
 
     override fun transform(value: Any?, context: ExprContext): Any? {
         return when (value) {
-            is List<*> -> {
+            is Iterable<*> -> {
                 value.flatMap { it?.toString()?.split(separator) ?: emptyList() }
             }
             is Array<*> -> {
@@ -144,11 +142,11 @@ class Split : PipeTransform {
 open class SingleStringHandler(private val op: (String?, String?) -> Boolean) : ConditionHandler {
 
     override fun test(keyValue: Any?, conditionValue: Any?): Boolean {
-        val keyString: String? = if (keyValue is List<*>) {
-            keyValue[0].coerce()
+        val keyString: String? = if (keyValue is Iterable<*>) {
+            keyValue.first().coerce()
         } else keyValue.coerce()
-        val valueString: String? = if (conditionValue is List<*>) {
-            conditionValue[0].coerce()
+        val valueString: String? = if (conditionValue is Iterable<*>) {
+            conditionValue.first().coerce()
         } else conditionValue.coerce()
 
         return op(keyString, valueString)
@@ -158,8 +156,8 @@ open class SingleStringHandler(private val op: (String?, String?) -> Boolean) : 
 open class ForAnyStringHandler(private val op: (String?, String?) -> Boolean) : ConditionHandler {
 
     override fun test(keyValue: Any?, conditionValue: Any?): Boolean {
-        val keyList = keyValue as? List<*> ?: listOf(keyValue)
-        val valList = conditionValue as? List<*> ?: listOf(conditionValue)
+        val keyList = keyValue as? Iterable<*> ?: listOf(keyValue)
+        val valList = conditionValue as? Iterable<*> ?: listOf(conditionValue)
 
         var result = false
 
@@ -179,8 +177,8 @@ open class ForAllStringHandler(private val op: (String?, String?) -> Boolean) : 
     override fun test(keyValue: Any?, conditionValue: Any?): Boolean {
         val keyList = if (keyValue == null) {
             emptyList<Any>()
-        } else keyValue as? List<*> ?: listOf(keyValue)
-        val valList = conditionValue as? List<*> ?: listOf(conditionValue)
+        } else keyValue as? Iterable<*> ?: listOf(keyValue)
+        val valList = conditionValue as? Iterable<*> ?: listOf(conditionValue)
 
         return keyList.fold(true) { result, key ->
             result && valList.any { op(key.coerce(), it.coerce()) }
