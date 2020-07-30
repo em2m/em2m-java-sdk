@@ -4,7 +4,7 @@ import javax.servlet.http.HttpServlet
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
 
-abstract class ActionServlet() : HttpServlet() {
+abstract class ActionServlet() : AbstractCorsServlet() {
 
     abstract val runtime: ServletRuntime
 

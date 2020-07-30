@@ -6,16 +6,16 @@ import javax.servlet.http.HttpServletResponse
 
 abstract class AbstractCorsServlet : HttpServlet() {
 
-    var maxAge: Int = 600
-    var allowHeaders = listOf("Authorization, Origin, X-Requested-With, Content-Type, Accept")
-    var allowMethods = listOf("POST, GET, OPTIONS, PUT, DELETE")
-    val allowCredentials = true
-    val allowOrigin = "*"
+    var maxAge = 600.toString()
+    var allowHeaders = listOf("Authorization, Origin, X-Requested-With, Content-Type, Accept").joinToString(",")
+    var allowMethods = listOf("POST, GET, OPTIONS, PUT, DELETE").joinToString(",")
+    private val allowCredentials = true
+    private val allowOrigin = "*"
 
     override fun doOptions(req: HttpServletRequest, resp: HttpServletResponse) {
-        resp.addHeader("Access-Control-Max-Age", "$maxAge")
-        resp.addHeader("Access-Control-Allow-Headers", allowHeaders.joinToString(","))
-        resp.addHeader("Access-Control-Allow-Methods", allowMethods.joinToString(","))
+        resp.addHeader("Access-Control-Max-Age", maxAge)
+        resp.addHeader("Access-Control-Allow-Headers", allowHeaders)
+        resp.addHeader("Access-Control-Allow-Methods", allowMethods)
 
         val origin = req.getHeader("Origin")
         if (origin != null) {
