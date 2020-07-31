@@ -14,10 +14,12 @@ abstract class ActionServlet() : AbstractCorsServlet() {
     }
 
     override fun doPost(req: HttpServletRequest, resp: HttpServletResponse) {
+        addCorsHeaders(resp)
         runtime.process(actionName(req), req, resp)
     }
 
     override fun doGet(req: HttpServletRequest, resp: HttpServletResponse) {
+        addCorsHeaders(resp)
         runtime.process(actionName(req), req, resp)
     }
 
