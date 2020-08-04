@@ -60,7 +60,7 @@ class ActionProcessorBuilder {
         return object : ActionFlowResolver {
             override fun findFlow(context: ActionContext): ActionFlow? {
                 val key = context.actionName
-                return instances.getOrElse(key) {
+                return instances.getOrPut(key) {
                     classes[key]?.let {
                         injector.getInstance(it.java)
                     }
