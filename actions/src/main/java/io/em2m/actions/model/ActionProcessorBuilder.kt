@@ -3,6 +3,7 @@ package io.em2m.actions.model
 import com.google.inject.Guice
 import com.google.inject.Injector
 import com.google.inject.Module
+import java.util.concurrent.ConcurrentHashMap
 import kotlin.reflect.KClass
 
 
@@ -10,7 +11,7 @@ class ActionProcessorBuilder {
 
     private var prefix: String? = null
     private val classes = HashMap<String, KClass<out ActionFlow>>()
-    private val instances = HashMap<String, ActionFlow>()
+    private val instances = ConcurrentHashMap<String, ActionFlow>()
     private val modules = ArrayList<Module>()
     private var injector: Injector? = null
     private val xforms = ArrayList<ActionTransformer>()
@@ -59,8 +60,10 @@ class ActionProcessorBuilder {
         return object : ActionFlowResolver {
             override fun findFlow(context: ActionContext): ActionFlow? {
                 val key = context.actionName
-                return instances[key] ?: classes[key]?.let {
-                    injector.getInstance(it.java)
+                return instances.getOrElse(key) {
+                    classes[key]?.let {
+                        injector.getInstance(it.java)
+                    }
                 }
             }
         }
