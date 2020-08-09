@@ -28,7 +28,7 @@ object BeanHelper {
     private val loader = BeanPropertiesLoader()
 
     fun getProperties(clazz: Class<*>): Map<String, PropertyDescriptor>? {
-        return cache.computeIfAbsent(clazz, loader)
+        return cache.getOrPut(clazz, { loader.apply(clazz) })
     }
 
     fun getPropertyDescriptor(clazz: Class<*>?, property: String): PropertyDescriptor? {
@@ -44,10 +44,19 @@ object BeanHelper {
         }
     }
 
+    fun putPropertyValue(obj: Any?, property: String, value: Any?) {
+        try {
+            val descriptor = BeanHelper.getPropertyDescriptor(obj?.javaClass, property)
+            descriptor?.writeMethod?.invoke(obj, value)
+        } catch (ex: Exception) {
+        }
+    }
+
 }
 
 interface PathPart {
     fun call(obj: Any?): Any?
+    fun put(obj: Any?, value: Any?)
 }
 
 class PropertyPathPart(val property: String) : PathPart {
@@ -74,6 +83,22 @@ class PropertyPathPart(val property: String) : PathPart {
         } else result
     }
 
+    override fun put(obj: Any?, value: Any?) {
+        when (obj) {
+            is MutableMap<*, *> -> (obj as MutableMap<String, Any?>)[property] = value
+            is ObjectNode -> obj.putPOJO(property, value)
+            else -> {
+                if (obj is MutableList<*> && index != null) {
+                    (obj as MutableList<Any?>)[index] = value
+                } else if (obj is Array<*> && index != null) {
+                    (obj as Array<Any?>)[index] = value
+                } else {
+                    BeanHelper.putPropertyValue(obj, property, value)
+                }
+            }
+        }
+    }
+
     private fun unwrapNode(node: JsonNode): Any? {
         return when (node) {
             is BinaryNode -> node.binaryValue()
@@ -87,7 +112,9 @@ class PropertyPathPart(val property: String) : PathPart {
             else -> node
         }
     }
+
 }
+
 
 class PathExpr(val path: String) {
 
@@ -103,6 +130,11 @@ class PathExpr(val path: String) {
                 .map {
                     PropertyPathPart(it)
                 }
+    }
+
+    fun setValue(context: Any?, value: Any?) {
+        val parent = parts.dropLast(1).fold(context) { acc, next -> next.call(acc) }
+        parts.last().put(parent, value)
     }
 
 }
@@ -122,12 +154,16 @@ class PathKeyHandler(val simplex: Simplex, val prefix: String? = null, val addSe
     }
 
     private fun getPath(name: String, context: ExprContext): Any? {
-        return if (prefix == null) {
-            simplex.getPath(name, context)
-        } else if (addSeparator) {
-            simplex.getPath(prefix + "." + name, context)
-        } else {
-            simplex.getPath(prefix + name, context)
+        return when {
+            prefix == null -> {
+                simplex.getPath(name, context)
+            }
+            addSeparator -> {
+                simplex.getPath("$prefix.$name", context)
+            }
+            else -> {
+                simplex.getPath(prefix + name, context)
+            }
         }
     }
 }
