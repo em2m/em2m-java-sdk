@@ -36,7 +36,6 @@ class ExprParser(private val keyResolver: KeyResolver, private val pipeTransform
         val splits = text.split('|')
         val key = Key.parse(splits.first().trim())
         val handler = keyResolver.find(key)
-
         val transforms: List<PipeTransform> = if (splits.size > 1) {
             splits.drop(1).map(::parseTransform)
         } else emptyList()
