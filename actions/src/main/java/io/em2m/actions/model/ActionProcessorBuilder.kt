@@ -60,11 +60,14 @@ class ActionProcessorBuilder {
         return object : ActionFlowResolver {
             override fun findFlow(context: ActionContext): ActionFlow? {
                 val key = context.actionName
-                return instances.getOrPut(key) {
-                    classes[key]?.let {
-                        injector.getInstance(it.java)
+                val clazz = classes[key]
+                return instances[key] ?: if (clazz != null) {
+                    instances.getOrPut(key) {
+                        classes[key]?.let {
+                            injector.getInstance(it.java)
+                        }
                     }
-                }
+                } else null
             }
         }
     }

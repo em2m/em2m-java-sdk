@@ -122,7 +122,7 @@ class Simplex(delegate: Simplex? = null) {
 
     fun eval(expr: String, context: ExprContext): Any? {
         val parsed = cache.getOrPut(expr, { parser.parse(expr) })
-        // safey measure until we implement an extensible caching API
+        // safety measure until we implement an extensible caching API
         if (cache.size > 1000) {
             cache.clear()
         }
