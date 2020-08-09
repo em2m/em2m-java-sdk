@@ -68,6 +68,15 @@ class PathTest {
     }
 
     @Test
+    fun testPutMissing() {
+        val expr = PathExpr("a.b.c")
+        val obj = HashMap<String, Any?>()
+        expr.setValue(obj, "value")
+        val value = expr.call(obj)
+        assertEquals("value", value)
+    }
+
+    @Test
     fun testArray() {
         val expr = PathExpr("f.1")
         val value = expr.call(map)
