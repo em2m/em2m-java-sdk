@@ -58,6 +58,7 @@ interface PathPart {
     fun get(obj: Any?): Any?
     fun getOrPut(obj: Any?, fn: (String) -> Any?): Any?
     fun put(obj: Any?, value: Any?)
+    fun remove(obj: Any?)
 }
 
 class PropertyPathPart(val property: String) : PathPart {
@@ -133,6 +134,22 @@ class PropertyPathPart(val property: String) : PathPart {
         }
     }
 
+    override fun remove(obj: Any?) {
+        when (obj) {
+            is MutableMap<*, *> -> (obj as MutableMap<String, Any?>).remove(property)
+            is ObjectNode -> obj.remove(property)
+            else -> {
+                if (obj is MutableList<*> && index != null) {
+                    (obj as MutableList<Any?>).removeAt(index)
+                } else if (obj is Array<*> && index != null) {
+                    (obj as Array<Any?>)[index] = null
+                } else {
+                    BeanHelper.putPropertyValue(obj, property, null)
+                }
+            }
+        }
+    }
+
     private fun unwrapNode(node: JsonNode): Any? {
         return when (node) {
             is BinaryNode -> node.binaryValue()
@@ -168,9 +185,16 @@ class PathExpr(val path: String) {
 
     fun setValue(context: Any?, value: Any?) {
         val parent = parts.dropLast(1).fold(context) { acc, next ->
-            next.getOrPut(acc) { HashMap<String, Any?>()}
+            next.getOrPut(acc) { HashMap<String, Any?>() }
         }
         parts.last().put(parent, value)
+    }
+
+    fun removeValue(context: Any?) {
+        val parent = parts.dropLast(1).fold(context) { acc, next ->
+            next.get(acc)
+        }
+        parts.last().remove(parent)
     }
 
 }
