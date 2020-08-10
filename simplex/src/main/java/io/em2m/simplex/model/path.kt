@@ -55,7 +55,8 @@ object BeanHelper {
 }
 
 interface PathPart {
-    fun call(obj: Any?): Any?
+    fun get(obj: Any?): Any?
+    fun getOrPut(obj: Any?, fn: (String) -> Any?): Any?
     fun put(obj: Any?, value: Any?)
 }
 
@@ -63,7 +64,7 @@ class PropertyPathPart(val property: String) : PathPart {
 
     val index = property.toIntOrNull()
 
-    override fun call(obj: Any?): Any? {
+    override fun get(obj: Any?): Any? {
 
         val result = when (obj) {
             is Map<*, *> -> obj[property]
@@ -75,6 +76,39 @@ class PropertyPathPart(val property: String) : PathPart {
                     obj[index]
                 } else {
                     BeanHelper.getPropertyValue(obj, property)
+                }
+            }
+        }
+        return if (result is JsonNode) {
+            unwrapNode(result)
+        } else result
+    }
+
+    override fun getOrPut(obj: Any?, fn: (String) -> Any?): Any? {
+
+        val result = when (obj) {
+            is MutableMap<*, *> -> {
+                (obj as MutableMap<String, Any?>).computeIfAbsent(property, fn)
+            }
+            is ObjectNode -> {
+                val result = obj.get(property)
+                if (result is MissingNode || result is NullNode) {
+                    obj.set<JsonNode>(property, JsonNodeFactory.instance.objectNode())
+                } else null
+            }
+            else -> {
+                if (obj is List<*> && index != null) {
+                    obj[index]
+                } else if (obj is Array<*> && index != null) {
+                    obj[index]
+                } else {
+                    var result = BeanHelper.getPropertyValue(obj, property)
+                    if (result == null) {
+                        val value = fn(property)
+                        BeanHelper.putPropertyValue(obj, property, value)
+                        result = value
+                    }
+                    result
                 }
             }
         }
@@ -121,7 +155,7 @@ class PathExpr(val path: String) {
     val parts: List<PathPart> = parse(path)
 
     fun call(context: Any?): Any? {
-        return parts.fold(context) { acc, next -> next.call(acc) }
+        return parts.fold(context) { acc, next -> next.get(acc) }
     }
 
     fun parse(expr: String): List<PathPart> {
@@ -133,7 +167,9 @@ class PathExpr(val path: String) {
     }
 
     fun setValue(context: Any?, value: Any?) {
-        val parent = parts.dropLast(1).fold(context) { acc, next -> next.call(acc) }
+        val parent = parts.dropLast(1).fold(context) { acc, next ->
+            next.getOrPut(acc) { HashMap<String, Any?>()}
+        }
         parts.last().put(parent, value)
     }
 
