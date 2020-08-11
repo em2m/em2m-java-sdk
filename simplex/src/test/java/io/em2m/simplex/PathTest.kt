@@ -48,7 +48,6 @@ class PathTest {
 
     }
 
-    @Ignore
     @Test
     fun testJson() {
         val expr = PathExpr(path)
