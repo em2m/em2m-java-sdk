@@ -77,6 +77,14 @@ class PathTest {
     }
 
     @Test
+    fun testRemove() {
+        val expr = PathExpr("a.b.c")
+        expr.removeValue(map)
+        val value = expr.call(map)
+        assertEquals(null, value)
+    }
+
+    @Test
     fun testArray() {
         val expr = PathExpr("f.1")
         val value = expr.call(map)

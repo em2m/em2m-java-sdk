@@ -2,13 +2,15 @@ package io.em2m.simplex.std
 
 import io.em2m.simplex.model.*
 import io.em2m.utils.coerce
+import java.net.URLDecoder
+import java.net.URLEncoder
 import java.util.regex.Matcher
 
 
 class UpperCasePipe : PipeTransform {
     override fun transform(value: Any?, context: ExprContext): Any? {
         return when (value) {
-            is Iterable<*> ->  value.map { it?.toString()?.toUpperCase() }
+            is Iterable<*> -> value.map { it?.toString()?.toUpperCase() }
             is Array<*> -> value.map { it?.toString()?.toUpperCase() }
             else -> value?.toString()?.toUpperCase()
         }
@@ -39,6 +41,43 @@ class TrimPipe : PipeTransform {
         }
     }
 }
+
+class UrlEncodePipe : PipeTransform {
+
+    override fun transform(value: Any?, context: ExprContext): Any? {
+        return if (value is Iterable<*>) {
+            value.map { encode(it) }
+        } else if (value is Array<*>) {
+            value.map { encode(it) }
+        } else {
+            encode(value)
+        }
+    }
+
+    fun encode(value: Any?): Any? {
+        return value?.toString()?.let { URLEncoder.encode(it, "UTF-8") } ?: value
+    }
+
+}
+
+class UrlDecodePipe : PipeTransform {
+
+    override fun transform(value: Any?, context: ExprContext): Any? {
+        return if (value is Iterable<*>) {
+            value.map { decode(it) }
+        } else if (value is Array<*>) {
+            value.map { decode(it) }
+        } else {
+            decode(value)
+        }
+    }
+
+    fun decode(value: Any?): Any? {
+        return value?.toString()?.let { URLDecoder.decode(it, "UTF-8") } ?: value
+    }
+
+}
+
 
 class AppendPipe : PipeTransform {
     var text = ""
@@ -246,13 +285,15 @@ object Strings {
 
     val pipes = BasicPipeTransformResolver()
             .transform("upperCase") { UpperCasePipe() }
-            .transform("capitalize" ) { CapitalizePipe() }
-            .transform("trim" ) { TrimPipe() }
-            .transform("append" ) { AppendPipe() }
-            .transform("prepend" ) { PrependPipe() }
-            .transform("join" ) { JoinPipe() }
-            .transform("emptyToNull" ) { EmptyToNull() }
-            .transform("split" ){ Split() }
+            .transform("capitalize") { CapitalizePipe() }
+            .transform("trim") { TrimPipe() }
+            .transform("append") { AppendPipe() }
+            .transform("prepend") { PrependPipe() }
+            .transform("join") { JoinPipe() }
+            .transform("emptyToNull") { EmptyToNull() }
+            .transform("split") { Split() }
+            .transform("urlEncode", UrlEncodePipe())
+            .transform("urlDecode", UrlDecodePipe())
     val keys = BasicKeyResolver()
     val conditions = BasicConditionResolver(StandardStringConditions)
 
