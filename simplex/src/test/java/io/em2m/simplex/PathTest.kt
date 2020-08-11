@@ -8,6 +8,7 @@ import io.em2m.simplex.model.PathKeyHandler
 import io.em2m.utils.coerceNonNull
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
+import org.junit.Ignore
 import org.junit.Test
 
 
@@ -47,6 +48,7 @@ class PathTest {
 
     }
 
+    @Ignore
     @Test
     fun testJson() {
         val expr = PathExpr(path)
