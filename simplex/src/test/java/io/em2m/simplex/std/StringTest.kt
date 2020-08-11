@@ -15,6 +15,7 @@ class StringTest : Assert() {
             Key("ns", "key2") to ConstKeyHandler("value2"),
             Key("ns", "key3") to ConstKeyHandler("value1, value2"),
             Key("ns", "key4") to ConstKeyHandler(listOf("value1, value2", "value3", "value4, value5")),
+            Key("ns", "key5") to ConstKeyHandler("a:b"),
             Key("ns", "pie") to ConstKeyHandler(3.14),
             Key("ns", "duration") to ConstKeyHandler(210_000),
             Key("ns", "five") to ConstKeyHandler(5)))
@@ -69,4 +70,14 @@ class StringTest : Assert() {
         assertEquals(expected1, actual1)
         assertEquals(expected2, actual2)
     }
+
+    @Test
+    fun testUrlEncode() {
+        val encodeExpr = "\${ns:key5 | urlEncode}"
+        val roundTripExpr = "\${ns:key5 | urlEncode | urlDecode}"
+        val expected = "a%3Ab"
+        assertEquals(expected, simplex.eval(encodeExpr, emptyMap()))
+        assertEquals("a:b", simplex.eval(roundTripExpr, emptyMap()))
+    }
+
 }
