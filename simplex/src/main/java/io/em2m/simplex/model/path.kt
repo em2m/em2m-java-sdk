@@ -88,14 +88,14 @@ class PropertyPathPart(val property: String) : PathPart {
     override fun getOrPut(obj: Any?, fn: (String) -> Any?): Any? {
 
         val result = when (obj) {
-            is MutableMap<*, *> -> {
-                (obj as MutableMap<String, Any?>).computeIfAbsent(property, fn)
-            }
             is ObjectNode -> {
                 val result = obj.get(property)
                 if (result is MissingNode || result is NullNode) {
                     obj.set<JsonNode>(property, JsonNodeFactory.instance.objectNode())
-                } else null
+                } else result
+            }
+            is MutableMap<*, *> -> {
+                (obj as MutableMap<String, Any?>).computeIfAbsent(property, fn)
             }
             else -> {
                 if (obj is List<*> && index != null) {
@@ -120,8 +120,8 @@ class PropertyPathPart(val property: String) : PathPart {
 
     override fun put(obj: Any?, value: Any?) {
         when (obj) {
-            is MutableMap<*, *> -> (obj as MutableMap<String, Any?>)[property] = value
             is ObjectNode -> obj.putPOJO(property, value)
+            is MutableMap<*, *> -> (obj as MutableMap<String, Any?>)[property] = value
             else -> {
                 if (obj is MutableList<*> && index != null) {
                     (obj as MutableList<Any?>)[index] = value
