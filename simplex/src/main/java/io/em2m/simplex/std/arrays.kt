@@ -95,6 +95,31 @@ class SizePipe : PipeTransform {
     }
 }
 
+class SlicePipe : PipeTransform {
+
+    var range = IntRange(0, 0)
+
+    override fun args(args: List<String>) {
+        if (args.isNotEmpty()) {
+            val start = if (args.isNotEmpty()) {
+                try {args[0].toInt()} catch (ex: RuntimeException) { 0 }
+            } else { 0 }
+            val end = if (args.size > 1) {
+                try {args[1].toInt()} catch (ex: RuntimeException) { 0 }
+            } else { 0 }
+            range = IntRange(start, end)
+        }
+    }
+    override fun transform(value: Any?, context: ExprContext): Any? {
+        return when (value) {
+            is List<*> -> value.slice(range)
+            is Array<*> -> value.slice(range)
+            is String -> value.slice(range)
+            else -> null
+        }
+    }
+}
+
 
 val StandardArrayConditions = emptyMap<String, ConditionHandler>()
 
@@ -110,7 +135,8 @@ object Arrays {
                     "firstNotBlank" to FirstNotBlankPipe(),
                     "last" to LastPipe(),
                     "lastNotBlank" to LastNotBlankPipe(),
-                    "size" to SizePipe()
+                    "size" to SizePipe(),
+                    "slice" to SlicePipe()
             )
     )
 }

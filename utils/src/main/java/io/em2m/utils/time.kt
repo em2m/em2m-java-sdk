@@ -19,19 +19,22 @@ object TimeAgo {
         var duration = span
         val prefix = when {
             (duration >= 0 && !withoutAffix) -> "in "
-            else -> ""
+            else -> null
         }
         val suffix = when {
             (duration < 0 && !withoutAffix) -> " ago"
-            else -> ""
+            else -> null 
         }
         if (duration < 0 ) duration *= -1
-        val res = StringBuffer()
+        val res = StringBuilder()
         for (i in TimeAgo.times.indices) {
             val current = TimeAgo.times[i]
             val temp = duration / current
             if (temp > 0) {
-                res.append(prefix).append(temp).append(" ").append(timeUnits[i]).append(if (temp != 1L) "s" else "").append(suffix)
+                if (prefix != null) res.append(prefix)
+                res.append(temp).append(" ").append(timeUnits[i])
+                if (temp != 1L) res.append("s") 
+                if (suffix != null) res.append(suffix)
                 break
             }
         }

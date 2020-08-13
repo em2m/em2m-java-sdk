@@ -8,6 +8,7 @@ import io.em2m.simplex.model.PathKeyHandler
 import io.em2m.utils.coerceNonNull
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
+import org.junit.Ignore
 import org.junit.Test
 
 
@@ -15,7 +16,7 @@ class PathTest {
 
     data class Bean(val a: A)
     data class A(val b: B)
-    data class B(val c: String)
+    data class B(var c: String)
 
     val bean = Bean(A(B(c = "value")))
 
@@ -27,7 +28,8 @@ class PathTest {
             }
           },
           "d": "dval",
-          "e": "eval"
+          "e": "eval",
+          "f": ["a", "b", "c"]
         }
     """)
 
@@ -40,6 +42,10 @@ class PathTest {
         val expr = PathExpr(path)
         val value = expr.call(bean)
         assertEquals("value", value)
+
+        expr.setValue(bean, "value2")
+        assertEquals("value2", expr.call(bean))
+
     }
 
     @Test
@@ -47,6 +53,9 @@ class PathTest {
         val expr = PathExpr(path)
         val value = expr.call(json)
         assertEquals("value", value)
+
+        expr.setValue(json, "value2")
+        assertEquals("value2", expr.call(json))
     }
 
     @Test
@@ -54,6 +63,36 @@ class PathTest {
         val expr = PathExpr(path)
         val value = expr.call(map)
         assertEquals("value", value)
+
+        expr.setValue(map, "value2")
+        assertEquals("value2", expr.call(map))
+    }
+
+    @Test
+    fun testPutMissing() {
+        val expr = PathExpr("a.b.c")
+        val obj = HashMap<String, Any?>()
+        expr.setValue(obj, "value")
+        val value = expr.call(obj)
+        assertEquals("value", value)
+    }
+
+    @Test
+    fun testRemove() {
+        val expr = PathExpr("a.b.c")
+        expr.removeValue(map)
+        val value = expr.call(map)
+        assertEquals(null, value)
+    }
+
+    @Test
+    fun testArray() {
+        val expr = PathExpr("f.1")
+        val value = expr.call(map)
+        assertEquals("b", value)
+
+        expr.setValue(map, "B")
+        assertEquals("B", expr.call(map))
     }
 
     @Test

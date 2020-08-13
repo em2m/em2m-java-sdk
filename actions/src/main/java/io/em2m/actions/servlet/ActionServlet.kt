@@ -4,7 +4,7 @@ import javax.servlet.http.HttpServlet
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
 
-abstract class ActionServlet() : HttpServlet() {
+abstract class ActionServlet() : AbstractCorsServlet() {
 
     abstract val runtime: ServletRuntime
 
@@ -14,10 +14,12 @@ abstract class ActionServlet() : HttpServlet() {
     }
 
     override fun doPost(req: HttpServletRequest, resp: HttpServletResponse) {
+        addCorsHeaders(resp)
         runtime.process(actionName(req), req, resp)
     }
 
     override fun doGet(req: HttpServletRequest, resp: HttpServletResponse) {
+        addCorsHeaders(resp)
         runtime.process(actionName(req), req, resp)
     }
 

@@ -13,6 +13,7 @@ import org.locationtech.jts.geom.Envelope
         Type(value = RangeQuery::class, name = "range"),
         Type(value = DateRangeQuery::class, name = "date_range"),
         Type(value = TermQuery::class, name = "term"),
+        Type(value = TermsQuery::class, name = "terms"),
         Type(value = MatchQuery::class, name = "match"),
         Type(value = RegexQuery::class, name = "regex"),
         Type(value = PrefixQuery::class, name = "prefix"),
@@ -41,7 +42,11 @@ class AndQuery(of: List<Query>) : BoolQuery(of) {
     constructor(vararg of: Query) : this(of.asList())
 
     override fun simplify(): Query {
-        val ofx = of.map { it.simplify() }.filter { it !is MatchAllQuery }
+        val ofx = of
+                .map { it.simplify() }
+                // lift terms of nested AND into this AND
+                .flatMap { if (it is AndQuery) it.of else listOf(it) }
+                .filter { it !is MatchAllQuery }
 
         return when {
             ofx.isEmpty() -> MatchAllQuery()
@@ -61,7 +66,10 @@ class OrQuery(of: List<Query>) : BoolQuery(of) {
     constructor(vararg of: Query) : this(of.asList())
 
     override fun simplify(): Query {
-        val ofx = of.map { it.simplify() }
+        val ofx = of
+                .map { it.simplify() }
+                .flatMap { if (it is OrQuery) it.of else listOf(it) }
+
         val matchAllCount = ofx.count { it is MatchAllQuery }
 
         return when {

@@ -6,23 +6,20 @@ import javax.servlet.http.HttpServletResponse
 
 abstract class AbstractCorsServlet : HttpServlet() {
 
-    var maxAge: Int = 600
-    var allowHeaders = listOf("Authorization, Origin, X-Requested-With, Content-Type, Accept")
-    var allowMethods = listOf("POST, GET, OPTIONS, PUT, DELETE")
-    val allowCredentials = true
-    val allowOrigin = "*"
+    var maxAge = 600.toString()
+    var allowHeaders = "Access-Control-Allow-Headers,Access-Control-Allow-Origin,Authorization,Origin,X-Requested-With,Content-Type,Accept,X-Em2m-Timezone"
+    var allowMethods = listOf("POST, GET, OPTIONS, PUT, DELETE").joinToString(",")
+    private val allowCredentials = true
+    private val allowOrigin = "*"
 
     override fun doOptions(req: HttpServletRequest, resp: HttpServletResponse) {
-        resp.addHeader("Access-Control-Max-Age", "$maxAge")
-        resp.addHeader("Access-Control-Allow-Headers", allowHeaders.joinToString(","))
-        resp.addHeader("Access-Control-Allow-Methods", allowMethods.joinToString(","))
+        addCorsHeaders(resp)
+    }
 
-        val origin = req.getHeader("Origin")
-        if (origin != null) {
-            resp.addHeader("Access-Control-Allow-Origin", origin)
-            resp.addHeader("Access-Control-Allow-Credentials", "$allowCredentials")
-        } else {
-            resp.addHeader("Access-Control-Allow-Origin", allowOrigin)
-        }
+    fun addCorsHeaders(resp: HttpServletResponse) {
+        resp.addHeader("Access-Control-Max-Age", maxAge)
+        resp.addHeader("Access-Control-Allow-Headers", allowHeaders)
+        resp.addHeader("Access-Control-Allow-Methods", allowMethods)
+        resp.addHeader("Access-Control-Allow-Origin", allowOrigin)
     }
 }

@@ -39,9 +39,17 @@ class RoundPipe : PipeTransform {
     }
 
     override fun transform(value: Any?, context: ExprContext): Any? {
-        return if (value is Number) {
-            BigDecimal(value.toDouble()).setScale(precision, RoundingMode.HALF_UP)
-        } else value
+        return when (value) {
+            is Iterable<*> ->  value.map { it?.round()}
+            is Array<*> -> value.map { it?.round() }
+            else -> value?.round()
+        }
+    }
+
+    private fun Any.round(): Any? {
+        return if (this is Number) {
+            BigDecimal(this.toDouble()).setScale(precision, RoundingMode.HALF_UP)
+        } else this
     }
 
 }
