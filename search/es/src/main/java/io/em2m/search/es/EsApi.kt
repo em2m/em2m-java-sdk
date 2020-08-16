@@ -378,46 +378,46 @@ class EsAliasRequest() {
 @Headers("Content-Type: application/json")
 interface EsApi {
 
-    @RequestLine("POST /{index}/{type}/_search")
+    @RequestLine(value = "POST /{index}/{type}/_search", decodeSlash = false)
     fun search(@Param("index") index: String, @Param("type") type: String, request: EsSearchRequest): EsSearchResult
 
-    @RequestLine("POST /{index}/{type}/_search?scroll={scroll}")
+    @RequestLine(value = "POST /{index}/{type}/_search?scroll={scroll}", decodeSlash = false)
     fun search(@Param("index") index: String, @Param("type") type: String, @Param("scroll") scroll: String, request: EsSearchRequest): EsSearchResult
 
-    @RequestLine("GET /_search/scroll?scroll={scroll}&scroll_id={scrollId}")
+    @RequestLine(value = "GET /_search/scroll?scroll={scroll}&scroll_id={scrollId}", decodeSlash = false)
     fun scroll(@Param("scroll") scroll: String, @Param("scrollId") scrollId: String): EsSearchResult
 
-    @RequestLine("PUT /{index}/")
+    @RequestLine(value = "PUT /{index}/", decodeSlash = false)
     fun createIndex(@Param("index") index: String)
 
-    @RequestLine("PUT /{index}/")
+    @RequestLine(value = "PUT /{index}/", decodeSlash = false)
     fun createIndex(@Param("index") index: String, settings: ObjectNode)
 
-    @RequestLine("DELETE /{index}/")
+    @RequestLine(value = "DELETE /{index}/", decodeSlash = false)
     fun deleteIndex(@Param("index") index: String)
 
-    @RequestLine("HEAD /{index}/")
+    @RequestLine(value = "HEAD /{index}/", decodeSlash = false)
     fun indexExists(@Param("index") index: String)
 
-    @RequestLine("GET /{index}/_mapping")
+    @RequestLine(value = "GET /{index}/_mapping", decodeSlash = false)
     fun getMappings(@Param("index") index: String): ObjectNode
 
-    @RequestLine("HEAD /{index}/{type}")
+    @RequestLine(value = "HEAD /{index}/{type}", decodeSlash = false)
     fun mappingExists(@Param("index") index: String, @Param("type") type: String)
 
-    @RequestLine("GET /{index}/_mapping/{type}")
+    @RequestLine(value = "GET /{index}/_mapping/{type}", decodeSlash = false)
     fun getMapping(@Param("index") index: String, @Param("type") type: String): ObjectNode
 
-    @RequestLine("PUT /{index}/_mapping/{type}")
+    @RequestLine(value = "PUT /{index}/_mapping/{type}", decodeSlash = false)
     fun putMapping(@Param("index") index: String, @Param("type") type: String, mapping: ObjectNode)
 
-    @RequestLine("POST /{index}/{type}/{id}")
+    @RequestLine(value = "POST /{index}/{type}/{id}", decodeSlash = false)
     fun put(@Param("index") index: String, @Param("type") type: String, @Param("id") id: String, document: Any)
 
-    @RequestLine("GET /{index}/{type}/{id}")
+    @RequestLine(value = "GET /{index}/{type}/{id}", decodeSlash = false)
     fun get(@Param("index") index: String, @Param("type") type: String, @Param("id") id: String): EsHit
 
-    @RequestLine("DELETE /{index}/{type}/{id}")
+    @RequestLine(value = "DELETE /{index}/{type}/{id}", decodeSlash = false)
     fun delete(@Param("index") index: String, @Param("type") type: String, @Param("id") id: String)
 
     @Headers("Content-Type: application/x-ndjson")
