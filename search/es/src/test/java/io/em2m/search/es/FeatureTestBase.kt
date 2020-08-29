@@ -1,6 +1,7 @@
 package io.em2m.search.es
 
 import com.fasterxml.jackson.databind.DeserializationFeature
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.databind.node.ObjectNode
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
@@ -27,42 +28,42 @@ abstract class FeatureTestBase : Assert() {
             esClient.deleteIndex("features")
         } catch (e: Exception) {
         }
-        flush();
+        flush()
         esClient.createIndex("features")
-        flush();
+        flush()
         esClient.putMapping("features", "doc", mapping)
-        flush();
+        flush()
         for (feature in earthquakes().features) {
-            esClient.put("features", "doc", feature.id!!, feature);
+            esClient.put("features", "doc", feature.id!!, feature)
         }
         flush()
     }
 
-    fun flush() {
+    private fun flush() {
         esClient.flush()
         // nodeClient.admin().indices().prepareRefresh().execute().actionGet();
     }
 
     companion object {
 
-        var mapper = jacksonObjectMapper().registerModule(GeoJsonModule())
+        private var mapper: ObjectMapper = jacksonObjectMapper().registerModule(GeoJsonModule())
                 .enable(SerializationFeature.INDENT_OUTPUT)
                 .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
 
         val idMapper = FnIdMapper<Feature>("id", { it.id!! }, { f, id -> f.id = id; f })
 
         fun earthquakes(): FeatureCollection {
-            val handler = FeatureCollectionHandler();
-            val parser = GeoJsonParser();
-            parser.handler(handler);
-            parser.parse(FileInputStream("src/test/resources/earthquakes_2.5_day.geojson"));
-            val result = handler.collection;
-            Assert.assertEquals(46, result.features.size);
-            return result;
+            val handler = FeatureCollectionHandler()
+            val parser = GeoJsonParser()
+            parser.handler(handler)
+            parser.parse(FileInputStream("src/test/resources/earthquakes_2.5_day.geojson"))
+            val result = handler.collection
+            assertEquals(46, result.features.size)
+            return result
         }
 
-        val es6 = false
-        val mappingPath = if (es6) {
+        const val es6 = false
+        private val mappingPath = if (es6) {
             "src/test/resources/mapping_es6.json"
         } else {
             "src/test/resources/mapping_es2.json"

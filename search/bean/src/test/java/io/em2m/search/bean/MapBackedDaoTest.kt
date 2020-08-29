@@ -53,7 +53,7 @@ class MapBackedDaoTest {
     @Test
     @Throws(Exception::class)
     fun testFields() {
-        var req = SearchRequest(
+        val req = SearchRequest(
                 limit = 10,
                 fields = listOf(Field("fields.title"), Field("fields.genres")))
         val results = dao.search(req)
@@ -70,7 +70,7 @@ class MapBackedDaoTest {
     @Test
     @Throws(Exception::class)
     fun testAgg() {
-        var req = SearchRequest(limit = 0, query = MatchAllQuery(), aggs = listOf(
+        val req = SearchRequest(limit = 0, query = MatchAllQuery(), aggs = listOf(
                 TermsAgg("fields.actors", key = "actors", size = 10),
                 FiltersAgg(mapOf("sci-fi" to TermQuery("fields.genres", "Sci-Fi"), "fantasy" to TermQuery("fields.genres", "Drama")), key = "genres")))
         val results = dao.search(req)
@@ -84,7 +84,7 @@ class MapBackedDaoTest {
     @Test
     @Throws(Exception::class)
     fun testSort() {
-        var req = SearchRequest(limit = 100, fields = listOf(Field(name = "fields.rank")),
+        val req = SearchRequest(limit = 100, fields = listOf(Field(name = "fields.rank")),
                 query = MatchAllQuery(), sorts = listOf(DocSort("fields.rank", Direction.Descending))
         )
         val results = dao.search(req)
