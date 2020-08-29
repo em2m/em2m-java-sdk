@@ -1,23 +1,22 @@
 package io.em2m.search.core.model
 
 import com.nhaarman.mockito_kotlin.*
-import io.em2m.search.core.daos.QueryTransformingSearchDao
+import io.em2m.search.core.daos.QueryTransformingSyncDao
 import org.junit.Assert
 import org.junit.Ignore
 import org.junit.Test
 import org.locationtech.jts.geom.Envelope
 import org.mockito.Mockito.verify
-import rx.Observable
 
 class QueryTransformingSearchDaoTest : Assert() {
 
-    val mock = mock<SearchDao<Any>> {
-        on { search(any()) } doReturn Observable.just(SearchResult<Any>(totalItems = 0L))
+    val mock = mock<SyncDao<Any>> {
+        on { search(any()) } doReturn SearchResult<Any>(totalItems = 0L)
     }
 
     @Test
     fun testFieldSet() {
-        val xformDao = QueryTransformingSearchDao(fieldSets = mapOf("brief" to listOf(Field("id"), Field("name"))), delegate = mock)
+        val xformDao = QueryTransformingSyncDao(fieldSets = mapOf("brief" to listOf(Field("id"), Field("name"))), delegate = mock)
         // known fieldSet
         xformDao.search(SearchRequest(fieldSet = "brief", fields = listOf(Field("other"))))
         // unknown fieldSet
@@ -50,7 +49,7 @@ class QueryTransformingSearchDaoTest : Assert() {
     @Test
     fun testQueryFieldAlias() {
         val actual = "geometry.coordinates"
-        val xformDao = QueryTransformingSearchDao(aliases = mapOf("coord" to Field(actual)), delegate = mock)
+        val xformDao = QueryTransformingSyncDao(aliases = mapOf("coord" to Field(actual)), delegate = mock)
 
         xformDao.search(SearchRequest(fields = listOf(Field("coord"), Field("other"))))
         xformDao.search(SearchRequest(query = BboxQuery("coord", Envelope(-180.0, 180.0, -90.0, 90.0))))
@@ -88,7 +87,7 @@ class QueryTransformingSearchDaoTest : Assert() {
 
     @Test
     fun testLuceneParser() {
-        val xformDao = QueryTransformingSearchDao(delegate = mock)
+        val xformDao = QueryTransformingSyncDao(delegate = mock)
         xformDao.search(SearchRequest(query = LuceneQuery("make:Honda AND model:Accord")))
 
         argumentCaptor <SearchRequest>().apply {
@@ -111,7 +110,7 @@ class QueryTransformingSearchDaoTest : Assert() {
     fun testNamedAgg() {
         val format = "#{bucket:key | upperCase}".replace("#", "$")
         val statusQuery = TermsAgg("status", format = format, ext = mapOf("icon" to "fa-key"))
-        val xformDao = QueryTransformingSearchDao   (namedAggs = mapOf("statusAgg" to statusQuery), delegate = mock)
+        val xformDao = QueryTransformingSyncDao   (namedAggs = mapOf("statusAgg" to statusQuery), delegate = mock)
         xformDao.search(SearchRequest(aggs = listOf(NamedAgg(name = "statusAgg", key = "key").setAny("size", 5))))
 
         argumentCaptor <SearchRequest>().apply {
