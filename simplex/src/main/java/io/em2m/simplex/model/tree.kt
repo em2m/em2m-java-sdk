@@ -8,7 +8,12 @@ interface TreeExpr : Expr
 class ArrayExpr(val values: List<Expr>) : TreeExpr {
 
     override fun call(context: ExprContext): List<Any?> {
-        return values.filterNot { (it as? ObjectExpr)?.skip(context) ?: false }.map { it.call(context) }.toList()
+        return values.filterNot {
+            if (it is ObjectExpr) {
+                val varContext = it.processVar(context)
+                it.skip(varContext)
+            } else false
+        }.map { it.call(context) }.toList()
     }
 }
 
@@ -79,7 +84,7 @@ class ObjectExpr(val fields: List<FieldExpr>) : TreeExpr {
         return fieldMap["@value"]?.value?.call(context)
     }
 
-    private fun processVar(context: ExprContext): ExprContext {
+    internal fun processVar(context: ExprContext): ExprContext {
         val varField = fieldMap["@var"]?.value
         return if (varField != null) {
             val oldVariables: Map<String, Any> = context["variables"].coerce() ?: emptyMap()
