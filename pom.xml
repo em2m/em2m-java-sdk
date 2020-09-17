@@ -36,7 +36,6 @@
         <module>simplex</module>
         <module>policy</module>
         <module>search</module>
-        <module>rules</module>
     </modules>
 
     <properties>
