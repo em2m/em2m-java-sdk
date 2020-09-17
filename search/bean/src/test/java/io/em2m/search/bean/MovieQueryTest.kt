@@ -19,13 +19,11 @@ package io.em2m.search.bean
 
 import io.em2m.search.core.model.*
 import io.em2m.search.core.parser.LuceneExprParser
-import io.em2m.search.core.parser.SimpleSchemaMapper
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Test
 
 class MovieQueryTest {
-    private val schemaMapper = SimpleSchemaMapper("text")
 
     @Test
     fun testTitleTerm() {
@@ -102,7 +100,7 @@ class MovieQueryTest {
         assertEquals(1595, find("fields.genres:A*").size.toLong())
     }
 
-    fun find(query: String): List<Movie> {
+    private fun find(query: String): List<Movie> {
         //LuceneExpressionConverter mapper = new LuceneExpressionConverter(schema);
         val expr = LuceneExprParser("text").parse(query)
         val predicate = Functions.toPredicate(expr)
@@ -110,7 +108,7 @@ class MovieQueryTest {
         return movies.values.filter(predicate)
     }
 
-    fun find(query: Query): List<Movie> {
+    private fun find(query: Query): List<Movie> {
         //LuceneExpressionConverter mapper = new LuceneExpressionConverter(schema);
         val predicate = Functions.toPredicate(query)
         assertNotNull("Unable to parse query", predicate)

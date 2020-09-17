@@ -32,8 +32,4 @@ abstract class AbstractSyncDao<T>(val idMapper: IdMapper<T>) : SyncDao<T> {
         return idMapper.generateId()
     }
 
-    fun toAsync(): SearchDao<T> {
-        return SyncDaoAsyncAdapter(this)
-    }
-
 }

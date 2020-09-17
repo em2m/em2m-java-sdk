@@ -98,10 +98,10 @@ class ObjectsTest {
     fun testSingleObjectEntries() {
         val data = mapOf("foo" to "bar1", "foo2" to "bar2")
         val context = mapOf("fieldValues" to mapOf("data" to data))
-        val entries = simplex.eval("\${f:data | entries}", context) as List<Map.Entry<*, *>>
+        val entries = simplex.eval("\${f:data | entries}", context) as List<Map<*, *>>
         assertEquals(2, entries.size)
-        assertEquals("foo", entries[0].key)
-        assertEquals("foo2", entries[1].key)
+        assertEquals("foo", entries[0]["key"])
+        assertEquals("foo2", entries[1]["key"])
         //assertEquals(data.entries.toTypedArray(), entries)
     }
 

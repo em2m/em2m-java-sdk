@@ -3,31 +3,9 @@ package io.em2m.search.core.model
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ObjectNode
-import rx.Observable
 import java.io.Closeable
 import java.util.*
 
-interface SearchDao<T> : Closeable {
-
-    fun create(entity: T): Observable<T>
-
-    fun deleteById(id: String): Observable<Boolean>
-
-    fun exists(id: String): Observable<Boolean>
-
-    fun search(request: SearchRequest): Observable<SearchResult<T>>
-
-    fun count(query: Query): Observable<Long>
-
-    fun findById(id: String): Observable<T?>
-
-    fun findOne(query: Query): Observable<T?>
-
-    fun save(id: String, entity: T): Observable<T>
-
-    fun saveBatch(entities: List<T>): Observable<List<T>>
-
-}
 
 interface SyncDao<T> : Closeable {
 
@@ -50,7 +28,6 @@ interface SyncDao<T> : Closeable {
     fun saveBatch(entities: List<T>): List<T>
 
 }
-
 
 interface IdMapper<T> {
     val idField: String
