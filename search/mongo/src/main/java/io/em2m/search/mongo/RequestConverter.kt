@@ -226,7 +226,7 @@ class RequestConverter(private val schemaMapper: SchemaMapper, private val objec
                             listOf(agg.value as Bson)
                         }
                         is String -> {
-                            Document.parse(agg.value.toString()) as List<Bson>
+                            listOf(Document.parse(agg.value.toString()))
                         }
                         is ArrayNode -> {
                             (agg.value as ArrayNode).map { objectMapper.convertValue(it, Document::class.java) }

@@ -1,6 +1,7 @@
 package io.em2m.policy.model
 
 import io.em2m.simplex.model.KeyResolver
+import io.em2m.utils.coerce
 import java.util.*
 
 
@@ -87,13 +88,13 @@ class Claims(initial: Map<String, Any?> = emptyMap()) {
         }
 
     var orgPath: List<String>?
-        get() = map["orgPath"] as? List<String>
+        get() = map["orgPath"].coerce()
         set(value) {
             map["orgPath"] = value
         }
 
     var roles: List<String>
-        get() = map["roles"] as? List<String> ?: emptyList()
+        get() = map["roles"].coerce() ?: emptyList()
         set(value) {
             map["roles"] = value
         }
