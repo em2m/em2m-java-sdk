@@ -107,7 +107,7 @@ class DateMathPipe : PipeTransform {
 
     override fun args(args: List<String>) {
         if (args.isNotEmpty()) {
-            dateMath = args[0]?.trim()
+            dateMath = args.first().trim()
         }
     }
 
@@ -176,7 +176,7 @@ object Dates {
             .transform("fromNow") { FromNowPipe() }
 
     val keys = BasicKeyResolver()
-            .key(Key("Date", "now")) { _ -> DateNowHandler() }
+            .key(Key("Date", "now")) { DateNowHandler() }
 
     val conditions = BasicConditionResolver(StandardDateConditions)
 
