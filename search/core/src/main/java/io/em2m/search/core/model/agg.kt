@@ -243,8 +243,8 @@ class XformAgg(
 
 data class Stats(val count: Long, val sum: Double, val min: Double?, val max: Double?, val avg: Double?)
 
-@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
 data class Bucket(val key: Any? = null, val count: Long, val label: String? = null, val stats: Stats? = null, val from: Any? = null, val to: Any? = null, val query: Query? = null, val aggs: Map<String, AggResult>? = null, val value: Any? = null)
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
-data class AggResult(val key: String, val buckets: List<Bucket>? = null, val stats: Stats? = null, val value: Any? = null, val op: String? = null, val field: String? = null)
+data class AggResult(val key: String, val buckets: List<Bucket>? = null, val stats: Stats? = null, val value: Any? = null, val op: String? = null, val field: String? = null, val type: String? = null)
