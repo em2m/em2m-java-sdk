@@ -183,7 +183,7 @@ open class AggResultTransformer {
         val buckets = aggResult.buckets?.map { transformBucket(it) }
         val stats = transformStats(aggResult.stats)
         val value = transformValue(aggResult.value)
-        return AggResult(aggResult.key, buckets, stats, value, aggResult.op, aggResult.field)
+        return AggResult(aggResult.key, buckets, stats, value, aggResult.op, aggResult.field, aggResult.type)
     }
 
     open fun transformBucket(bucket: Bucket): Bucket {
