@@ -79,13 +79,11 @@ class Simplex(delegate: Simplex? = null) {
         return this
     }
 
-    fun exec(exec: Exec, context: ExprContext): ExecResult {
+    fun exec(exec: Exec, context: ExprContext): Any? {
         // todo - add cache
-        val handler = execs.findHandler(exec)
+        val handler = execs.findHandler(exec.op)
         return if (handler != null) {
-            val config = exec.config.mapValues { eval(it.value, context) }
-            val params = exec.params.mapValues { eval(it.value, context) }
-            handler.configure(config)
+            val params = exec.params.mapValues { it.value?.call(context) }
             handler.call(context, exec.op, params)
         } else {
             throw RuntimeException("Need to handle not-found commands!")
@@ -106,12 +104,17 @@ class Simplex(delegate: Simplex? = null) {
         return conditions.getCondition(name)
     }
 
+    fun findExecHandler(op: String): ExecHandler? {
+        return execs.findHandler(op)
+    }
+
     private fun getConditionExpr(op: String, key: String, value: List<String>): SingleConditionExpr {
         val keyExpr = parser.parse("$" + "{" + key + "}")
         val values = ArrayExpr(value.map { parser.parse(it) })
         val handler = requireNotNull(conditions.getCondition(op))
         return SingleConditionExpr(op, handler, keyExpr, values)
     }
+
 
     private fun getKeyValue(key: String, context: ExprContext): Any? {
         val parsedKey = Key.parse(key)

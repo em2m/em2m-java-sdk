@@ -48,7 +48,7 @@ class TreeTest {
 
         val rule: Rule = mapper.readValue(json)
         assertNotNull(rule)
-        val obj = rule.obj.call(emptyMap()) as Map<String, Any?>
+        val obj: Map<String, Any> = rule.obj.call(emptyMap()).coerce() ?: emptyMap()
         assertNotNull(obj)
         assertEquals("Value1", obj["v1"])
         assertEquals("VALUE2", obj["v2"])

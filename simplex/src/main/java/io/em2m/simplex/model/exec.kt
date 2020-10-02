@@ -3,20 +3,24 @@ package io.em2m.simplex.model
 
 // standard ops: log, httpRequest,
 
-data class Exec(
-        val op: String,
-        val config: Map<String, String> = emptyMap(),
-        val params: Map<String, String> = emptyMap())
+data class Exec(val op: String, val params: Map<String, Expr?> = emptyMap())
 
 interface ExecHandler {
-    fun configure(config: Map<String, Any?>)
-    fun call(context: ExprContext, op: String, params: Map<String, Any?>): ExecResult
+    fun call(context: ExprContext, op: String, params: Map<String, Any?>): Any?
 }
 
-data class ExecResult(val value: Any? = null)
+class ExecExpr(val op: String, val handler: ExecHandler?, val paramExprs: Map<String, Expr?>) : Expr {
+
+    override fun call(context: ExprContext): Any? {
+        val contextExecs: ExecResolver? = context["execs"] as? ExecResolver
+        val h = contextExecs?.findHandler(op) ?: handler
+        val params = paramExprs.mapValues { it.value?.call(context) }
+        return h?.call(context, op, params)
+    }
+}
 
 interface ExecResolver {
-    fun findHandler(exec: Exec): ExecHandler?
+    fun findHandler(op: String): ExecHandler?
 }
 
 class BasicExecResolver(handlers: Map<String, (op: String) -> ExecHandler> = emptyMap()) : ExecResolver {
@@ -39,23 +43,13 @@ class BasicExecResolver(handlers: Map<String, (op: String) -> ExecHandler> = emp
         return this
     }
 
-    override fun findHandler(exec: Exec): ExecHandler? {
-        var result = handlers[exec.op]?.invoke(exec.op)
+    override fun findHandler(op: String): ExecHandler? {
+        var result = handlers[op]?.invoke(op)
         for (delegate in delegates) {
             if (result != null) break
-            result = delegate.findHandler(exec)
+            result = delegate.findHandler(op)
         }
         return result
     }
 
-}
-
-class ExecExpr(val op: String, val handler: ExecHandler, val config: Map<String, Any?>, val paramExprs: Map<String, Expr>) {
-
-    fun call(context: ExprContext): ExecResult {
-
-        val params = paramExprs.mapValues { it.value.call(context) }
-
-        return handler.call(context, op, params)
-    }
 }
