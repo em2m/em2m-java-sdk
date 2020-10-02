@@ -5,8 +5,8 @@ import io.em2m.simplex.model.BasicKeyResolver
 import io.em2m.simplex.model.Key
 import io.em2m.simplex.model.KeyHandler
 import io.em2m.simplex.model.PathKeyHandler
+import io.em2m.utils.coerce
 import org.junit.Test
-import java.util.Map
 import kotlin.test.assertEquals
 
 class ObjectsTest {
@@ -98,7 +98,7 @@ class ObjectsTest {
     fun testSingleObjectEntries() {
         val data = mapOf("foo" to "bar1", "foo2" to "bar2")
         val context = mapOf("fieldValues" to mapOf("data" to data))
-        val entries = simplex.eval("\${f:data | entries}", context) as List<Map<*, *>>
+        val entries: List<Map<*, *>> = simplex.eval("\${f:data | entries}", context).coerce() ?: emptyList()
         assertEquals(2, entries.size)
         assertEquals("foo", entries[0]["key"])
         assertEquals("foo2", entries[1]["key"])

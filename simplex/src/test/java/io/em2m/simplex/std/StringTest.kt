@@ -16,6 +16,7 @@ class StringTest : Assert() {
             Key("ns", "key3") to ConstKeyHandler("value1, value2"),
             Key("ns", "key4") to ConstKeyHandler(listOf("value1, value2", "value3", "value4, value5")),
             Key("ns", "key5") to ConstKeyHandler("a:b"),
+            Key("ns", "key6") to ConstKeyHandler("a/b"),
             Key("ns", "pie") to ConstKeyHandler(3.14),
             Key("ns", "duration") to ConstKeyHandler(210_000),
             Key("ns", "five") to ConstKeyHandler(5)))
@@ -67,8 +68,20 @@ class StringTest : Assert() {
         val expr2 = requireNotNull(simplex.parser.parse(exprString2))
         val actual2 = expr2.call(emptyMap())
 
+        val exprString3 = "\${ns:key5 | split:\\:}"
+        val expected3 = listOf("a", "b")
+        val expr3 = requireNotNull(simplex.parser.parse(exprString3))
+        val actual3 = expr3.call(emptyMap())
+
+        val exprString4 = "\${ns:key6 | split:/}"
+        val expected4 = listOf("a", "b")
+        val expr4 = requireNotNull(simplex.parser.parse(exprString4))
+        val actual4 = expr4.call(emptyMap())
+
         assertEquals(expected1, actual1)
         assertEquals(expected2, actual2)
+        assertEquals(expected3, actual3)
+        assertEquals(expected4, actual4)
     }
 
     @Test

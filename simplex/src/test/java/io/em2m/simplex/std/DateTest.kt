@@ -58,6 +58,13 @@ class DateTest {
     }
 
     @Test
+    fun testFormatDurationZero() {
+        val pipe = FormatDurationPipe()
+        val result = pipe.transform(0, emptyMap())
+        assertEquals("0 seconds", result)
+    }
+
+    @Test
     fun testFormatDateWithColon() {
         val exprString = "\${ns:dateKey | formatDate:yyyy-MM-dd HH\\:mm:America/Los_Angeles}"
         val expr = requireNotNull(simplex.parser.parse(exprString))
