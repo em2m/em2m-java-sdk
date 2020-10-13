@@ -1,6 +1,7 @@
 package io.em2m.utils
 
 import java.time.Duration
+import java.util.*
 import java.util.concurrent.TimeUnit
 
 
@@ -49,4 +50,14 @@ object TimeAgo {
 
 fun Duration.fromNow(withoutAffix: Boolean = false): String {
     return TimeAgo.fromNow(toMillis(), withoutAffix)
+}
+
+fun Date.nextBusinessDay(): Date {
+    val c = Calendar.getInstance()
+    c.time = this
+    c.add(Calendar.DATE, 1)
+    while ((c.get(Calendar.DAY_OF_WEEK) == 1) || (c.get(Calendar.DAY_OF_WEEK) == 7)) {
+        c.add(Calendar.DATE, 1)
+    }
+    return c.time
 }
