@@ -57,12 +57,13 @@ data class ConstPart(val value: Any?) : Part {
     }
 }
 
-data class ExprPart(val expr: Expr?): Part {
+data class ExprPart(val expr: Expr?) : Part {
 
     override fun call(context: ExprContext): Any? {
         return expr?.call(context)
     }
 }
+
 
 interface ValueExpr : Expr {
     val parts: List<Part>

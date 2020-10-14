@@ -49,3 +49,18 @@ inline fun <reified T : Any> Any?.coerceNonNull(fallback: T? = null, objectMappe
         requireNotNull(fallback)
     }
 }
+
+fun Any?.isTruthy(): Boolean {
+    return when (this) {
+        is Boolean -> this
+        is String -> this.isNotBlank()
+        is Double -> this != 0 && this.isFinite()
+        is Float -> (this != 0) && this.isFinite()
+        is Number -> (this != 0)
+        else -> this != null
+    }
+}
+
+fun Any?.isFalsy(): Boolean {
+    return !isTruthy()
+}
