@@ -47,12 +47,13 @@ class TreeDeserializer(val simplex: Simplex = Simplex()) : JsonDeserializer<Expr
     private fun parseObject(node: ObjectNode): Expr {
         return if (node.has("@exec")) {
             val op = node.get("@exec").asText()
+            val value = if (node.has("@value")) parse(node.get("@value")) else null
             val handler = simplex.findExecHandler(op)
             val fields = node.fieldNames().asSequence().filterNot { it.startsWith("@") }.map { f ->
                 val fieldNode = node[f]
                 f to parse(fieldNode)
             }.toMap()
-            ExecExpr(op, handler, fields)
+            ExecExpr(op, handler, fields, value)
         } else {
             val fields = node.fieldNames().asSequence().map { f ->
                 val fieldNode = node[f]

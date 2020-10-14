@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory
 import java.net.HttpURLConnection
 import java.net.URL
 import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 
 
 class ExecTest {
@@ -21,6 +22,7 @@ class ExecTest {
                 .handler("log") { LogHandler() }
                 .handler("http") { HttpHandler() }
         )
+        simplex.keys(BasicKeyResolver().key(Key("field", "*"), PathKeyHandler(simplex)))
     }
 
     private val mapper = jacksonObjectMapper().registerModule(SimplexModule(simplex))
@@ -45,12 +47,15 @@ class ExecTest {
                 """
                  {
                    "@exec": "http",
-                   "url": "https://jsonplaceholder.typicode.com/posts/1"
+                   "url": "https://jsonplaceholder.typicode.com/posts/1",
+                   "@value": "#{result.body}"
                  }   
-                """)
+                """.replace("#", "$"))
         val result = exec.call(emptyMap())
-        assertNotNull(result)
+        assertTrue(result is String)
+        assertTrue(result.startsWith("quia"))
     }
+
 
     class LogHandler : ExecHandler {
 
@@ -74,11 +79,13 @@ class ExecTest {
 
     class HttpHandler : ExecHandler {
 
+        private val mapper = jacksonObjectMapper()
+
         override fun call(context: ExprContext, op: String, params: Map<String, Any?>): Any? {
             val url = URL(params["url"].toString())
             return with(url.openConnection() as HttpURLConnection) {
                 println("\nSent 'GET' request to URL : $url; Response Code : $responseCode")
-                inputStream.bufferedReader().readText()
+                mapper.readValue(inputStream.bufferedReader())
             }
         }
 
