@@ -9,13 +9,16 @@ interface ExecHandler {
     fun call(context: ExprContext, op: String, params: Map<String, Any?>): Any?
 }
 
-class ExecExpr(val op: String, val handler: ExecHandler?, val paramExprs: Map<String, Expr?>) : Expr {
+class ExecExpr(val op: String, val handler: ExecHandler?, val paramExprs: Map<String, Expr?>, val value: Expr? = null) : Expr {
 
     override fun call(context: ExprContext): Any? {
         val contextExecs: ExecResolver? = context["execs"] as? ExecResolver
         val h = contextExecs?.findHandler(op) ?: handler
         val params = paramExprs.mapValues { it.value?.call(context) }
-        return h?.call(context, op, params)
+        val result = h?.call(context, op, params)
+        return if (value != null) {
+            value.call(context.plus("result" to result))
+        } else result
     }
 }
 
