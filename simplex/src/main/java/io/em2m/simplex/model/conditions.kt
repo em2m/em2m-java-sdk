@@ -1,6 +1,6 @@
 package io.em2m.simplex.model
 
-import io.em2m.utils.coerce
+import io.em2m.utils.isTruthy
 
 interface ConditionHandler {
     fun test(keyValue: Any?, conditionValue: Any?): Boolean
@@ -59,7 +59,7 @@ class ConstConditionExpr(val value: Boolean) : ConditionExpr {
 
 class ValueConditionExpr(val value: Expr?) : ConditionExpr {
     override fun call(context: ExprContext): Boolean {
-        return value?.call(context).coerce() ?: false
+        return value?.call(context).isTruthy()
     }
 }
 
