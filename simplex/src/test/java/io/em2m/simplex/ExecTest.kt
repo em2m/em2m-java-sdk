@@ -9,7 +9,6 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.net.HttpURLConnection
 import java.net.URL
-import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
 
@@ -20,7 +19,7 @@ class ExecTest {
     init {
         simplex.execs(BasicExecResolver()
                 .handler("log") { LogHandler() }
-                .handler("http") { HttpHandler() }
+                .handler("http:get") { HttpHandler() }
         )
         simplex.keys(BasicKeyResolver().key(Key("field", "*"), PathKeyHandler(simplex)))
     }
@@ -46,7 +45,7 @@ class ExecTest {
         val exec: Expr = mapper.readValue(
                 """
                  {
-                   "@exec": "http",
+                   "@exec": "http:get",
                    "url": "https://jsonplaceholder.typicode.com/posts/1",
                    "@value": "#{result.body}"
                  }   
@@ -82,6 +81,7 @@ class ExecTest {
         private val mapper = jacksonObjectMapper()
 
         override fun call(context: ExprContext, op: String, params: Map<String, Any?>): Any? {
+
             val url = URL(params["url"].toString())
             return with(url.openConnection() as HttpURLConnection) {
                 println("\nSent 'GET' request to URL : $url; Response Code : $responseCode")

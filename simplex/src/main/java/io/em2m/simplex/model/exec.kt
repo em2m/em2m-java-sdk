@@ -48,6 +48,10 @@ class BasicExecResolver(handlers: Map<String, (op: String) -> ExecHandler> = emp
 
     override fun findHandler(op: String): ExecHandler? {
         var result = handlers[op]?.invoke(op)
+        if (result == null && op.contains(":")) {
+            val namespace = op.split(":").first()
+            result = handlers["$namespace:*"]?.invoke(op)
+        }
         for (delegate in delegates) {
             if (result != null) break
             result = delegate.findHandler(op)
