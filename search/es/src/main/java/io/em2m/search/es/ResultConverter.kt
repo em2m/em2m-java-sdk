@@ -2,6 +2,7 @@ package io.em2m.search.es
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.node.ArrayNode
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.em2m.geo.geojson.GeoJsonModule
 import io.em2m.search.core.model.*
@@ -75,6 +76,9 @@ class ResultConverter<T>(private val mapper: DocMapper<T>) {
         val fieldName = field.name
         if (fieldName != null) {
             for (path in fieldName.split('.')) {
+                if (node is ArrayNode) {
+                    node = node.firstOrNull()
+                }
                 node = node?.get(path)
                 if (node == null) break
             }
