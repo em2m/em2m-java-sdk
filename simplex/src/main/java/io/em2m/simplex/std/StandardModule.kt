@@ -11,8 +11,8 @@ class StandardModule : BasicSimplexModule() {
         keys(Numbers.keys)
         keys(Dates.keys)
         keys(Bools.keys)
-        key(Key("repeat", "*"), PathKeyHandler(simplex, "repeat"))
-        key(Key("var", "*"), PathKeyHandler(simplex, "variables"))
+        key(Key("repeat", "*"), PathKeyHandler("repeat"))
+        key(Key("var", "*"), PathKeyHandler("variables"))
 
         transforms(Numbers.pipes)
         transforms(Strings.pipes)

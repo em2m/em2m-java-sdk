@@ -21,7 +21,7 @@ class ExecTest {
                 .handler("log") { LogHandler() }
                 .handler("http:get") { HttpHandler() }
         )
-        simplex.keys(BasicKeyResolver().key(Key("field", "*"), PathKeyHandler(simplex)))
+        simplex.keys(BasicKeyResolver().key(Key("field", "*"), PathKeyHandler()))
     }
 
     private val mapper = jacksonObjectMapper().registerModule(SimplexModule(simplex))

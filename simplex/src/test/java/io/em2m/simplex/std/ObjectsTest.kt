@@ -12,7 +12,7 @@ import kotlin.test.assertEquals
 class ObjectsTest {
 
     val simplex = Simplex()
-    val keys = BasicKeyResolver(mapOf(Key("f", "*") to (PathKeyHandler(simplex, "fieldValues") as KeyHandler)))
+    val keys = BasicKeyResolver(mapOf(Key("f", "*") to (PathKeyHandler("fieldValues") as KeyHandler)))
 
     init {
         simplex.keys(keys)

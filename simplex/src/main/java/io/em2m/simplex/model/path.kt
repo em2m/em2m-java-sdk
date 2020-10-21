@@ -199,7 +199,7 @@ class PathExpr(val path: String) {
 
 }
 
-class PathKeyHandler(val simplex: Simplex, val prefix: String? = null, val addSeparator: Boolean = true) : KeyHandler {
+class PathKeyHandler(val prefix: String? = null, val addSeparator: Boolean = true) : KeyHandler {
 
     private fun keyNames(key: Key): List<String> {
         return key.name.split(',').map { it.trim() }
@@ -216,13 +216,13 @@ class PathKeyHandler(val simplex: Simplex, val prefix: String? = null, val addSe
     private fun getPath(name: String, context: ExprContext): Any? {
         return when {
             prefix == null -> {
-                simplex.getPath(name, context)
+                Simplex.simplex.getPath(name, context)
             }
             addSeparator -> {
-                simplex.getPath("$prefix.$name", context)
+                Simplex.simplex.getPath("$prefix.$name", context)
             }
             else -> {
-                simplex.getPath(prefix + name, context)
+                Simplex.simplex.getPath(prefix + name, context)
             }
         }
     }
