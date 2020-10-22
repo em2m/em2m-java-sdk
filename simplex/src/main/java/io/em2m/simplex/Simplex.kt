@@ -5,46 +5,15 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.em2m.simplex.model.*
 import io.em2m.simplex.parser.ExprParser
 import io.em2m.simplex.parser.SimplexModule
-import io.em2m.simplex.std.*
+import io.em2m.simplex.std.StandardModule
 import io.em2m.utils.coerce
 import java.util.concurrent.ConcurrentHashMap
 
-
-class Simplex(delegate: Simplex? = null) {
-
-    init {
-        if (delegate != null) {
-            keys(delegate.keys)
-            pipes(delegate.pipes)
-            conditions(delegate.conditions)
-            execs(delegate.execs)
-        }
-    }
+class Simplex() {
 
     private val keys = BasicKeyResolver()
-            .delegate(Numbers.keys)
-            .delegate(Dates.keys)
-            .delegate(Bools.keys)
-            .key(Key("repeat", "*"), PathKeyHandler(this, "repeat"))
-            .key(Key("var", "*"), PathKeyHandler(this, "variables"))
-
     private val pipes = BasicPipeTransformResolver()
-            .delegate(Numbers.pipes)
-            .delegate(Strings.pipes)
-            .delegate(I18n.pipes)
-            .delegate(Dates.pipes)
-            .delegate(Arrays.pipes)
-            .delegate(Bytes.pipes)
-            .delegate(Bools.pipes(this))
-            .delegate(Objects.pipes)
-
     private val conditions = BasicConditionResolver()
-            .delegate(Strings.conditions)
-            .delegate(Numbers.conditions)
-            .delegate(Bools.conditions)
-            .delegate(Dates.conditions)
-
-
     private val execs = BasicExecResolver()
 
     private val cache = ConcurrentHashMap<String, Expr>()
@@ -54,6 +23,19 @@ class Simplex(delegate: Simplex? = null) {
     val parser = ExprParser(keys, pipes)
 
     val objectMapper: ObjectMapper = jacksonObjectMapper().registerModule(SimplexModule(this))
+
+    init {
+        registerModule(StandardModule())
+    }
+
+    fun registerModule(module: Module): Simplex {
+        module.configure(this)
+        keys.delegate(module.keyResolver)
+        pipes.delegate(module.pipeResolver)
+        conditions.delegate(module.conditionResolver)
+        execs.delegate(module.execResolver)
+        return this
+    }
 
     fun keys(delegate: KeyResolver): Simplex {
         keys.delegate(delegate)
@@ -79,13 +61,11 @@ class Simplex(delegate: Simplex? = null) {
         return this
     }
 
-    fun exec(exec: Exec, context: ExprContext): ExecResult {
+    fun exec(exec: Exec, context: ExprContext): Any? {
         // todo - add cache
-        val handler = execs.findHandler(exec)
+        val handler = execs.findHandler(exec.op)
         return if (handler != null) {
-            val config = exec.config.mapValues { eval(it.value, context) }
-            val params = exec.params.mapValues { eval(it.value, context) }
-            handler.configure(config)
+            val params = exec.params.mapValues { it.value?.call(context) }
             handler.call(context, exec.op, params)
         } else {
             throw RuntimeException("Need to handle not-found commands!")
@@ -106,12 +86,17 @@ class Simplex(delegate: Simplex? = null) {
         return conditions.getCondition(name)
     }
 
+    fun findExecHandler(op: String): ExecHandler? {
+        return execs.findHandler(op)
+    }
+
     private fun getConditionExpr(op: String, key: String, value: List<String>): SingleConditionExpr {
         val keyExpr = parser.parse("$" + "{" + key + "}")
         val values = ArrayExpr(value.map { parser.parse(it) })
         val handler = requireNotNull(conditions.getCondition(op))
         return SingleConditionExpr(op, handler, keyExpr, values)
     }
+
 
     private fun getKeyValue(key: String, context: ExprContext): Any? {
         val parsedKey = Key.parse(key)
@@ -143,3 +128,4 @@ fun Any?.evalPath(path: String): Any? {
 inline fun <reified T : Any> Any?.evalPath(path: String, fallback: T?): T? {
     return Simplex.simplex.getPath(path, this).coerce(fallback)
 }
+

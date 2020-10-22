@@ -182,11 +182,11 @@ open class SingleStringHandler(private val op: (String?, String?) -> Boolean) : 
 
     override fun test(keyValue: Any?, conditionValue: Any?): Boolean {
         val keyString: String? = if (keyValue is Iterable<*>) {
-            keyValue.first().coerce()
-        } else keyValue.coerce()
+            keyValue.first()?.coerce()
+        } else keyValue?.coerce()
         val valueString: String? = if (conditionValue is Iterable<*>) {
-            conditionValue.first().coerce()
-        } else conditionValue.coerce()
+            conditionValue.first()?.coerce()
+        } else conditionValue?.coerce()
 
         return op(keyString, valueString)
     }
@@ -202,7 +202,7 @@ open class ForAnyStringHandler(private val op: (String?, String?) -> Boolean) : 
 
         keyList.forEach { first ->
             valList.forEach { second ->
-                if (op(first.coerce(), second.coerce())) {
+                if (op(first?.coerce(), second?.coerce())) {
                     result = true
                 }
             }
@@ -220,7 +220,7 @@ open class ForAllStringHandler(private val op: (String?, String?) -> Boolean) : 
         val valList = conditionValue as? Iterable<*> ?: listOf(conditionValue)
 
         return keyList.fold(true) { result, key ->
-            result && valList.any { op(key.coerce(), it.coerce()) }
+            result && valList.any { op(key?.coerce(), it?.coerce()) }
         }
     }
 }

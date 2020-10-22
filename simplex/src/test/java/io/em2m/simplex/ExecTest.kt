@@ -3,105 +3,90 @@ package io.em2m.simplex
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import io.em2m.simplex.model.*
+import io.em2m.simplex.parser.SimplexModule
 import org.junit.Test
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.net.HttpURLConnection
 import java.net.URL
-import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 
 
 class ExecTest {
 
     private val simplex = Simplex()
-    private val mapper = jacksonObjectMapper()
 
     init {
         simplex.execs(BasicExecResolver()
                 .handler("log") { LogHandler() }
-                .handler("http") { HttpHandler() }
+                .handler("http:get") { HttpHandler() }
         )
+        simplex.keys(BasicKeyResolver().key(Key("field", "*"), PathKeyHandler()))
     }
+
+    private val mapper = jacksonObjectMapper().registerModule(SimplexModule(simplex))
 
     @Test
     fun testLog() {
 
-        val exec: Exec = mapper.readValue(
+        val exec: Expr = mapper.readValue(
                 """
                     {
-                     "op": "log",
-                     "config": { "level" : "info" },
-                      "params": { "value": "value" }
+                     "@exec": "log",
+                     "value": "value"
                     }
                     """)
         val context = HashMap<String, Any?>()
-        simplex.exec(exec, context)
+        exec.call(context)
     }
 
     @Test
     fun testHttp() {
-        val exec: Exec = mapper.readValue(
+        val exec: Expr = mapper.readValue(
                 """
                  {
-                     "op": "http",
-                     "params": { 
-                       "method":  "POST",
-                       "url": "https://jsonplaceholder.typicode.com/posts/1"
-                     }
+                   "@exec": "http:get",
+                   "url": "https://jsonplaceholder.typicode.com/posts/1",
+                   "@value": "#{result.body}"
                  }   
-                """)
-        val result = simplex.exec(exec, emptyMap())
-        assertNotNull(result)
+                """.replace("#", "$"))
+        val result = exec.call(emptyMap())
+        assertTrue(result is String)
+        assertTrue(result.startsWith("quia"))
     }
+
 
     class LogHandler : ExecHandler {
 
         private var log: Logger = LoggerFactory.getLogger(javaClass)
-        private var level = "info"
+        private var defaultLevel = "info"
 
-        override fun configure(config: Map<String, Any?>) {
-            val configLevel = (config["level"] as? String)?.toLowerCase()
-            if (configLevel != null) {
-                level = configLevel
-            }
-        }
-
-        override fun call(context: ExprContext, op: String, params: Map<String, Any?>): ExecResult {
+        override fun call(context: ExprContext, op: String, params: Map<String, Any?>): Any? {
+            val level = params["level"]?.toString() ?: defaultLevel
             val value = params["value"]?.toString()
-            if (value != null) {
+            return if (value != null) {
                 when (level) {
                     "debug" -> log.debug(value)
                     "warn" -> log.warn(value)
                     "error" -> log.error(value)
                     else -> log.info(value.toString())
                 }
-            }
-            return ExecResult()
+            } else null
         }
 
     }
 
     class HttpHandler : ExecHandler {
 
-        private var method = "POST"
+        private val mapper = jacksonObjectMapper()
 
-        override fun configure(config: Map<String, Any?>) {
-            (config["method"] as? String)?.also {
-                method = it
-            }
-            // URL
-            // request / body
-            // headers
-        }
+        override fun call(context: ExprContext, op: String, params: Map<String, Any?>): Any? {
 
-        override fun call(context: ExprContext, op: String, params: Map<String, Any?>): ExecResult {
             val url = URL(params["url"].toString())
-            var value: Any?
-            with(url.openConnection() as HttpURLConnection) {
+            return with(url.openConnection() as HttpURLConnection) {
                 println("\nSent 'GET' request to URL : $url; Response Code : $responseCode")
-                value = inputStream.bufferedReader().readText()
+                mapper.readValue(inputStream.bufferedReader())
             }
-            return ExecResult(value)
         }
 
     }

@@ -8,6 +8,7 @@ import io.em2m.actions.model.ActionFlow
 import io.em2m.actions.model.ActionProcessorBuilder
 import io.em2m.actions.model.Priorities.Companion.MAIN
 import io.em2m.actions.model.TypedActionFlow
+import io.em2m.actions.servlet.ActionServlet
 import io.em2m.actions.servlet.ServletRuntime
 import io.em2m.actions.xforms.JacksonRequestTransformer
 import io.em2m.actions.xforms.JacksonResponseTransformer
@@ -33,7 +34,7 @@ class ExampleServer {
         val context = ServletContextHandler(ServletContextHandler.SESSIONS)
         context.contextPath = "/"
         // context.addServlet(ServletHolder(SampleSseServlet()), "/sse")
-        val holder = ServletHolder(ActionServlet())
+        val holder = ServletHolder(TestActionServlet())
         holder.registration.setMultipartConfig(MultipartConfigElement("/tmp/uploads", 1024 * 1024 * 50, 1024 * 1024 * 50, (1024 * 1024).toInt()))
         context.addServlet(holder, "/actions/*")
 
@@ -76,7 +77,7 @@ class ExampleServer {
         }
     }
 
-    class ActionServlet : HttpServlet() {
+    class TestActionServlet : ActionServlet() {
 
         private val processor = ActionProcessorBuilder()
                 .prefix("demo")
@@ -88,12 +89,7 @@ class ExampleServer {
                 .transformer(JacksonResponseTransformer())
                 .build()
 
-        private val runtime = ServletRuntime("demo", processor)
-
-        override fun doPost(request: HttpServletRequest, response: HttpServletResponse) {
-            val actionName = request.pathInfo.substring(1)
-            runtime.process(actionName, request, response)
-        }
+        override val runtime = ServletRuntime("demo", processor)
 
     }
 

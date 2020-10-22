@@ -58,6 +58,13 @@ class DateTest {
     }
 
     @Test
+    fun testFormatDurationZero() {
+        val pipe = FormatDurationPipe()
+        val result = pipe.transform(0, emptyMap())
+        assertEquals("0 seconds", result)
+    }
+
+    @Test
     fun testFormatDateWithColon() {
         val exprString = "\${ns:dateKey | formatDate:yyyy-MM-dd HH\\:mm:America/Los_Angeles}"
         val expr = requireNotNull(simplex.parser.parse(exprString))
@@ -100,6 +107,23 @@ class DateTest {
         val result = expr.call(emptyMap())
         val actual = SimpleDateFormat("yyyy-MM-dd").format(result)
         assertEquals(expected, actual)
+    }
+
+    @Test
+    fun testDatePlus() {
+        val expected = "2015-04-22"
+        val exprString = "\${ns:dateKey | datePlus:1:d}"
+        val expr = requireNotNull(simplex.parser.parse(exprString))
+        val result = expr.call(emptyMap())
+        val actual = SimpleDateFormat("yyyy-MM-dd").format(result)
+        assertEquals(expected, actual)
+
+        val exprString2 = "\${ns:dateKey | datePlus:\$offset:d}"
+        val expr2 = requireNotNull(simplex.parser.parse(exprString))
+        val result2 = expr.call(mapOf("offset" to 1))
+        val actual2 = SimpleDateFormat("yyyy-MM-dd").format(result2)
+        assertEquals(expected, actual2)
+
     }
 
 }

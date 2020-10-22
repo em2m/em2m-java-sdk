@@ -5,7 +5,7 @@ import io.em2m.search.core.model.*
 import io.em2m.simplex.Simplex
 import io.em2m.simplex.model.Expr
 
-class FieldTransformer<T> (val simplex: Simplex, fields: List<FieldModel>) : Transformer<T> {
+class FieldTransformer<T>(val simplex: Simplex, fields: List<FieldModel>) : Transformer<T> {
 
     private val fieldModels = fields.associateBy { it.name }
     private val queryXform = FieldQueryTransformer(fieldModels)
@@ -137,7 +137,7 @@ class FieldTransformer<T> (val simplex: Simplex, fields: List<FieldModel>) : Tra
 
     private fun transformRows(req: SearchRequest, result: SearchResult<T>, models: List<FieldModel>, delegates: List<Field>): List<List<Any?>>? {
 
-        val lookup = result.fields.mapIndexed { index, field -> field.name to index}
+        val lookup = result.fields.mapIndexed { index, field -> field.name to index }
 
         return result.rows?.map { row ->
             val values = HashMap<String, Any?>()
@@ -216,7 +216,7 @@ class FieldTransformer<T> (val simplex: Simplex, fields: List<FieldModel>) : Tra
         override fun transformDateHistogramAgg(agg: DateHistogramAgg) = DateHistogramAgg(applyAlias(agg.field), agg.format, agg.interval, agg.offset, agg.timeZone, agg.missing, agg.key, agg.aggs, agg.extensions, agg.minDocCount)
         override fun transformDateRangeAgg(agg: DateRangeAgg) = DateRangeAgg(applyAlias(agg.field), agg.format, agg.timeZone, agg.ranges, agg.key, agg.aggs, agg.extensions, agg.minDocCount)
         override fun transformFiltersAgg(agg: FiltersAgg) = FiltersAgg(agg.filters.mapValues {
-            queryTransformer.transform(it.value) ?: MatchAllQuery()
+            queryTransformer.transform(it.value)
         }, agg.key, agg.aggs, agg.extensions, agg.minDocCount)
 
         override fun transformGeoBoundsAgg(agg: GeoBoundsAgg) = GeoBoundsAgg(applyAlias(agg.field), agg.key, agg.aggs, agg.extensions, agg.minDocCount)

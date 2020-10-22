@@ -5,6 +5,7 @@ import io.em2m.simplex.model.*
 import io.em2m.simplex.parser.DateMathParser
 import io.em2m.utils.coerce
 import io.em2m.utils.fromNow
+import io.em2m.utils.nextBusinessDay
 import java.time.Duration
 import java.time.Instant
 import java.time.ZoneId
@@ -107,7 +108,7 @@ class DateMathPipe : PipeTransform {
 
     override fun args(args: List<String>) {
         if (args.isNotEmpty()) {
-            dateMath = args[0]?.trim()
+            dateMath = args.first().trim()
         }
     }
 
@@ -118,6 +119,63 @@ class DateMathPipe : PipeTransform {
         } else value
     }
 }
+
+class NextBusinessDayPipe : PipeTransform {
+
+    override fun transform(value: Any?, context: ExprContext): Any? {
+        val dateInput: Date? = value.toDate()
+        return if (dateInput != null) {
+            dateInput.nextBusinessDay()
+        } else value
+    }
+}
+
+class DatePlusPipe : PipeTransform {
+
+    var units: String = "d"
+    var amount = 1
+    var path: String? = null
+
+    override fun args(args: List<String>) {
+        if (args.isNotEmpty()) {
+            val arg0 = args[0]
+            if (arg0.startsWith("$")) {
+                path = arg0.removePrefix("$")
+            } else {
+                amount = arg0.toInt()
+            }
+        }
+        if (args.size > 1) {
+            units = args[1]
+        }
+    }
+
+    override fun transform(value: Any?, context: ExprContext): Any? {
+
+        val dateInput: Date? = value.toDate()
+        return if (dateInput != null) {
+            val p = path
+            val amount: Int = if (p != null) {
+                context["variables"].evalPath(p).coerce() ?: context["fieldValues"].evalPath(p).coerce()
+                ?: context.evalPath(p).coerce() ?: 0
+            } else {
+                this.amount
+            }
+            val c = Calendar.getInstance()
+            c.time = dateInput
+            when (units) {
+                "d" -> c.add(Calendar.DATE, amount)
+                "w" -> c.add(Calendar.WEEK_OF_MONTH, amount)
+                "y" -> c.add(Calendar.HOUR, amount)
+                "m" -> c.add(Calendar.MONTH, amount)
+                else -> {
+                }
+            }
+            c.time
+        } else value
+    }
+}
+
 
 class DateNowHandler : KeyHandler {
 
@@ -166,7 +224,6 @@ val StandardDateConditions = mapOf(
         "DateGreaterThanEquals" to DateGreaterThanEquals()
 )
 
-
 object Dates {
 
     val pipes = BasicPipeTransformResolver()
@@ -174,9 +231,11 @@ object Dates {
             .transform("formatDuration") { FormatDurationPipe() }
             .transform("dateMath") { DateMathPipe() }
             .transform("fromNow") { FromNowPipe() }
+            .transform("nextWeekDay", NextBusinessDayPipe())
+            .transform("datePlus") { DatePlusPipe() }
 
     val keys = BasicKeyResolver()
-            .key(Key("Date", "now")) { _ -> DateNowHandler() }
+            .key(Key("Date", "now")) { DateNowHandler() }
 
     val conditions = BasicConditionResolver(StandardDateConditions)
 

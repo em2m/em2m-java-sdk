@@ -25,10 +25,29 @@ class NamedTransformer<T>(private val namedAggs: Map<String, Agg>) : Transformer
             val reqAgg = aggMap[key]
             if (reqAgg is NamedAgg) {
                 val buckets = aggResult.buckets?.map { it.copy(query = NamedQuery(name = reqAgg.name, value = it.key)) }
-                AggResult(key = key, buckets = buckets, stats = aggResult.stats, value = aggResult.value, op = "filters")
+                val field: String? = field(reqAgg)
+                val type: String? = type(reqAgg)
+                AggResult(key = key, buckets = buckets, stats = aggResult.stats, value = aggResult.value, op = "filters", field = field, type = type)
             } else aggResult
         }
         return result.copy(aggs = aggs)
     }
 
+    fun field(namedAgg: NamedAgg): String? {
+        val agg = namedAggs[namedAgg.name]
+        return when (agg) {
+            is DateRangeAgg -> agg.field
+            is DateHistogramAgg -> agg.field
+            else -> null
+        }
+    }
+
+    fun type(namedAgg: NamedAgg): String? {
+        val agg = namedAggs[namedAgg.name]
+        return when (agg) {
+            is DateRangeAgg -> "date"
+            is DateHistogramAgg -> "date"
+            else -> null
+        }
+    }
 }
