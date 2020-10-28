@@ -6,6 +6,7 @@ import io.em2m.search.core.model.RowContext
 import io.em2m.search.core.model.SearchRequest
 import io.em2m.simplex.model.BasicKeyResolver
 import io.em2m.simplex.model.BasicPipeTransformResolver
+import io.em2m.simplex.model.ConstKeyHandler
 import io.em2m.simplex.model.Key
 import io.em2m.simplex.parser.ExprParser
 import io.em2m.simplex.std.Arrays
