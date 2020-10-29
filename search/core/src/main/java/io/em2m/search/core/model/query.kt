@@ -110,7 +110,13 @@ class NamedQuery(var name: String, var value: Any? = null) : Query()
 class TermQuery(field: String, val value: Any?) : FieldedQuery(field)
 class TermsQuery(field: String,
                  @JsonFormat(with = [JsonFormat.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY, JsonFormat.Feature.WRITE_SINGLE_ELEM_ARRAYS_UNWRAPPED])
-                 val value: List<Any?>) : FieldedQuery(field)
+                 val value: List<Any?>) : FieldedQuery(field) {
+
+    override fun simplify(): Query {
+        return if (value.size < 2) TermQuery(field, value.firstOrNull()) else this
+    }
+
+}
 
 class MatchQuery(field: String, val value: String, val operator: String? = null) : FieldedQuery(field)
 
@@ -119,6 +125,7 @@ class WildcardQuery(field: String, val value: String) : FieldedQuery(field)
 class PhraseQuery(field: String,
                   @JsonFormat(with = [JsonFormat.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY, JsonFormat.Feature.WRITE_SINGLE_ELEM_ARRAYS_UNWRAPPED])
                   val value: List<String>) : FieldedQuery(field)
+
 class PrefixQuery(field: String, val value: String) : FieldedQuery(field)
 
 class RegexQuery(field: String, val value: String) : FieldedQuery(field)
