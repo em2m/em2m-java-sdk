@@ -38,7 +38,9 @@ abstract class BoolQuery(@JsonProperty("of") val of: List<Query> = emptyList()) 
 
 class MatchAllQuery : Query()
 
-class AndQuery(of: List<Query>) : BoolQuery(of) {
+class AndQuery(
+        @JsonFormat(with = [JsonFormat.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY, JsonFormat.Feature.WRITE_SINGLE_ELEM_ARRAYS_UNWRAPPED])
+        of: List<Query>) : BoolQuery(of) {
     constructor(vararg of: Query) : this(of.asList())
 
     override fun simplify(): Query {
@@ -62,7 +64,9 @@ class AndQuery(of: List<Query>) : BoolQuery(of) {
     }
 }
 
-class OrQuery(of: List<Query>) : BoolQuery(of) {
+class OrQuery(
+        @JsonFormat(with = [JsonFormat.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY, JsonFormat.Feature.WRITE_SINGLE_ELEM_ARRAYS_UNWRAPPED])
+        of: List<Query>) : BoolQuery(of) {
     constructor(vararg of: Query) : this(of.asList())
 
     override fun simplify(): Query {
@@ -85,7 +89,9 @@ class OrQuery(of: List<Query>) : BoolQuery(of) {
     }
 }
 
-class NotQuery(of: List<Query>) : BoolQuery(of) {
+class NotQuery(
+        @JsonFormat(with = [JsonFormat.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY, JsonFormat.Feature.WRITE_SINGLE_ELEM_ARRAYS_UNWRAPPED])
+        of: List<Query>) : BoolQuery(of) {
     constructor(vararg of: Query) : this(of.asList())
 
     override fun simplify(): Query {
@@ -102,13 +108,17 @@ class NativeQuery(var value: Any? = null) : Query()
 class NamedQuery(var name: String, var value: Any? = null) : Query()
 
 class TermQuery(field: String, val value: Any?) : FieldedQuery(field)
-class TermsQuery(field: String, val value: List<Any?>) : FieldedQuery(field)
+class TermsQuery(field: String,
+                 @JsonFormat(with = [JsonFormat.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY, JsonFormat.Feature.WRITE_SINGLE_ELEM_ARRAYS_UNWRAPPED])
+                 val value: List<Any?>) : FieldedQuery(field)
 
 class MatchQuery(field: String, val value: String, val operator: String? = null) : FieldedQuery(field)
 
 class WildcardQuery(field: String, val value: String) : FieldedQuery(field)
 
-class PhraseQuery(field: String, val value: List<String>) : FieldedQuery(field)
+class PhraseQuery(field: String,
+                  @JsonFormat(with = [JsonFormat.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY, JsonFormat.Feature.WRITE_SINGLE_ELEM_ARRAYS_UNWRAPPED])
+                  val value: List<String>) : FieldedQuery(field)
 class PrefixQuery(field: String, val value: String) : FieldedQuery(field)
 
 class RegexQuery(field: String, val value: String) : FieldedQuery(field)
