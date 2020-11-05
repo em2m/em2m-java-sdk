@@ -9,6 +9,7 @@ import org.junit.Test
 import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
 
@@ -97,6 +98,17 @@ class DateTest {
         val expr = requireNotNull(simplex.parser.parse(exprString))
         val result = expr.call(emptyMap())
         assertTrue(result.toString().endsWith("ago"))
+    }
+
+    @Test
+    fun testFromNowUnits() {
+        val dayExpr = requireNotNull(simplex.parser.parse("\${ns:dateKey | fromNowUnits:d}"))
+        val dayResult = dayExpr.call(emptyMap())
+        assertNotNull(dayResult)
+
+        val minuteExpr = requireNotNull(simplex.parser.parse("\${ns:dateKey | fromNowUnits:m}"))
+        val minuteResult = minuteExpr.call(emptyMap())
+        assertNotNull(minuteResult)
     }
 
     @Test
