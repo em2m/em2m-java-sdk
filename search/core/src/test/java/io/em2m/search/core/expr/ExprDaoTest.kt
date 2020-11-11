@@ -6,6 +6,7 @@ import com.nhaarman.mockito_kotlin.mock
 import io.em2m.search.core.model.*
 import io.em2m.simplex.Simplex
 import io.em2m.simplex.model.BasicKeyResolver
+import io.em2m.simplex.model.ConstKeyHandler
 import io.em2m.simplex.model.Key
 import org.junit.Assert
 import org.junit.Test

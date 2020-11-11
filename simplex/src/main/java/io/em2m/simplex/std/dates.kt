@@ -72,11 +72,25 @@ class FormatDatePipe : PipeTransform {
 
 class FormatDurationPipe : PipeTransform {
 
+    private var units: String? = null
+
+    override fun args(args: List<String>) {
+        if (args.isNotEmpty()) {
+            units = args[0].coerce()
+        }
+    }
+
     override fun transform(value: Any?, context: ExprContext): Any? {
         val longValue: Long? = value?.coerce()
         return if (longValue != null) {
             val duration = Duration.ofMillis(longValue)
-            duration.fromNow(true)
+            when (units?.trim()) {
+                "days" -> duration.toDays()
+                "hours" -> duration.toHours()
+                "minutes" -> duration.toMinutes()
+                "seconds" -> duration.toMillis() / 1000
+                else -> duration.fromNow(true)
+            }
         } else value
     }
 
@@ -96,6 +110,32 @@ class FromNowPipe : PipeTransform {
         val date: Date? = value.toDate()
         return if (date != null) {
             Duration.between(Instant.now(), date.toInstant()).fromNow(withoutAffix)
+        } else value
+    }
+
+}
+
+class FromNowUnitsPipe : PipeTransform {
+
+    private var units = "d"
+
+    override fun args(args: List<String>) {
+        if (args.isNotEmpty()) {
+            units = args[0].coerce() ?: "d"
+        }
+    }
+
+    override fun transform(value: Any?, context: ExprContext): Any? {
+        val date: Date? = value.toDate()
+        return if (date != null) {
+            val duration = Duration.between(date.toInstant(), Instant.now())
+            when (units) {
+                "d" -> duration.toDays()
+                "h" -> duration.toHours()
+                "m" -> duration.toMinutes()
+                "s" -> duration.toMillis() / 1000
+                else -> duration.toDays()
+            }
         } else value
     }
 
@@ -231,6 +271,7 @@ object Dates {
             .transform("formatDuration") { FormatDurationPipe() }
             .transform("dateMath") { DateMathPipe() }
             .transform("fromNow") { FromNowPipe() }
+            .transform("fromNowUnits") { FromNowUnitsPipe() }
             .transform("nextWeekDay", NextBusinessDayPipe())
             .transform("datePlus") { DatePlusPipe() }
 

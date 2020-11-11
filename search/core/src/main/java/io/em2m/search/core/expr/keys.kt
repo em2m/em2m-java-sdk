@@ -4,14 +4,6 @@ import io.em2m.search.core.model.BucketContext
 import io.em2m.search.core.model.RowContext
 import io.em2m.simplex.model.*
 
-class ConstKeyHandler(val value: Any?) : KeyHandlerSupport() {
-
-    override fun call(key: Key, context: ExprContext): Any? {
-        return value
-    }
-
-}
-
 interface Fielded {
     fun fields(key: Key): List<String>
 }
