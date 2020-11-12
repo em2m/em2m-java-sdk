@@ -37,7 +37,7 @@ class FormatDatePipe : PipeTransform {
             pattern = DateTimeFormatter.ofPattern(args[0])
             if (args.size == 2) {
                 if (args[1].startsWith("$")) {
-                    path = args[1].removePrefix("$")
+                    path = args[1].removePrefix("$").trim()
                 } else {
                     try {
                         pattern = pattern.withZone(ZoneId.of(args[1]))
@@ -155,7 +155,7 @@ class DateMathPipe : PipeTransform {
 
             if (args.size > 1) {
                 if (args[1].startsWith("$")) {
-                    zonePath = args[1].removePrefix("$")
+                    zonePath = args[1].removePrefix("$").trim()
                 } else {
                     try {
                         zone = DateTimeZone.forID(args[1])
@@ -189,7 +189,7 @@ class NextBusinessDayPipe : PipeTransform {
     override fun args(args: List<String>) {
         if (args.isNotEmpty()) {
             if (args[0].startsWith("$")) {
-                zonePath = args[0].removePrefix("$")
+                zonePath = args[0].removePrefix("$").trim()
             } else {
                 try {
                     zone = TimeZone.getTimeZone(args[0])
@@ -227,7 +227,7 @@ class DatePlusPipe : PipeTransform {
         if (args.isNotEmpty()) {
             val arg0 = args[0]
             if (arg0.startsWith("$")) {
-                path = arg0.removePrefix("$")
+                path = arg0.removePrefix("$").trim()
             } else {
                 amount = arg0.toInt()
             }
@@ -237,7 +237,7 @@ class DatePlusPipe : PipeTransform {
         }
         if (args.size > 2) {
             if (args[2].startsWith("$")) {
-                zonePath = args[2].removePrefix("$")
+                zonePath = args[2].removePrefix("$").trim()
             } else {
                 try {
                     zone = TimeZone.getTimeZone(args[2])
