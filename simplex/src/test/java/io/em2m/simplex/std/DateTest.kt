@@ -124,7 +124,7 @@ class DateTest {
     @Test
     fun testDateMathVariableZone() {
         val expected = "2015-04-21 22:00"
-        val exprString = "\${ns:dateKey | dateMath:now+1d/d:\$timeZone}"
+        val exprString = "\${ns:dateKey | dateMath:now+1d/d:\$timeZone }"
         val expr = requireNotNull(simplex.parser.parse(exprString))
         val result = expr.call(mapOf("timeZone" to "America/Chicago"))
         val actual = SimpleDateFormat("yyyy-MM-dd HH:mm").format(result)
