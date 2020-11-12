@@ -52,8 +52,9 @@ fun Duration.fromNow(withoutAffix: Boolean = false): String {
     return TimeAgo.fromNow(toMillis(), withoutAffix)
 }
 
-fun Date.nextBusinessDay(): Date {
+fun Date.nextBusinessDay(timeZone: TimeZone): Date {
     val c = Calendar.getInstance()
+    c.timeZone = timeZone
     c.time = this
     c.add(Calendar.DATE, 1)
     while ((c.get(Calendar.DAY_OF_WEEK) == 1) || (c.get(Calendar.DAY_OF_WEEK) == 7)) {
