@@ -6,6 +6,7 @@ import io.em2m.simplex.parser.DateMathParser
 import io.em2m.utils.coerce
 import io.em2m.utils.fromNow
 import io.em2m.utils.nextBusinessDay
+import org.joda.time.DateTimeZone
 import java.time.Duration
 import java.time.Instant
 import java.time.ZoneId
@@ -145,27 +146,71 @@ class DateMathPipe : PipeTransform {
 
     private val dateMathParser = DateMathParser()
     private var dateMath: String? = null
+    private var zonePath: String? = null
+    private var zone: DateTimeZone = DateTimeZone.forID("America/Los_Angeles")
 
     override fun args(args: List<String>) {
         if (args.isNotEmpty()) {
             dateMath = args.first().trim()
+
+            if (args.size > 1) {
+                if (args[1].startsWith("$")) {
+                    zonePath = args[1].removePrefix("$")
+                } else {
+                    try {
+                        zone = DateTimeZone.forID(args[1])
+                    } catch (ex: Exception) {
+                    }
+                }
+            }
         }
     }
 
     override fun transform(value: Any?, context: ExprContext): Any? {
         val dateInput: Date? = value.toDate()
         return if (dateInput != null && dateMath != null) {
-            dateMathParser.parse(dateMath.toString(), dateInput.time).coerce<Date>()
+            var timeZone: DateTimeZone = zone
+            if (zonePath != null) {
+                val zoneId = context.evalPath(zonePath!!)?.toString()
+                try {
+                    timeZone = DateTimeZone.forID(zoneId)
+                } catch (ex: Exception) {}
+            }
+            dateMathParser.parse(dateMath.toString(), dateInput.time, false, timeZone).coerce<Date>()
         } else value
     }
 }
 
 class NextBusinessDayPipe : PipeTransform {
 
+    private var zonePath: String? = null
+    private var zone: TimeZone = TimeZone.getTimeZone("America/Los_Angeles")
+
+    override fun args(args: List<String>) {
+        if (args.isNotEmpty()) {
+            if (args[0].startsWith("$")) {
+                zonePath = args[0].removePrefix("$")
+            } else {
+                try {
+                    zone = TimeZone.getTimeZone(args[0])
+                } catch (ex: Exception) {
+                }
+            }
+        }
+    }
+
     override fun transform(value: Any?, context: ExprContext): Any? {
         val dateInput: Date? = value.toDate()
         return if (dateInput != null) {
-            dateInput.nextBusinessDay()
+            var timeZone: TimeZone = zone
+            if (zonePath != null) {
+                val zoneId = context.evalPath(zonePath!!)?.toString()
+                try {
+                    timeZone = TimeZone.getTimeZone(zoneId)
+                } catch (ex: Exception) {}
+            }
+
+            dateInput.nextBusinessDay(timeZone)
         } else value
     }
 }
@@ -175,6 +220,8 @@ class DatePlusPipe : PipeTransform {
     var units: String = "d"
     var amount = 1
     var path: String? = null
+    var zonePath: String? = null
+    var zone: TimeZone = TimeZone.getTimeZone("America/Los_Angeles")
 
     override fun args(args: List<String>) {
         if (args.isNotEmpty()) {
@@ -187,6 +234,16 @@ class DatePlusPipe : PipeTransform {
         }
         if (args.size > 1) {
             units = args[1]
+        }
+        if (args.size > 2) {
+            if (args[2].startsWith("$")) {
+                zonePath = args[2].removePrefix("$")
+            } else {
+                try {
+                    zone = TimeZone.getTimeZone(args[2])
+                } catch (ex: Exception) {
+                }
+            }
         }
     }
 
@@ -201,7 +258,17 @@ class DatePlusPipe : PipeTransform {
             } else {
                 this.amount
             }
+
+            var timeZone: TimeZone = zone
+            if (zonePath != null) {
+                val zoneId = context.evalPath(zonePath!!)?.toString()
+                try {
+                    timeZone = TimeZone.getTimeZone(zoneId)
+                } catch (ex: Exception) {}
+            }
+
             val c = Calendar.getInstance()
+            c.timeZone = timeZone
             c.time = dateInput
             when (units) {
                 "d" -> c.add(Calendar.DATE, amount)
