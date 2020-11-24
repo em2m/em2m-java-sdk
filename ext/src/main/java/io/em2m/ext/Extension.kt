@@ -15,7 +15,7 @@
  * is strictly forbidden unless prior written permission is obtained
  * from Elastic M2M Incorporated.
  */
-package io.em2m.sdk.ext
+package io.em2m.ext
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ObjectNode

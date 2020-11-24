@@ -15,10 +15,10 @@
  * is strictly forbidden unless prior written permission is obtained
  * from Elastic M2M Incorporated.
  */
-package io.em2m.sdk.ext
+package io.em2m.ext
 
 import com.typesafe.config.Config
-import io.em2m.sdk.ext.io.ExplodedBundleLoader
+import io.em2m.ext.io.ExplodedBundleLoader
 import io.em2m.simplex.Simplex
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory

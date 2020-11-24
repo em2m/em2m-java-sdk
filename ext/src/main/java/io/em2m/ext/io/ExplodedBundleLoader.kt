@@ -15,7 +15,7 @@
  * is strictly forbidden unless prior written permission is obtained
  * from Elastic M2M Incorporated.
  */
-package io.em2m.sdk.ext.io
+package io.em2m.ext.io
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ObjectNode
@@ -24,10 +24,10 @@ import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.em2m.policy.keys.ClaimsKeyHandler
 import io.em2m.policy.keys.EnvironmentKeyHandler
-import io.em2m.sdk.ext.Bundle
-import io.em2m.sdk.ext.BundleSpec
-import io.em2m.sdk.ext.Extension
-import io.em2m.sdk.ext.ExtensionSpec
+import io.em2m.ext.Bundle
+import io.em2m.ext.BundleSpec
+import io.em2m.ext.Extension
+import io.em2m.ext.ExtensionSpec
 import io.em2m.simplex.Simplex
 import io.em2m.simplex.model.BasicKeyResolver
 import io.em2m.simplex.model.Key
