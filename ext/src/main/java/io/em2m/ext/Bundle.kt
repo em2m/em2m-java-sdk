@@ -15,7 +15,7 @@
  * is strictly forbidden unless prior written permission is obtained
  * from Elastic M2M Incorporated.
  */
-package io.em2m.sdk.ext
+package io.em2m.ext
 
 import io.em2m.simplex.model.Expr
 import java.io.File
