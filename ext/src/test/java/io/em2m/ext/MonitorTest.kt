@@ -27,7 +27,6 @@ import io.em2m.simplex.model.PathKeyHandler
 import org.junit.Ignore
 import org.junit.Test
 
-@Ignore
 class MonitorTest {
 
     private val config: Config = ConfigFactory.parseMap(mapOf("data.ext.dir" to "src/test/ext"))
@@ -46,7 +45,7 @@ class MonitorTest {
     @Test
     fun testMonitoring() {
         service.startMonitoring()
-        Thread.sleep(1000)
+        Thread.sleep(10000)
         service.stopMonitoring()
         Thread.sleep(500)
     }
