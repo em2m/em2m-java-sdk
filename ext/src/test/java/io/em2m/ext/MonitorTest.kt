@@ -27,6 +27,7 @@ import io.em2m.simplex.model.PathKeyHandler
 import org.junit.Ignore
 import org.junit.Test
 
+@Ignore
 class MonitorTest {
 
     private val config: Config = ConfigFactory.parseMap(mapOf("data.ext.dir" to "src/test/ext"))
