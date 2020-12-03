@@ -44,7 +44,7 @@ class ExtensionServiceImpl @Inject constructor(val config: Config, val simplex: 
     private val log: Logger = LoggerFactory.getLogger(javaClass)
     private val dir = File(config.getString("data.ext.dir"))
     private val monitoringEnabled =
-        if (config.hasPath("ext.monitoring.enabled")) config.getBoolean("ext.scanning.enabled") else false
+        if (config.hasPath("ext.monitoring.enabled")) config.getBoolean("ext.monitoring.enabled") else false
 
     private var running = false
 
@@ -98,9 +98,10 @@ class ExtensionServiceImpl @Inject constructor(val config: Config, val simplex: 
             val watcher = FileSystems.getDefault().newWatchService()
             dir.toPath().register(watcher, ENTRY_CREATE, ENTRY_DELETE, ENTRY_MODIFY)
             running = true
-            thread(start = true, isDaemon = true) {
+            thread(start = true, isDaemon = true, name = "ExtensionServiceWatcher") {
                 while (running) {
                     try {
+
                         val key = watcher.take()
                         val events = key.pollEvents()
                         var reloadRequired = false

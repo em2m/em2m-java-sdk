@@ -1,0 +1,42 @@
+#
+# ELASTIC M2M Inc. CONFIDENTIAL
+# __________________
+#
+# Copyright (c) 2013-2020 Elastic M2M Incorporated, All Rights Reserved.
+#
+# NOTICE:  All information contained herein is, and remains
+# the property of Elastic M2M Incorporated
+#
+# The intellectual and technical concepts contained
+# herein are proprietary to Elastic M2M Incorporated
+# and may be covered by U.S. and Foreign Patents,  patents in
+# process, and are protected by trade secret or copyright law.
+# Dissemination of this information or reproduction of this material
+# is strictly forbidden unless prior written permission is obtained
+# from Elastic M2M Incorporated.
+#
+
+# Editor configuration, see http://editorconfig.org
+root = true
+
+[*]
+charset = utf-8
+indent_style = space
+indent_size = 4
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+[*.md]
+max_line_length = off
+trim_trailing_whitespace = false
+
+[*.yml]
+indent_style = space
+indent_size = 2
+
+[*.yaml]
+indent_size = 2
+
+[*.json]
+indent_style = space
+indent_size = 2

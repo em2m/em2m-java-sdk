@@ -46,7 +46,7 @@ class MonitorTest {
     @Test
     fun testMonitoring() {
         service.startMonitoring()
-        Thread.sleep(1000)
+        Thread.sleep(10000)
         service.stopMonitoring()
         Thread.sleep(500)
     }
