@@ -1,9 +1,7 @@
 package io.em2m.simplex.std
 
 import io.em2m.simplex.evalPath
-import io.em2m.simplex.model.BasicPipeTransformResolver
-import io.em2m.simplex.model.ExprContext
-import io.em2m.simplex.model.PipeTransform
+import io.em2m.simplex.model.*
 import io.em2m.utils.coerce
 
 class PathPipe() : PipeTransform {

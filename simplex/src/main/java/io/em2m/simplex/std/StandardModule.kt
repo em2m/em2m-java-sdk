@@ -13,6 +13,7 @@ class StandardModule : BasicSimplexModule() {
         keys(Bools.keys)
         key(Key("repeat", "*"), PathKeyHandler("repeat"))
         key(Key("var", "*"), PathKeyHandler("variables"))
+        key(Key("path", "*"), PathKeyHandler())
 
         transforms(Numbers.pipes)
         transforms(Strings.pipes)
