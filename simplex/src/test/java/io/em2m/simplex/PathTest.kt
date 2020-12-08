@@ -106,7 +106,7 @@ class PathTest {
     @Test
     fun testKeyHandler() {
         val simplex = Simplex()
-        simplex.keys(BasicKeyResolver().key(Key("field", "*"), PathKeyHandler(simplex)))
+        simplex.keys(BasicKeyResolver().key(Key("field", "*"), PathKeyHandler()))
         val expr = "\${a.b.c}"
         val context = map
         assertEquals("value", simplex.eval(expr, context))
@@ -115,7 +115,7 @@ class PathTest {
     @Test
     fun testKeyHandlerPrefix() {
         val simplex = Simplex()
-        simplex.keys(BasicKeyResolver().key(Key("field", "*"), PathKeyHandler(simplex, "a")))
+        simplex.keys(BasicKeyResolver().key(Key("field", "*"), PathKeyHandler( "a")))
         val expr = "\${b.c}"
         val context = map
         assertEquals("value", simplex.eval(expr, context))
@@ -124,7 +124,7 @@ class PathTest {
     @Test
     fun testKeyHandlerMultiplePaths() {
         val simplex = Simplex()
-        simplex.keys(BasicKeyResolver().key(Key("field", "*"), PathKeyHandler(simplex)))
+        simplex.keys(BasicKeyResolver().key(Key("field", "*"), PathKeyHandler()))
         val expr = "\${a.b.c,d,e}"
         val context = map
         assertArrayEquals(arrayOf("value", "dval", "eval"), (simplex.eval(expr, context) as List<*>).toTypedArray())

@@ -5,6 +5,8 @@ import io.em2m.simplex.model.*
 import io.em2m.simplex.parser.DateMathParser
 import io.em2m.utils.coerce
 import io.em2m.utils.fromNow
+import io.em2m.utils.nextBusinessDay
+import org.joda.time.DateTimeZone
 import java.time.Duration
 import java.time.Instant
 import java.time.ZoneId
@@ -35,7 +37,7 @@ class FormatDatePipe : PipeTransform {
             pattern = DateTimeFormatter.ofPattern(args[0])
             if (args.size == 2) {
                 if (args[1].startsWith("$")) {
-                    path = args[1].removePrefix("$")
+                    path = args[1].removePrefix("$").trim()
                 } else {
                     try {
                         pattern = pattern.withZone(ZoneId.of(args[1]))
@@ -71,23 +73,28 @@ class FormatDatePipe : PipeTransform {
 
 class FormatDurationPipe : PipeTransform {
 
+    private var units: String? = null
+
+    override fun args(args: List<String>) {
+        if (args.isNotEmpty()) {
+            units = args[0].coerce()
+        }
+    }
+
     override fun transform(value: Any?, context: ExprContext): Any? {
         val longValue: Long? = value?.coerce()
         return if (longValue != null) {
             val duration = Duration.ofMillis(longValue)
-            duration.fromNow(true)
+            when (units?.trim()) {
+                "days" -> duration.toDays()
+                "hours" -> duration.toHours()
+                "minutes" -> duration.toMinutes()
+                "seconds" -> duration.toMillis() / 1000
+                else -> duration.fromNow(true)
+            }
         } else value
     }
 
-}
-
-class durationToDaysPipe : PipeTransform {
-    override fun transform(value: Any?, context: ExprContext): Any? {
-        val milliseconds: Long? = value?.coerce()
-        return if (milliseconds != null) {
-            Math.round(milliseconds!!/(1000.0*60*60*24)*10)/10.0
-        } else milliseconds
-    }
 }
 
 class FromNowPipe : PipeTransform {
@@ -109,24 +116,173 @@ class FromNowPipe : PipeTransform {
 
 }
 
+class FromNowUnitsPipe : PipeTransform {
+
+    private var units = "d"
+
+    override fun args(args: List<String>) {
+        if (args.isNotEmpty()) {
+            units = args[0].coerce() ?: "d"
+        }
+    }
+
+    override fun transform(value: Any?, context: ExprContext): Any? {
+        val date: Date? = value.toDate()
+        return if (date != null) {
+            val duration = Duration.between(date.toInstant(), Instant.now())
+            when (units) {
+                "d" -> duration.toDays()
+                "h" -> duration.toHours()
+                "m" -> duration.toMinutes()
+                "s" -> duration.toMillis() / 1000
+                else -> duration.toDays()
+            }
+        } else value
+    }
+
+}
+
 class DateMathPipe : PipeTransform {
 
     private val dateMathParser = DateMathParser()
     private var dateMath: String? = null
+    private var zonePath: String? = null
+    private var zone: DateTimeZone = DateTimeZone.forID("America/Los_Angeles")
 
     override fun args(args: List<String>) {
         if (args.isNotEmpty()) {
-            dateMath = args[0]?.trim()
+            dateMath = args.first().trim()
+
+            if (args.size > 1) {
+                if (args[1].startsWith("$")) {
+                    zonePath = args[1].removePrefix("$").trim()
+                } else {
+                    try {
+                        zone = DateTimeZone.forID(args[1])
+                    } catch (ex: Exception) {
+                    }
+                }
+            }
         }
     }
 
     override fun transform(value: Any?, context: ExprContext): Any? {
         val dateInput: Date? = value.toDate()
         return if (dateInput != null && dateMath != null) {
-            dateMathParser.parse(dateMath.toString(), dateInput.time).coerce<Date>()
+            var timeZone: DateTimeZone = zone
+            if (zonePath != null) {
+                val zoneId = context.evalPath(zonePath!!)?.toString()
+                try {
+                    timeZone = DateTimeZone.forID(zoneId)
+                } catch (ex: Exception) {}
+            }
+            dateMathParser.parse(dateMath.toString(), dateInput.time, false, timeZone).coerce<Date>()
         } else value
     }
 }
+
+class NextBusinessDayPipe : PipeTransform {
+
+    private var zonePath: String? = null
+    private var zone: TimeZone = TimeZone.getTimeZone("America/Los_Angeles")
+
+    override fun args(args: List<String>) {
+        if (args.isNotEmpty()) {
+            if (args[0].startsWith("$")) {
+                zonePath = args[0].removePrefix("$").trim()
+            } else {
+                try {
+                    zone = TimeZone.getTimeZone(args[0])
+                } catch (ex: Exception) {
+                }
+            }
+        }
+    }
+
+    override fun transform(value: Any?, context: ExprContext): Any? {
+        val dateInput: Date? = value.toDate()
+        return if (dateInput != null) {
+            var timeZone: TimeZone = zone
+            if (zonePath != null) {
+                val zoneId = context.evalPath(zonePath!!)?.toString()
+                try {
+                    timeZone = TimeZone.getTimeZone(zoneId)
+                } catch (ex: Exception) {}
+            }
+
+            dateInput.nextBusinessDay(timeZone)
+        } else value
+    }
+}
+
+class DatePlusPipe : PipeTransform {
+
+    var units: String = "d"
+    var amount = 1
+    var path: String? = null
+    var zonePath: String? = null
+    var zone: TimeZone = TimeZone.getTimeZone("America/Los_Angeles")
+
+    override fun args(args: List<String>) {
+        if (args.isNotEmpty()) {
+            val arg0 = args[0]
+            if (arg0.startsWith("$")) {
+                path = arg0.removePrefix("$").trim()
+            } else {
+                amount = arg0.toInt()
+            }
+        }
+        if (args.size > 1) {
+            units = args[1]
+        }
+        if (args.size > 2) {
+            if (args[2].startsWith("$")) {
+                zonePath = args[2].removePrefix("$").trim()
+            } else {
+                try {
+                    zone = TimeZone.getTimeZone(args[2])
+                } catch (ex: Exception) {
+                }
+            }
+        }
+    }
+
+    override fun transform(value: Any?, context: ExprContext): Any? {
+
+        val dateInput: Date? = value.toDate()
+        return if (dateInput != null) {
+            val p = path
+            val amount: Int = if (p != null) {
+                context["variables"].evalPath(p).coerce() ?: context["fieldValues"].evalPath(p).coerce()
+                ?: context.evalPath(p).coerce() ?: 0
+            } else {
+                this.amount
+            }
+
+            var timeZone: TimeZone = zone
+            if (zonePath != null) {
+                val zoneId = context.evalPath(zonePath!!)?.toString()
+                try {
+                    timeZone = TimeZone.getTimeZone(zoneId)
+                } catch (ex: Exception) {}
+            }
+
+            val c = Calendar.getInstance()
+            c.timeZone = timeZone
+            c.time = dateInput
+            when (units) {
+                "d" -> c.add(Calendar.DATE, amount)
+                "w" -> c.add(Calendar.WEEK_OF_MONTH, amount)
+                "y" -> c.add(Calendar.HOUR, amount)
+                "m" -> c.add(Calendar.MONTH, amount)
+                else -> {
+                }
+            }
+            c.time
+        } else value
+    }
+}
+
 
 class DateNowHandler : KeyHandler {
 
@@ -175,7 +331,6 @@ val StandardDateConditions = mapOf(
         "DateGreaterThanEquals" to DateGreaterThanEquals()
 )
 
-
 object Dates {
 
     val pipes = BasicPipeTransformResolver()
@@ -183,10 +338,12 @@ object Dates {
             .transform("formatDuration") { FormatDurationPipe() }
             .transform("dateMath") { DateMathPipe() }
             .transform("fromNow") { FromNowPipe() }
-            .transform("durationToDays") { durationToDaysPipe() }
+            .transform("fromNowUnits") { FromNowUnitsPipe() }
+            .transform("nextWeekDay", NextBusinessDayPipe())
+            .transform("datePlus") { DatePlusPipe() }
 
     val keys = BasicKeyResolver()
-            .key(Key("Date", "now")) { _ -> DateNowHandler() }
+            .key(Key("Date", "now")) { DateNowHandler() }
 
     val conditions = BasicConditionResolver(StandardDateConditions)
 

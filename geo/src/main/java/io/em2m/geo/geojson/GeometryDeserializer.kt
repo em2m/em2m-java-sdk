@@ -11,9 +11,10 @@ class GeometryDeserializer<T : Geometry?> : JsonDeserializer<T>() {
 
     private val factory = GeometryFactory()
 
-    override fun deserialize(jsonParser: JsonParser, arg1: DeserializationContext): T? {
+    override fun deserialize(jsonParser: JsonParser, ctx: DeserializationContext): T? {
         val oc = jsonParser.codec
         val node = oc.readTree<JsonNode>(jsonParser)
+        @Suppress("UNCHECKED_CAST")
         return geometry(node) as? T?
     }
 
