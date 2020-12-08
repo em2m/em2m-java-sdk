@@ -102,14 +102,27 @@ class SlicePipe : PipeTransform {
     override fun args(args: List<String>) {
         if (args.isNotEmpty()) {
             val start = if (args.isNotEmpty()) {
-                try {args[0].toInt()} catch (ex: RuntimeException) { 0 }
-            } else { 0 }
+                try {
+                    args[0].toInt()
+                } catch (ex: RuntimeException) {
+                    0
+                }
+            } else {
+                0
+            }
             val end = if (args.size > 1) {
-                try {args[1].toInt()} catch (ex: RuntimeException) { 0 }
-            } else { 0 }
+                try {
+                    args[1].toInt()
+                } catch (ex: RuntimeException) {
+                    0
+                }
+            } else {
+                0
+            }
             range = IntRange(start, end)
         }
     }
+
     override fun transform(value: Any?, context: ExprContext): Any? {
         return when (value) {
             is List<*> -> value.slice(range)
@@ -126,17 +139,17 @@ val StandardArrayConditions = emptyMap<String, ConditionHandler>()
 object Arrays {
     val conditions = BasicConditionResolver(StandardBoolConditions)
     val pipes = BasicPipeTransformResolver(
-            mapOf(
-                    "notNull" to NotNullPipe(),
-                    "reversed" to ReversedPipe(),
-                    "filterNotNull" to FilterNotNullPipe(),
-                    "filterNotBlank" to FilterNotBlankPipe(),
-                    "first" to FirstPipe(),
-                    "firstNotBlank" to FirstNotBlankPipe(),
-                    "last" to LastPipe(),
-                    "lastNotBlank" to LastNotBlankPipe(),
-                    "size" to SizePipe(),
-                    "slice" to SlicePipe()
-            )
+        mapOf(
+            "notNull" to NotNullPipe(),
+            "reversed" to ReversedPipe(),
+            "filterNotNull" to FilterNotNullPipe(),
+            "filterNotBlank" to FilterNotBlankPipe(),
+            "first" to FirstPipe(),
+            "firstNotBlank" to FirstNotBlankPipe(),
+            "last" to LastPipe(),
+            "lastNotBlank" to LastNotBlankPipe(),
+            "size" to SizePipe(),
+            "slice" to SlicePipe()
+        )
     )
 }

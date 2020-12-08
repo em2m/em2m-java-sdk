@@ -2,6 +2,7 @@ package io.em2m.search.core.expr
 
 import io.em2m.search.core.model.BucketContext
 import io.em2m.search.core.model.RowContext
+import io.em2m.simplex.evalPath
 import io.em2m.simplex.model.*
 
 interface Fielded {
@@ -20,8 +21,14 @@ class FieldKeyHandler : KeyHandler, Fielded {
 
     override fun call(key: Key, context: ExprContext): Any? {
         val rowContext = RowContext(context)
-        val values = fields(key).map { field ->
-            rowContext.fieldValues[field]
+        val values = if (rowContext.fieldValues != null) {
+            fields(key).map { field ->
+                rowContext.fieldValues[field]
+            }
+        } else {
+            fields(key).map { field ->
+                rowContext.evalPath(field)
+            }
         }
         return if (values.size == 1) {
             values.first()
