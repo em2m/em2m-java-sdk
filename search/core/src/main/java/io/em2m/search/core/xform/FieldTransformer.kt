@@ -71,7 +71,7 @@ class FieldTransformer<T>(val simplex: Simplex, fields: List<FieldModel>) : Tran
     private fun transformSorts(sorts: List<DocSort>): List<DocSort> {
         return sorts.flatMap { sort ->
             val model = fieldModels[sort.field]
-            if (model?.delegateFields != null) {
+            if (model?.delegateFields?.isNotEmpty() == true) {
                 model.delegateFields.map { DocSort(it, sort.direction) }
             } else if (model?.delegateExpr != null) {
                 listOf(Field(expr = model.delegateExpr)).mapNotNull { it.name }.map { DocSort(it, sort.direction) }
