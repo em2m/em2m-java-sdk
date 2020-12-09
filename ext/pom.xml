@@ -4,7 +4,7 @@
     ELASTIC M2M Inc. CONFIDENTIAL
     __________________
 
-    Copyright (c) 2013-2016 Elastic M2M Incorporated, All Rights Reserved.
+    Copyright (c) 2013-2020 Elastic M2M Incorporated, All Rights Reserved.
 
     NOTICE:  All information contained herein is, and remains
     the property of Elastic M2M Incorporated
@@ -29,8 +29,8 @@
     </parent>
 
     <packaging>jar</packaging>
-    <artifactId>em2m-java-sdk-policy</artifactId>
-    <name>em2m-java-sdk-policy</name>
+    <artifactId>em2m-java-sdk-ext</artifactId>
+    <name>em2m-java-sdk-ext</name>
 
     <dependencies>
 
@@ -41,49 +41,25 @@
         </dependency>
 
         <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-core</artifactId>
-            <version>${jackson.version}</version>
+            <groupId>io.em2m.sdk</groupId>
+            <artifactId>em2m-java-sdk-policy</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>javax.inject</groupId>
+            <artifactId>javax.inject</artifactId>
         </dependency>
 
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
-            <version>${jackson.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-annotations</artifactId>
-            <version>${jackson.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>com.fasterxml.jackson.module</groupId>
-            <artifactId>jackson-module-kotlin</artifactId>
-            <version>${jackson.version}</version>
         </dependency>
 
         <dependency>
             <groupId>com.fasterxml.jackson.dataformat</groupId>
             <artifactId>jackson-dataformat-yaml</artifactId>
             <version>${jackson.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>com.auth0</groupId>
-            <artifactId>java-jwt</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.jetbrains.kotlin</groupId>
-            <artifactId>kotlin-stdlib</artifactId>
-            <version>${kotlin.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.jetbrains.kotlin</groupId>
-            <artifactId>kotlin-test</artifactId>
-            <version>${kotlin.version}</version>
-            <scope>test</scope>
         </dependency>
 
     </dependencies>
@@ -96,5 +72,6 @@
             </plugin>
         </plugins>
     </build>
+
 
 </project>

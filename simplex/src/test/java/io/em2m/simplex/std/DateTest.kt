@@ -17,6 +17,7 @@ class DateTest {
 
     private val keyResolver = BasicKeyResolver(mapOf(
             Key("ns", "dateKey") to ConstKeyHandler("2015-04-21T17:31:06-07"),
+            //Key("ns", "dateKey") to ConstKeyHandler(1429641066000),
             Key("ns", "duration") to ConstKeyHandler(210_000)))
             .delegate(Numbers.keys)
 
@@ -117,7 +118,9 @@ class DateTest {
         val exprString = "\${ns:dateKey | dateMath:now+1d/d:America/Chicago}"
         val expr = requireNotNull(simplex.parser.parse(exprString))
         val result = expr.call(emptyMap())
-        val actual = SimpleDateFormat("yyyy-MM-dd HH:mm").format(result)
+        val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm")
+        sdf.timeZone = TimeZone.getTimeZone("America/Los_Angeles")
+        val actual = sdf.format(result)
         assertEquals(expected, actual)
     }
 
@@ -127,7 +130,9 @@ class DateTest {
         val exprString = "\${ns:dateKey | dateMath:now+1d/d:\$timeZone }"
         val expr = requireNotNull(simplex.parser.parse(exprString))
         val result = expr.call(mapOf("timeZone" to "America/Chicago"))
-        val actual = SimpleDateFormat("yyyy-MM-dd HH:mm").format(result)
+        val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm")
+        sdf.timeZone = TimeZone.getTimeZone("America/Los_Angeles")
+        val actual = sdf.format(result)
         assertEquals(expected, actual)
     }
 
@@ -137,20 +142,26 @@ class DateTest {
         val exprString = "\${ns:dateKey | datePlus:1:d}"
         val expr = requireNotNull(simplex.parser.parse(exprString))
         val result = expr.call(emptyMap())
-        val actual = SimpleDateFormat("yyyy-MM-dd HH:mm").format(result)
+        val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm")
+        sdf.timeZone = TimeZone.getTimeZone("America/Los_Angeles")
+        val actual = sdf.format(result)
         assertEquals(expected, actual)
 
         val exprString2 = "\${ns:dateKey | datePlus:\$offset:d}"
         val expr2 = requireNotNull(simplex.parser.parse(exprString))
         val result2 = expr.call(mapOf("offset" to 1))
-        val actual2 = SimpleDateFormat("yyyy-MM-dd HH:mm").format(result2)
+        val sdf2 = SimpleDateFormat("yyyy-MM-dd HH:mm")
+        sdf2.timeZone = TimeZone.getTimeZone("America/Los_Angeles")
+        val actual2 = sdf2.format(result2)
         assertEquals(expected, actual2)
 
         val expected3 = "2015-04-22 17:31"
         val exprString3 = "\${ns:dateKey | datePlus:1:d:\$timeZone}"
         val expr3 = requireNotNull(simplex.parser.parse(exprString3))
         val result3 = expr3.call(mapOf("timeZone" to "America/Chicago"))
-        val actual3 = SimpleDateFormat("yyyy-MM-dd HH:mm").format(result3)
+        val sdf3 = SimpleDateFormat("yyyy-MM-dd HH:mm")
+        sdf3.timeZone = TimeZone.getTimeZone("America/Los_Angeles")
+        val actual3 = sdf3.format(result3)
         assertEquals(expected3, actual3)
     }
 

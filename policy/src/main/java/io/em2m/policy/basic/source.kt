@@ -51,5 +51,18 @@ class LocalPolicySource(roleDir: File, policyDir: File, simplex: Simplex) : Poli
         }
     }
 
+}
+
+class CompositePolicySource(private val sources: List<PolicySource>) : PolicySource {
+
+    override val policies: List<Policy>
+        get() {
+            return sources.flatMap { policies}
+        }
+
+    override val roles: List<Role>
+        get() {
+            return sources.flatMap { roles }
+        }
 
 }

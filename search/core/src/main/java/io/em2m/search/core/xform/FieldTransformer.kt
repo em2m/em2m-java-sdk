@@ -45,7 +45,6 @@ class FieldTransformer<T>(val simplex: Simplex, fields: List<FieldModel>) : Tran
         return fields.flatMap { field ->
             if (field.expr != null) {
                 val expr = simplex.parser.parse(field.expr)
-                val delegates = FieldKeyHandler.fields(expr)
                 FieldKeyHandler.fields(expr).map { Field(it) }
             } else {
                 listOf(field)
@@ -72,7 +71,7 @@ class FieldTransformer<T>(val simplex: Simplex, fields: List<FieldModel>) : Tran
     private fun transformSorts(sorts: List<DocSort>): List<DocSort> {
         return sorts.flatMap { sort ->
             val model = fieldModels[sort.field]
-            if (model?.delegateFields != null) {
+            if (model?.delegateFields?.isNotEmpty() == true) {
                 model.delegateFields.map { DocSort(it, sort.direction) }
             } else listOf(sort)
         }
