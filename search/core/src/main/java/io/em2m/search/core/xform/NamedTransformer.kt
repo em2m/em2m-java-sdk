@@ -1,6 +1,7 @@
 package io.em2m.search.core.xform
 
 import io.em2m.search.core.model.*
+import io.em2m.simplex.model.ExprContext
 
 class NamedTransformer<T>(private val namedAggs: Map<String, Agg>) : Transformer<T> {
 
@@ -8,18 +9,18 @@ class NamedTransformer<T>(private val namedAggs: Map<String, Agg>) : Transformer
     private val queryXform = NamedAggQueryTransformer(namedAggs, "America/Los_Angeles")
     private val aggXform = NamedAggTransformer(namedAggs)
 
-    override fun transformQuery(query: Query?): Query? {
-        return query?.let { queryXform.transform(it) }
+    override fun transformQuery(query: Query?, context: ExprContext): Query? {
+        return query?.let { queryXform.transform(it, context) }
     }
 
-    override fun transformRequest(request: SearchRequest): SearchRequest {
+    override fun transformRequest(request: SearchRequest, context: ExprContext): SearchRequest {
         val tz = request.params["timeZone"]?.toString() ?: "America/Los_Angeles"
-        val query = request.query?.let { NamedAggQueryTransformer(namedAggs, tz).transform(it) } ?: request.query
-        val aggs = request.aggs.map { aggXform.transform(it) }
+        val query = request.query?.let { NamedAggQueryTransformer(namedAggs, tz).transform(it, context) } ?: request.query
+        val aggs = request.aggs.map { aggXform.transform(it, context) }
         return request.copy(query = query, aggs = aggs)
     }
 
-    override fun transformResult(request: SearchRequest, result: SearchResult<T>): SearchResult<T> {
+    override fun transformResult(request: SearchRequest, result: SearchResult<T>, context: ExprContext): SearchResult<T> {
         val aggMap = request.aggs.associateBy { it.key }
         val aggs = result.aggs.mapValues { (key, aggResult) ->
             val reqAgg = aggMap[key]

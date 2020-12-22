@@ -24,7 +24,7 @@ class FieldTransformerTest {
     @Test
     fun testSingleFieldAlias() {
         val req = SearchRequest(fields = listOf(Field("_title")), sorts = listOf(DocSort("_title")))
-        val req2 = xform.transformRequest(req)
+        val req2 = xform.transformRequest(req, emptyMap())
         assertEquals("name", req2.fields.first().name)
         assertEquals("name", req2.sorts.first().field)
     }
@@ -32,7 +32,7 @@ class FieldTransformerTest {
     @Test
     fun testMultiFieldAlias() {
         val req = SearchRequest(fields = listOf(Field("_subtitle")), sorts = listOf(DocSort("_subtitle")))
-        val req2 = xform.transformRequest(req)
+        val req2 = xform.transformRequest(req, emptyMap())
         assertEquals(listOf("type", "summary"), req2.fields.map { it.name })
         assertEquals(listOf("type", "summary"), req2.sorts.map { it.field })
     }
@@ -40,7 +40,7 @@ class FieldTransformerTest {
     @Test
     fun testSingleFieldQuery() {
         val req = SearchRequest(query = TermQuery("_title", "Title"))
-        val req2 = xform.transformRequest(req)
+        val req2 = xform.transformRequest(req, emptyMap())
         val q2 = req2.query
         assertTrue(q2 is TermQuery)
         assertEquals("name", q2.field)
@@ -50,7 +50,7 @@ class FieldTransformerTest {
     @Test
     fun testMultiFieldQuery() {
         val req = SearchRequest(query = TermQuery("_subtitle", "Summary"))
-        val req2 = xform.transformRequest(req)
+        val req2 = xform.transformRequest(req, emptyMap())
         val q2 = req2.query
         assertTrue(q2 is OrQuery)
         assertEquals(2, q2.of.size)
@@ -63,7 +63,7 @@ class FieldTransformerTest {
     @Test
     fun testTransformAggs() {
         val req = SearchRequest(aggs = listOf(TermsAgg("_title")))
-        val req2 = xform.transformRequest(req)
+        val req2 = xform.transformRequest(req, emptyMap())
         assertEquals(1, req2.aggs.size)
         val agg = req2.aggs.first() as TermsAgg
         assertEquals("name", agg.field)
@@ -77,7 +77,7 @@ class FieldTransformerTest {
                 listOf("Name 2", "Type 2", "Summary 2")
         )
         val res = SearchResult<Any>(rows = rows, totalItems = 2, fields = listOf(Field(name="name"), Field(name="type"), Field(name="summary")))
-        val res2 = xform.transformResult(req, res)
+        val res2 = xform.transformResult(req, res, emptyMap())
         val rows2 = res2.rows ?: emptyList()
         assertEquals("Name 1 / Type 1:Summary 1", rows2[0][0])
         assertEquals("Name 2 / Type 2:Summary 2", rows2[1][0])

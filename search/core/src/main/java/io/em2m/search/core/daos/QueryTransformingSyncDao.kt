@@ -24,21 +24,23 @@ class QueryTransformingSyncDao<T>(
     }
 
     private fun transformQuery(query: Query, timeZone: String? = null): Query {
+        val context = emptyMap<String, Any?>()
         return query
-                .let { LuceneQueryTransformer().transform(it) }
-                .let { FieldAliasQueryTransformer(aliases).transform(it) }
-                .let { NamedAggQueryTransformer(namedAggs, timeZone).transform(it) }
+                .let { LuceneQueryTransformer().transform(it, context) }
+                .let { FieldAliasQueryTransformer(aliases).transform(it, context) }
+                .let { NamedAggQueryTransformer(namedAggs, timeZone).transform(it, context) }
     }
 
     private fun transformAggs(aggs: List<Agg>): List<Agg> {
+        val context: Map<String, Any?> = emptyMap()
         val aliasXform = FieldAliasAggTransformer(aliases)
         val namedXform = NamedAggTransformer(namedAggs)
         return aggs
                 .map {
-                    aliasXform.transform(it)
+                    aliasXform.transform(it, context)
                 }
                 .map {
-                    namedXform.transform((it))
+                    namedXform.transform(it, context)
                 }
     }
 

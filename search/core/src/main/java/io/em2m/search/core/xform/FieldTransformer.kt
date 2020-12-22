@@ -4,6 +4,7 @@ import io.em2m.search.core.expr.FieldKeyHandler
 import io.em2m.search.core.model.*
 import io.em2m.simplex.Simplex
 import io.em2m.simplex.model.Expr
+import io.em2m.simplex.model.ExprContext
 
 class FieldTransformer<T>(val simplex: Simplex, fields: List<FieldModel>) : Transformer<T> {
 
@@ -11,15 +12,19 @@ class FieldTransformer<T>(val simplex: Simplex, fields: List<FieldModel>) : Tran
     private val queryXform = FieldQueryTransformer(fieldModels)
     private val aggsXform = FieldAggTransformer(fieldModels)
 
-    override fun transformRequest(request: SearchRequest): SearchRequest {
+    override fun transformRequest(request: SearchRequest, context: ExprContext): SearchRequest {
         val sorts = transformSorts(request.sorts)
-        val fields = transformFields(request.fields)
-        val query = transformQuery(request.query)
-        val aggs = transformAggs(request.aggs)
+        val fields = transformFields(request.fields, context)
+        val query = transformQuery(request.query, context)
+        val aggs = transformAggs(request.aggs, context)
         return request.copy(sorts = sorts, fields = fields, query = query, aggs = aggs)
     }
 
-    override fun transformResult(request: SearchRequest, result: SearchResult<T>): SearchResult<T> {
+    override fun transformResult(
+        request: SearchRequest,
+        result: SearchResult<T>,
+        context: ExprContext
+    ): SearchResult<T> {
         val aggResults = transformAggResults(request, result.aggs)
         val models = reqModels(request.fields)
         val fields = delegateFields(models)
@@ -27,16 +32,15 @@ class FieldTransformer<T>(val simplex: Simplex, fields: List<FieldModel>) : Tran
         return result.copy(aggs = aggResults, rows = rows, fields = request.fields)
     }
 
-    override fun transformQuery(query: Query?): Query? {
-        return query?.let { queryXform.transform(query) } ?: query
+    override fun transformQuery(query: Query?, context: ExprContext): Query? {
+        return query?.let { queryXform.transform(query, context) } ?: query
     }
 
-
-    private fun transformAggs(aggs: List<Agg>): List<Agg> {
-        return aggs.map { aggsXform.transform(it) }
+    private fun transformAggs(aggs: List<Agg>, context: ExprContext): List<Agg> {
+        return aggs.map { aggsXform.transform(it, context) }
     }
 
-    private fun transformFields(fields: List<Field>): List<Field> {
+    private fun transformFields(fields: List<Field>, context: ExprContext): List<Field> {
 
         // 1. map expression into fields
         // 2. apply aliases
@@ -134,7 +138,12 @@ class FieldTransformer<T>(val simplex: Simplex, fields: List<FieldModel>) : Tran
         }.distinct()
     }
 
-    private fun transformRows(req: SearchRequest, result: SearchResult<T>, models: List<FieldModel>, delegates: List<Field>): List<List<Any?>>? {
+    private fun transformRows(
+        req: SearchRequest,
+        result: SearchResult<T>,
+        models: List<FieldModel>,
+        delegates: List<Field>
+    ): List<List<Any?>>? {
 
         val lookup = result.fields.mapIndexed { index, field -> field.name to index }
 
@@ -167,11 +176,13 @@ class FieldTransformer<T>(val simplex: Simplex, fields: List<FieldModel>) : Tran
         }
     }
 
-    class FieldModel(val name: String,
-                     val delegateField: String? = null,
-                     val delegateExpr: String? = null,
-                     val expr: Expr? = null,
-                     val settings: Map<String, Any?> = emptyMap()) {
+    class FieldModel(
+        val name: String,
+        val delegateField: String? = null,
+        val delegateExpr: String? = null,
+        val expr: Expr? = null,
+        val settings: Map<String, Any?> = emptyMap()
+    ) {
         val delegateFields = if (expr != null) FieldKeyHandler.fields(expr) else listOfNotNull(delegateField)
     }
 
@@ -191,17 +202,38 @@ class FieldTransformer<T>(val simplex: Simplex, fields: List<FieldModel>) : Tran
             }
         }
 
-        override fun transformTermQuery(query: TermQuery) = applyAlias(query.field) { TermQuery(it, query.value) }
-        override fun transformTermsQuery(query: TermsQuery) = applyAlias(query.field) { TermsQuery(it, query.value) }
-        override fun transformMatchQuery(query: MatchQuery) = applyAlias(query.field) { MatchQuery(it, query.value, query.operator) }
-        override fun transformPhraseQuery(query: PhraseQuery) = applyAlias(query.field) { PhraseQuery(it, query.value) }
-        override fun transformPrefixQuery(query: PrefixQuery) = applyAlias(query.field) { PrefixQuery(it, query.value) }
-        override fun transformWildcardQuery(query: WildcardQuery) = applyAlias(query.field) { WildcardQuery(it, query.value) }
-        override fun transformRegexQuery(query: RegexQuery) = applyAlias(query.field) { RegexQuery(it, query.value) }
-        override fun transformDateRangeQuery(query: DateRangeQuery) = applyAlias(query.field) { DateRangeQuery(it, query.lt, query.lte, query.gt, query.gte) }
-        override fun transformRangeQuery(query: RangeQuery) = applyAlias(query.field) { RangeQuery(it, query.lt, query.lte, query.gt, query.gte) }
-        override fun transformBboxQuery(query: BboxQuery) = applyAlias(query.field) { BboxQuery(it, query.value) }
-        override fun transformExistsQuery(query: ExistsQuery) = applyAlias(query.field) { ExistsQuery(it, query.value) }
+        override fun transformTermQuery(query: TermQuery, context: ExprContext) =
+            applyAlias(query.field) { TermQuery(it, query.value) }
+
+        override fun transformTermsQuery(query: TermsQuery, context: ExprContext) =
+            applyAlias(query.field) { TermsQuery(it, query.value) }
+
+        override fun transformMatchQuery(query: MatchQuery, context: ExprContext) =
+            applyAlias(query.field) { MatchQuery(it, query.value, query.operator) }
+
+        override fun transformPhraseQuery(query: PhraseQuery, context: ExprContext) =
+            applyAlias(query.field) { PhraseQuery(it, query.value) }
+
+        override fun transformPrefixQuery(query: PrefixQuery, context: ExprContext) =
+            applyAlias(query.field) { PrefixQuery(it, query.value) }
+
+        override fun transformWildcardQuery(query: WildcardQuery, context: ExprContext) =
+            applyAlias(query.field) { WildcardQuery(it, query.value) }
+
+        override fun transformRegexQuery(query: RegexQuery, context: ExprContext) =
+            applyAlias(query.field) { RegexQuery(it, query.value) }
+
+        override fun transformDateRangeQuery(query: DateRangeQuery, context: ExprContext) =
+            applyAlias(query.field) { DateRangeQuery(it, query.lt, query.lte, query.gt, query.gte) }
+
+        override fun transformRangeQuery(query: RangeQuery, context: ExprContext) =
+            applyAlias(query.field) { RangeQuery(it, query.lt, query.lte, query.gt, query.gte) }
+
+        override fun transformBboxQuery(query: BboxQuery, context: ExprContext) =
+            applyAlias(query.field) { BboxQuery(it, query.value) }
+
+        override fun transformExistsQuery(query: ExistsQuery, context: ExprContext) =
+            applyAlias(query.field) { ExistsQuery(it, query.value) }
     }
 
     class FieldAggTransformer(private val fields: Map<String, FieldModel>) : AggTransformer() {
@@ -212,21 +244,92 @@ class FieldTransformer<T>(val simplex: Simplex, fields: List<FieldModel>) : Tran
             return fields.getOrElse(field, { null })?.delegateFields?.firstOrNull() ?: field
         }
 
-        override fun transformDateHistogramAgg(agg: DateHistogramAgg) = DateHistogramAgg(applyAlias(agg.field), null, agg.interval, agg.offset, agg.timeZone, agg.missing, agg.key, agg.aggs, agg.extensions, agg.minDocCount)
-        override fun transformDateRangeAgg(agg: DateRangeAgg) = DateRangeAgg(applyAlias(agg.field), null, agg.timeZone, agg.ranges, agg.key, agg.aggs, agg.extensions, agg.minDocCount)
-        override fun transformFiltersAgg(agg: FiltersAgg) = FiltersAgg(agg.filters.mapValues {
-            queryTransformer.transform(it.value)
+        override fun transformDateHistogramAgg(agg: DateHistogramAgg, context: ExprContext) = DateHistogramAgg(
+            applyAlias(agg.field),
+            agg.format,
+            agg.interval,
+            agg.offset,
+            agg.timeZone,
+            agg.missing,
+            agg.key,
+            agg.aggs,
+            agg.extensions,
+            agg.minDocCount
+        )
+
+        override fun transformDateRangeAgg(agg: DateRangeAgg, context: ExprContext) = DateRangeAgg(
+            applyAlias(agg.field),
+            agg.format,
+            agg.timeZone,
+            agg.ranges,
+            agg.key,
+            agg.aggs,
+            agg.extensions,
+            agg.minDocCount
+        )
+
+        override fun transformFiltersAgg(agg: FiltersAgg, context: ExprContext) = FiltersAgg(agg.filters.mapValues {
+            queryTransformer.transform(it.value, context)
         }, agg.key, agg.aggs, agg.extensions, agg.minDocCount)
 
-        override fun transformGeoBoundsAgg(agg: GeoBoundsAgg) = GeoBoundsAgg(applyAlias(agg.field), agg.key, agg.aggs, agg.extensions, agg.minDocCount)
-        override fun transformGeoCentroidAgg(agg: GeoCentroidAgg) = GeoCentroidAgg(applyAlias(agg.field), agg.key, agg.aggs, agg.extensions, agg.minDocCount)
-        override fun transformGeoDistanceAgg(agg: GeoDistanceAgg) = GeoDistanceAgg(applyAlias(agg.field), agg.origin, agg.unit, agg.ranges, agg.key, agg.aggs, agg.extensions, agg.minDocCount)
-        override fun transformGeoHashAgg(agg: GeoHashAgg) = GeoHashAgg(applyAlias(agg.field), agg.precision, agg.size, agg.key, agg.aggs, agg.extensions, agg.minDocCount)
-        override fun transformHistogramAgg(agg: HistogramAgg) = HistogramAgg(applyAlias(agg.field), null, agg.interval, agg.offset, agg.key, agg.missing, agg.aggs, agg.extensions, agg.minDocCount)
-        override fun transformMissingAgg(agg: MissingAgg) = MissingAgg(applyAlias(agg.field), agg.key, agg.aggs, agg.extensions, agg.minDocCount)
-        override fun transformRangeAgg(agg: RangeAgg) = RangeAgg(applyAlias(agg.field), agg.ranges, agg.key, agg.aggs, agg.extensions, agg.minDocCount)
-        override fun transformStatsAgg(agg: StatsAgg) = StatsAgg(applyAlias(agg.field), agg.key, null, agg.aggs, agg.extensions, agg.minDocCount)
-        override fun transformTermsAgg(agg: TermsAgg) = TermsAgg(applyAlias(agg.field), agg.size, agg.key, agg.sort, null, agg.missing, agg.aggs, agg.extensions, agg.minDocCount)
+        override fun transformGeoBoundsAgg(agg: GeoBoundsAgg, context: ExprContext) =
+            GeoBoundsAgg(applyAlias(agg.field), agg.key, agg.aggs, agg.extensions, agg.minDocCount)
 
+        override fun transformGeoCentroidAgg(agg: GeoCentroidAgg, context: ExprContext) =
+            GeoCentroidAgg(applyAlias(agg.field), agg.key, agg.aggs, agg.extensions, agg.minDocCount)
+
+        override fun transformGeoDistanceAgg(agg: GeoDistanceAgg, context: ExprContext) = GeoDistanceAgg(
+            applyAlias(agg.field),
+            agg.origin,
+            agg.unit,
+            agg.ranges,
+            agg.key,
+            agg.aggs,
+            agg.extensions,
+            agg.minDocCount
+        )
+
+        override fun transformGeoHashAgg(agg: GeoHashAgg, context: ExprContext) = GeoHashAgg(
+            applyAlias(agg.field),
+            agg.precision,
+            agg.size,
+            agg.key,
+            agg.aggs,
+            agg.extensions,
+            agg.minDocCount
+        )
+
+        override fun transformHistogramAgg(agg: HistogramAgg, context: ExprContext) = HistogramAgg(
+            applyAlias(agg.field),
+            null, /*agg.format,*/ // issue with ags not supporting format
+            agg.interval,
+            agg.offset,
+            agg.key,
+            agg.missing,
+            agg.aggs,
+            agg.extensions,
+            agg.minDocCount
+        )
+
+        override fun transformMissingAgg(agg: MissingAgg, context: ExprContext) =
+            MissingAgg(applyAlias(agg.field), agg.key, agg.aggs, agg.extensions, agg.minDocCount)
+
+        override fun transformRangeAgg(agg: RangeAgg, context: ExprContext) =
+            RangeAgg(applyAlias(agg.field), agg.ranges, agg.key, agg.aggs, agg.extensions, agg.minDocCount)
+
+        override fun transformStatsAgg(agg: StatsAgg, context: ExprContext) =
+            StatsAgg(applyAlias(agg.field), agg.key, null /*agg.format*/, agg.aggs, agg.extensions, agg.minDocCount)
+
+        override fun transformTermsAgg(agg: TermsAgg, context: ExprContext) = TermsAgg(
+            applyAlias(agg.field),
+            agg.size,
+            agg.key,
+            agg.sort,
+            null /*agg.format*/,
+            agg.missing,
+            agg.aggs,
+            agg.extensions,
+            agg.minDocCount
+        )
     }
 }

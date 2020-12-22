@@ -5,6 +5,7 @@ import io.em2m.search.core.model.*
 import io.em2m.search.core.xform.SourceFormatAggTransformer
 import io.em2m.simplex.Simplex
 import io.em2m.simplex.model.Expr
+import io.em2m.simplex.model.ExprContext
 
 @Deprecated("Use FieldTransformerDao instead")
 open class ExprTransformingSyncDao<T>(simplex: Simplex, delegate: SyncDao<T>) : SyncDaoWrapper<T>(delegate) {
@@ -22,7 +23,7 @@ open class ExprTransformingSyncDao<T>(simplex: Simplex, delegate: SyncDao<T>) : 
         val exprFields = rowExprs.filterNotNull().flatMap { FieldKeyHandler.fields(it) }
         val delegateFields = exprFields.plus(rowNames).filterNotNull().map { Field(name = it) }
         val query = request.query?.let { transformQuery(it) }
-        val req = request.copy(query = query, fields = delegateFields, aggs = transformAggs(request.aggs), sorts = transformSorts(request.sorts))
+        val req = request.copy(query = query, fields = delegateFields, aggs = transformAggs(request.aggs, emptyMap()), sorts = transformSorts(request.sorts))
         return delegate.search(req).let { results ->
             val rows = transformRows(request, results.rows, delegateFields, rowExprs)
             val aggs = transformAggResults(request, results.aggs)
@@ -45,13 +46,13 @@ open class ExprTransformingSyncDao<T>(simplex: Simplex, delegate: SyncDao<T>) : 
     }
 
     private fun transformQuery(query: Query, timeZone: String? = null): Query {
-        return query.let { ExprQueryTransformer(parser).transform(it) }
+        return query.let { ExprQueryTransformer(parser).transform(it, emptyMap()) }
     }
 
-    private fun transformAggs(aggs: List<Agg>): List<Agg> {
+    private fun transformAggs(aggs: List<Agg>, context: ExprContext): List<Agg> {
         val sourceFormatXform = SourceFormatAggTransformer()
         return aggs.map {
-            sourceFormatXform.transform((it))
+            sourceFormatXform.transform(it, context)
         }
     }
 

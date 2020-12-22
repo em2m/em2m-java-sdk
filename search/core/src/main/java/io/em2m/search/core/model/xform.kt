@@ -1,68 +1,70 @@
 package io.em2m.search.core.model
 
+import io.em2m.simplex.model.ExprContext
+
 interface Transformer<T> {
-    fun transformRequest(request: SearchRequest): SearchRequest = request
-    fun transformResult(request: SearchRequest, result: SearchResult<T>): SearchResult<T> = result
-    fun transformQuery(query: Query?): Query? = query
-    fun transformItem(item: T): T = item
+    fun transformRequest(request: SearchRequest, context: ExprContext): SearchRequest = request
+    fun transformResult(request: SearchRequest, result: SearchResult<T>, context: ExprContext): SearchResult<T> = result
+    fun transformQuery(query: Query?, context: ExprContext): Query? = query
+    fun transformItem(item: T, context: ExprContext): T = item
 }
 
 open class QueryTransformer {
 
-    fun transform(query: Query): Query = when (query) {
+    fun transform(query: Query, context: ExprContext): Query = when (query) {
         is AndQuery -> {
-            transformAndQuery(query)
+            transformAndQuery(query, context)
         }
         is OrQuery -> {
-            transformOrQuery(query)
+            transformOrQuery(query, context)
         }
         is NotQuery -> {
-            transformNotQuery(query)
+            transformNotQuery(query, context)
         }
         is TermQuery -> {
-            transformTermQuery(query)
+            transformTermQuery(query, context)
         }
         is TermsQuery -> {
-            transformTermsQuery(query)
+            transformTermsQuery(query, context)
         }
         is MatchQuery -> {
-            transformMatchQuery(query)
+            transformMatchQuery(query, context)
         }
         is PhraseQuery -> {
-            transformPhraseQuery(query)
+            transformPhraseQuery(query, context)
         }
         is PrefixQuery -> {
-            transformPrefixQuery(query)
+            transformPrefixQuery(query, context)
         }
         is WildcardQuery -> {
-            transformWildcardQuery(query)
+            transformWildcardQuery(query, context)
         }
         is RegexQuery -> {
-            transformRegexQuery(query)
+            transformRegexQuery(query, context)
         }
         is RangeQuery -> {
-            transformRangeQuery(query)
+            transformRangeQuery(query, context)
         }
         is DateRangeQuery -> {
-            transformDateRangeQuery(query)
+            transformDateRangeQuery(query, context)
         }
         is BboxQuery -> {
-            transformBboxQuery(query)
+            transformBboxQuery(query, context)
         }
         is MatchAllQuery -> {
-            transformMatchAllQuery(query)
+            transformMatchAllQuery(query, context)
         }
         is NativeQuery -> {
-            transformNativeQuery(query)
+            transformNativeQuery(query, context)
         }
         is NamedQuery -> {
-            transformNamedQuery(query)
+            transformNamedQuery(query, context)
         }
         is LuceneQuery -> {
-            transformLuceneQuery(query)
+            transformLuceneQuery(query, context)
         }
         is ExistsQuery -> {
-            transformExistsQuery(query)
+            transformExistsQuery(query, context)
         }
         else -> {
             query
@@ -70,111 +72,110 @@ open class QueryTransformer {
     }
 
     // Boolean Queries
-    open fun transformAndQuery(query: AndQuery): Query {
-        return AndQuery(query.of.mapNotNull { transform(it) })
+    open fun transformAndQuery(query: AndQuery, context: ExprContext): Query {
+        return AndQuery(query.of.mapNotNull { transform(it, context) })
     }
 
-    open fun transformOrQuery(query: OrQuery): Query {
-        return OrQuery(query.of.mapNotNull { transform(it) })
+    open fun transformOrQuery(query: OrQuery, context: ExprContext): Query {
+        return OrQuery(query.of.mapNotNull { transform(it, context) })
     }
 
-    open fun transformNotQuery(query: NotQuery): Query {
-        return NotQuery(query.of.mapNotNull { transform(it) })
+    open fun transformNotQuery(query: NotQuery, context: ExprContext): Query {
+        return NotQuery(query.of.mapNotNull { transform(it, context) })
     }
 
     // Field Queries
 
-    open fun transformTermQuery(query: TermQuery): Query = query
-    open fun transformTermsQuery(query: TermsQuery): Query = query
-    open fun transformMatchQuery(query: MatchQuery): Query = query
-    open fun transformPhraseQuery(query: PhraseQuery): Query = query
-    open fun transformPrefixQuery(query: PrefixQuery): Query = query
-    open fun transformWildcardQuery(query: WildcardQuery): Query = query
-    open fun transformRegexQuery(query: RegexQuery): Query = query
-    open fun transformDateRangeQuery(query: DateRangeQuery): Query = query
-    open fun transformRangeQuery(query: RangeQuery): Query = query
-    open fun transformBboxQuery(query: BboxQuery): Query = query
-    open fun transformExistsQuery(query: ExistsQuery): Query = query
+    open fun transformTermQuery(query: TermQuery, context: ExprContext): Query = query
+    open fun transformTermsQuery(query: TermsQuery, context: ExprContext): Query = query
+    open fun transformMatchQuery(query: MatchQuery, context: ExprContext): Query = query
+    open fun transformPhraseQuery(query: PhraseQuery, context: ExprContext): Query = query
+    open fun transformPrefixQuery(query: PrefixQuery, context: ExprContext): Query = query
+    open fun transformWildcardQuery(query: WildcardQuery, context: ExprContext): Query = query
+    open fun transformRegexQuery(query: RegexQuery, context: ExprContext): Query = query
+    open fun transformDateRangeQuery(query: DateRangeQuery, context: ExprContext): Query = query
+    open fun transformRangeQuery(query: RangeQuery, context: ExprContext): Query = query
+    open fun transformBboxQuery(query: BboxQuery, context: ExprContext): Query = query
+    open fun transformExistsQuery(query: ExistsQuery, context: ExprContext): Query = query
 
     // Special Queries
 
-    open fun transformLuceneQuery(query: LuceneQuery): Query = query
-    open fun transformMatchAllQuery(query: MatchAllQuery): Query = query
-    open fun transformNativeQuery(query: NativeQuery): Query = query
-    open fun transformNamedQuery(query: NamedQuery): Query = query
-
+    open fun transformLuceneQuery(query: LuceneQuery, context: ExprContext): Query = query
+    open fun transformMatchAllQuery(query: MatchAllQuery, context: ExprContext): Query = query
+    open fun transformNativeQuery(query: NativeQuery, context: ExprContext): Query = query
+    open fun transformNamedQuery(query: NamedQuery, context: ExprContext): Query = query
 
 }
 
 open class AggTransformer {
 
-    fun transform(agg: Agg): Agg = when (agg) {
+    fun transform(agg: Agg, context: ExprContext): Agg = when (agg) {
 
         is DateHistogramAgg -> {
-            transformDateHistogramAgg(agg)
+            transformDateHistogramAgg(agg, context)
         }
         is DateRangeAgg -> {
-            transformDateRangeAgg(agg)
+            transformDateRangeAgg(agg, context)
         }
         is FiltersAgg -> {
-            transformFiltersAgg(agg)
+            transformFiltersAgg(agg, context)
         }
         is GeoBoundsAgg -> {
-            transformGeoBoundsAgg(agg)
+            transformGeoBoundsAgg(agg, context)
         }
         is GeoCentroidAgg -> {
-            transformGeoCentroidAgg(agg)
+            transformGeoCentroidAgg(agg, context)
         }
         is GeoDistanceAgg -> {
-            transformGeoDistanceAgg(agg)
+            transformGeoDistanceAgg(agg, context)
         }
         is GeoHashAgg -> {
-            transformGeoHashAgg(agg)
+            transformGeoHashAgg(agg, context)
         }
         is HistogramAgg -> {
-            transformHistogramAgg(agg)
+            transformHistogramAgg(agg, context)
         }
         is MissingAgg -> {
-            transformMissingAgg(agg)
+            transformMissingAgg(agg, context)
         }
         is NamedAgg -> {
-            transformNamedAgg(agg)
+            transformNamedAgg(agg, context)
         }
         is NativeAgg -> {
-            transformNativeAgg(agg)
+            transformNativeAgg(agg, context)
         }
         is RangeAgg -> {
-            transformRangeAgg(agg)
+            transformRangeAgg(agg, context)
         }
         is StatsAgg -> {
-            transformStatsAgg(agg)
+            transformStatsAgg(agg, context)
         }
         is TermsAgg -> {
-            transformTermsAgg(agg)
+            transformTermsAgg(agg, context)
         }
         is XformAgg -> {
-            transformXformAgg(agg)
+            transformXformAgg(agg, context)
         }
         else -> {
             agg
         }
     }
 
-    open fun transformDateHistogramAgg(agg: DateHistogramAgg): Agg = agg
-    open fun transformDateRangeAgg(agg: DateRangeAgg): Agg = agg
-    open fun transformFiltersAgg(agg: FiltersAgg): Agg = agg
-    open fun transformGeoBoundsAgg(agg: GeoBoundsAgg): Agg = agg
-    open fun transformGeoCentroidAgg(agg: GeoCentroidAgg): Agg = agg
-    open fun transformGeoDistanceAgg(agg: GeoDistanceAgg): Agg = agg
-    open fun transformGeoHashAgg(agg: GeoHashAgg): Agg = agg
-    open fun transformHistogramAgg(agg: HistogramAgg): Agg = agg
-    open fun transformMissingAgg(agg: MissingAgg): Agg = agg
-    open fun transformNamedAgg(agg: NamedAgg): Agg = agg
-    open fun transformNativeAgg(agg: NativeAgg): Agg = agg
-    open fun transformRangeAgg(agg: RangeAgg): Agg = agg
-    open fun transformStatsAgg(agg: StatsAgg): Agg = agg
-    open fun transformTermsAgg(agg: TermsAgg): Agg = agg
-    open fun transformXformAgg(agg: XformAgg): Agg = agg
+    open fun transformDateHistogramAgg(agg: DateHistogramAgg, context: ExprContext): Agg = agg
+    open fun transformDateRangeAgg(agg: DateRangeAgg, context: ExprContext): Agg = agg
+    open fun transformFiltersAgg(agg: FiltersAgg, context: ExprContext): Agg = agg
+    open fun transformGeoBoundsAgg(agg: GeoBoundsAgg, context: ExprContext): Agg = agg
+    open fun transformGeoCentroidAgg(agg: GeoCentroidAgg, context: ExprContext): Agg = agg
+    open fun transformGeoDistanceAgg(agg: GeoDistanceAgg, context: ExprContext): Agg = agg
+    open fun transformGeoHashAgg(agg: GeoHashAgg, context: ExprContext): Agg = agg
+    open fun transformHistogramAgg(agg: HistogramAgg, context: ExprContext): Agg = agg
+    open fun transformMissingAgg(agg: MissingAgg, context: ExprContext): Agg = agg
+    open fun transformNamedAgg(agg: NamedAgg, context: ExprContext): Agg = agg
+    open fun transformNativeAgg(agg: NativeAgg, context: ExprContext): Agg = agg
+    open fun transformRangeAgg(agg: RangeAgg, context: ExprContext): Agg = agg
+    open fun transformStatsAgg(agg: StatsAgg, context: ExprContext): Agg = agg
+    open fun transformTermsAgg(agg: TermsAgg, context: ExprContext): Agg = agg
+    open fun transformXformAgg(agg: XformAgg, context: ExprContext): Agg = agg
 }
 
 open class AggResultTransformer {
@@ -202,7 +203,7 @@ open class AggResultTransformer {
 
 class QueryTransformerAdapter<T>(val xforms: List<QueryTransformer>) : Transformer<T> {
 
-    override fun transformQuery(query: Query?): Query? {
-        return query?.let { xforms.fold(query) { current, xform -> xform.transform(current) } }
+    override fun transformQuery(query: Query?, context: ExprContext): Query? {
+        return query?.let { xforms.fold(query) { current, xform -> xform.transform(current, context) } }
     }
 }
