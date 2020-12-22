@@ -1,11 +1,12 @@
 package io.em2m.search.core.xform
 
 import io.em2m.search.core.model.*
+import io.em2m.simplex.model.ExprContext
 import io.em2m.utils.coerce
 
 class NamedAggQueryTransformer(private val namedAggs: Map<String, Agg>, val timeZone: String?) : QueryTransformer() {
 
-    override fun transformNamedQuery(query: NamedQuery): Query {
+    override fun transformNamedQuery(query: NamedQuery, context: ExprContext): Query {
         val agg = namedAggs[query.name]
         val value = query.value
 
@@ -50,7 +51,7 @@ class NamedAggQueryTransformer(private val namedAggs: Map<String, Agg>, val time
                 TermQuery(agg.field, value)
             }
             else -> {
-                super.transformNamedQuery(query)
+                super.transformNamedQuery(query, context)
             }
         }
     }
