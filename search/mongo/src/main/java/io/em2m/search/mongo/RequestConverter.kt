@@ -11,6 +11,7 @@ import com.mongodb.client.model.Sorts
 import io.em2m.search.core.model.*
 import io.em2m.search.core.parser.LuceneExprParser
 import io.em2m.search.core.parser.SchemaMapper
+import io.em2m.simplex.model.ExprContext
 import io.em2m.simplex.parser.DateMathParser
 import org.bson.Document
 import org.bson.conversions.Bson
@@ -23,7 +24,7 @@ class RequestConverter(private val schemaMapper: SchemaMapper, private val objec
 
     private val notXform = PushDownNotQueryTransformer()
 
-    private fun Query.fixNot() = notXform.transform(this)
+    private fun Query.fixNot() = notXform.transform(this, emptyMap())
 
     fun convertQuery(query: Query): Bson {
         return convertInternal(query.fixNot().simplify())
@@ -268,7 +269,7 @@ class RequestConverter(private val schemaMapper: SchemaMapper, private val objec
 
     class PushDownNotQueryTransformer : QueryTransformer() {
 
-        override fun transformNotQuery(query: NotQuery): Query {
+        override fun transformNotQuery(query: NotQuery, context: ExprContext): Query {
             return AndQuery(query.of.map { it.negate() })
         }
 

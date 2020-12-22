@@ -3,16 +3,17 @@ package io.em2m.search.core.xform
 import com.fasterxml.jackson.databind.ObjectMapper
 import io.em2m.search.core.model.*
 import io.em2m.simplex.model.Expr
+import io.em2m.simplex.model.ExprContext
 import io.em2m.utils.coerce
 
 class XformTransformer<T>(val objectMapper: ObjectMapper) : Transformer<T> {
 
-    override fun transformRequest(request: SearchRequest): SearchRequest {
-        val aggs = request.aggs.map { aggXform.transform(it) }
+    override fun transformRequest(request: SearchRequest, context: ExprContext): SearchRequest {
+        val aggs = request.aggs.map { aggXform.transform(it, context) }
         return request.copy(aggs = aggs)
     }
 
-    override fun transformResult(request: SearchRequest, result: SearchResult<T>): SearchResult<T> {
+    override fun transformResult(request: SearchRequest, result: SearchResult<T>, context: ExprContext): SearchResult<T> {
         val aggs = request.aggs.mapNotNull { agg ->
             if (agg is XformAgg) {
                 val aggResult = result.aggs[agg.agg.key]
@@ -61,8 +62,8 @@ class XformTransformer<T>(val objectMapper: ObjectMapper) : Transformer<T> {
 
         val aggXform = object : AggTransformer() {
 
-            override fun transformXformAgg(agg: XformAgg): Agg {
-                return ExtensionsTransformer(agg.extensions).transform(agg.agg)
+            override fun transformXformAgg(agg: XformAgg, context: ExprContext): Agg {
+                return ExtensionsTransformer(agg.extensions).transform(agg.agg, context)
             }
 
         }
