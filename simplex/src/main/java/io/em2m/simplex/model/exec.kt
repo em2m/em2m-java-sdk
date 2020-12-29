@@ -9,7 +9,8 @@ interface ExecHandler {
     fun call(context: ExprContext, op: String, params: Map<String, Any?>): Any?
 }
 
-class ExecExpr(val op: String, val handler: ExecHandler?, val paramExprs: Map<String, Expr?>, val value: Expr? = null) : Expr {
+class ExecExpr(val op: String, val handler: ExecHandler?, val paramExprs: Map<String, Expr?>, val value: Expr? = null) :
+    Expr {
 
     override fun call(context: ExprContext): Any? {
         val contextExecs: ExecResolver? = context["execs"] as? ExecResolver
@@ -42,7 +43,7 @@ class BasicExecResolver(handlers: Map<String, (op: String) -> ExecHandler> = emp
     }
 
     fun delegate(delegate: ExecResolver): BasicExecResolver {
-        delegates.add(delegate)
+        delegates.add(0, delegate)
         return this
     }
 

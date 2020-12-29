@@ -67,7 +67,7 @@ class BasicKeyResolver(handlers: Map<Key, KeyHandler> = emptyMap(), vararg deleg
     }
 
     fun delegate(resolver: KeyResolver): BasicKeyResolver {
-        delegates.add(resolver)
+        delegates.add(0, resolver)
         return this
     }
 
