@@ -27,7 +27,11 @@ data class KeyOnlyPipePart(override val key: Key, override val handler: KeyHandl
     }
 }
 
-data class SingleTransformPipePart(override val key: Key, override val handler: KeyHandler?, val transform: PipeTransform) : PipePart {
+data class SingleTransformPipePart(
+    override val key: Key,
+    override val handler: KeyHandler?,
+    val transform: PipeTransform
+) : PipePart {
 
     override val transforms = listOf(transform)
 
@@ -39,7 +43,11 @@ data class SingleTransformPipePart(override val key: Key, override val handler: 
     }
 }
 
-data class MultiTransformPipePart(override val key: Key, override val handler: KeyHandler?, override val transforms: List<PipeTransform> = emptyList()) : PipePart {
+data class MultiTransformPipePart(
+    override val key: Key,
+    override val handler: KeyHandler?,
+    override val transforms: List<PipeTransform> = emptyList()
+) : PipePart {
 
     override fun call(context: ExprContext): Any? {
         val contextKeys: KeyResolver? = context["keys"] as? KeyResolver
@@ -168,7 +176,7 @@ class BasicPipeTransformResolver(handlers: Map<String, PipeTransform> = emptyMap
     }
 
     fun delegate(delegate: PipeTransformResolver): BasicPipeTransformResolver {
-        delegates.add(delegate)
+        delegates.add(0, delegate)
         return this
     }
 
