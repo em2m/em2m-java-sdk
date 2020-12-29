@@ -35,7 +35,6 @@
         <module>geo</module>
         <module>actions</module>
         <module>simplex</module>
-        <module>simplex2</module>
         <module>policy</module>
         <module>search</module>
     </modules>
