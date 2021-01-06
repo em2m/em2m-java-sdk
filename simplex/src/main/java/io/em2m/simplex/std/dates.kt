@@ -7,11 +7,10 @@ import io.em2m.utils.coerce
 import io.em2m.utils.fromNow
 import io.em2m.utils.nextBusinessDay
 import org.joda.time.DateTimeZone
-import java.time.Duration
-import java.time.Instant
-import java.time.ZoneId
+import java.time.*
 import java.time.format.DateTimeFormatter
 import java.util.*
+
 
 private fun Any?.toDate(): Date? {
     return when (this) {
@@ -25,11 +24,50 @@ private fun Any?.toDate(): Date? {
     }
 }
 
+class ParseDatePipe : PipeTransform {
+    private var zoneId = ZoneId.of("America/Los_Angeles")
+    private var pattern: DateTimeFormatter = DateTimeFormatter.ofPattern("YYYY-mm-dd")
+        .withZone(zoneId)
+    private var path: String? = null
+
+    override fun args(args: List<String>) {
+        if (args.isNotEmpty()) {
+            pattern = DateTimeFormatter.ofPattern(args[0])
+            if (args.size == 2) {
+                if (args[1].startsWith("$")) {
+                    path = args[1].removePrefix("$").trim()
+                } else {
+                    try {
+                        zoneId = ZoneId.of(args[1])
+                        pattern = pattern.withZone(zoneId)
+                    } catch (ex: Exception) {
+                    }
+                }
+            } else {
+                pattern = pattern.withZone(zoneId)
+            }
+        }
+    }
+
+    override fun transform(value: Any?, context: ExprContext): Any? {
+        return if (value != null) {
+            try {
+                val date = LocalDate.parse(value.toString(), pattern)
+                val epoch = date.atStartOfDay(zoneId).toEpochSecond() * 1000
+                Date(epoch)
+            } catch (ex: java.lang.Exception) {
+                null
+            }
+        } else null
+    }
+
+}
+
 class FormatDatePipe : PipeTransform {
 
     private val defaultZoneId = ZoneId.of("America/Los_Angeles")
     private var pattern: DateTimeFormatter = DateTimeFormatter.ofPattern("YYYY-mm-dd")
-            .withZone(defaultZoneId)
+        .withZone(defaultZoneId)
     private var path: String? = null
 
     override fun args(args: List<String>) {
@@ -174,7 +212,8 @@ class DateMathPipe : PipeTransform {
                 val zoneId = context.evalPath(zonePath!!)?.toString()
                 try {
                     timeZone = DateTimeZone.forID(zoneId)
-                } catch (ex: Exception) {}
+                } catch (ex: Exception) {
+                }
             }
             dateMathParser.parse(dateMath.toString(), dateInput.time, false, timeZone).coerce<Date>()
         } else value
@@ -207,7 +246,8 @@ class NextBusinessDayPipe : PipeTransform {
                 val zoneId = context.evalPath(zonePath!!)?.toString()
                 try {
                     timeZone = TimeZone.getTimeZone(zoneId)
-                } catch (ex: Exception) {}
+                } catch (ex: Exception) {
+                }
             }
 
             dateInput.nextBusinessDay(timeZone)
@@ -264,7 +304,8 @@ class DatePlusPipe : PipeTransform {
                 val zoneId = context.evalPath(zonePath!!)?.toString()
                 try {
                     timeZone = TimeZone.getTimeZone(zoneId)
-                } catch (ex: Exception) {}
+                } catch (ex: Exception) {
+                }
             }
 
             val c = Calendar.getInstance()
@@ -323,27 +364,28 @@ class DateGreaterThan : SingleDateHandler({ k, v -> compareDates(k, v) > 0 })
 class DateGreaterThanEquals : SingleDateHandler({ k, v -> compareDates(k, v) >= 0 })
 
 val StandardDateConditions = mapOf(
-        "DateEquals" to DateEquals(),
-        "DateNotEquals" to DateNotEquals(),
-        "DateLessThan" to DateLessThan(),
-        "DateLessThanEquals" to DateLessThanEquals(),
-        "DateGreaterThan" to DateGreaterThan(),
-        "DateGreaterThanEquals" to DateGreaterThanEquals()
+    "DateEquals" to DateEquals(),
+    "DateNotEquals" to DateNotEquals(),
+    "DateLessThan" to DateLessThan(),
+    "DateLessThanEquals" to DateLessThanEquals(),
+    "DateGreaterThan" to DateGreaterThan(),
+    "DateGreaterThanEquals" to DateGreaterThanEquals()
 )
 
 object Dates {
 
     val pipes = BasicPipeTransformResolver()
-            .transform("formatDate") { FormatDatePipe() }
-            .transform("formatDuration") { FormatDurationPipe() }
-            .transform("dateMath") { DateMathPipe() }
-            .transform("fromNow") { FromNowPipe() }
-            .transform("fromNowUnits") { FromNowUnitsPipe() }
-            .transform("nextWeekDay", NextBusinessDayPipe())
-            .transform("datePlus") { DatePlusPipe() }
+        .transform("formatDate") { FormatDatePipe() }
+        .transform("parseDate") { ParseDatePipe() }
+        .transform("formatDuration") { FormatDurationPipe() }
+        .transform("dateMath") { DateMathPipe() }
+        .transform("fromNow") { FromNowPipe() }
+        .transform("fromNowUnits") { FromNowUnitsPipe() }
+        .transform("nextWeekDay", NextBusinessDayPipe())
+        .transform("datePlus") { DatePlusPipe() }
 
     val keys = BasicKeyResolver()
-            .key(Key("Date", "now")) { DateNowHandler() }
+        .key(Key("Date", "now")) { DateNowHandler() }
 
     val conditions = BasicConditionResolver(StandardDateConditions)
 
