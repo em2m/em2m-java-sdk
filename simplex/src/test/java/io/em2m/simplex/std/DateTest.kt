@@ -17,6 +17,7 @@ class DateTest {
 
     private val keyResolver = BasicKeyResolver(mapOf(
             Key("ns", "dateKey") to ConstKeyHandler("2015-04-21T17:31:06-07"),
+            Key("ns", "dateKey2") to ConstKeyHandler("04/21/2015"),
             //Key("ns", "dateKey") to ConstKeyHandler(1429641066000),
             Key("ns", "duration") to ConstKeyHandler(210_000)))
             .delegate(Numbers.keys)
@@ -49,6 +50,15 @@ class DateTest {
         val expr = requireNotNull(simplex.parser.parse(exprString))
         val result = expr.call(emptyMap())
         assertEquals("2015", result)
+    }
+
+    @Test
+    fun testParseDate() {
+        val exprString = "\${ns:dateKey2 | parseDate:MM/dd/yyyy}"
+        val expr = requireNotNull(simplex.parser.parse(exprString))
+        val result = expr.call(emptyMap())
+        @Suppress("DEPRECATION")
+        assertEquals("2015", (result as Date).year.toString())
     }
 
     @Test
