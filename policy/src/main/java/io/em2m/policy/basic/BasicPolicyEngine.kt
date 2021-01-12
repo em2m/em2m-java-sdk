@@ -30,11 +30,12 @@ class BasicPolicyEngine(policySource: PolicySource, val simplex: Simplex = Simpl
         val matches = statements.filter { it.condition.call(context.map) }
         val nDeny = matches.count { it.effect == Effect.Deny }
         val nAllow = matches.count { it.effect == Effect.Allow }
+        val rewrites = matches.flatMap { it.rewrite }
         val allowed = if (nDeny > 0) {
             LOG.warn("User attempted to execute an explicitly denied action: Account ID = ${context.claims.sub}, Action = $actionName")
             false
         } else nAllow > 0
-        return ActionCheck(allowed, statements.size, nAllow, nDeny)
+        return ActionCheck(allowed, statements.size, nAllow, nDeny, rewrites)
     }
 
     private fun expandRole(roleId: String): List<String> {

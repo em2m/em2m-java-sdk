@@ -1,5 +1,6 @@
 package io.em2m.actions.model
 
+import io.em2m.policy.model.ActionCheck
 import io.em2m.policy.model.Claims
 import io.em2m.policy.model.Environment
 import io.em2m.policy.model.PolicyContext
@@ -18,6 +19,8 @@ data class ActionContext(val actionName: String,
                          var inputStream: InputStream? = null,
                          var request: Any? = null,
                          var multipart: MultipartData? = null,
+                         var actionCheck: ActionCheck? = null,
+                         var rewrites: Map<String, Any?> = emptyMap(),
                          val scope: MutableMap<String, Any?> = HashMap(),
                          var debug: Boolean = false,
                          var error: Throwable? = null,
@@ -28,13 +31,15 @@ data class ActionContext(val actionName: String,
                 claims: Map<String, Any?> = emptyMap(),
                 environment: MutableMap<String, Any?> = HashMap(),
                 resource: String? = null,
+                actionCheck: ActionCheck? = null,
+                rewrites: Map<String, Any?> = emptyMap(),
                 scope: MutableMap<String, Any?> = HashMap(),
                 debug: Boolean = false,
                 requestId: String = UUID.randomUUID().toString(),
                 request: Any? = null,
                 multipart: MultipartData? = null,
                 error: Throwable? = null,
-                response: Response) : this(actionName, Claims(claims), environment, requestId, resource, inputStream, request, multipart, scope, debug, error, response)
+                response: Response) : this(actionName, Claims(claims), environment, requestId, resource, inputStream, request, multipart, actionCheck, rewrites, scope, debug, error, response)
 
     val keyHandlers = HashMap<Key, KeyHandler>()
 

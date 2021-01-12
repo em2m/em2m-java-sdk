@@ -1,6 +1,6 @@
 package io.em2m.policy.model
 
-data class ActionCheck(val allowed: Boolean, val nStatements: Int, val nAllow: Int, val nDeny: Int)
+data class ActionCheck(val allowed: Boolean, val nStatements: Int, val nAllow: Int, val nDeny: Int, val rewrites: List<Rewrite>)
 
 interface PolicyEngine {
     fun isActionAllowed(actionName: String, context: PolicyContext): Boolean
