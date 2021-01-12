@@ -7,6 +7,7 @@ import io.em2m.utils.coerce
 import io.em2m.utils.fromNow
 import io.em2m.utils.nextBusinessDay
 import org.joda.time.DateTimeZone
+import java.text.SimpleDateFormat
 import java.time.*
 import java.time.format.DateTimeFormatter
 import java.util.*
@@ -26,25 +27,27 @@ private fun Any?.toDate(): Date? {
 
 class ParseDatePipe : PipeTransform {
     private var zoneId = ZoneId.of("America/Los_Angeles")
-    private var pattern: DateTimeFormatter = DateTimeFormatter.ofPattern("YYYY-mm-dd")
+    var pattern = "YYYY-mm-dd"
+    private var formatter: DateTimeFormatter = DateTimeFormatter.ofPattern("YYYY-mm-dd")
         .withZone(zoneId)
     private var path: String? = null
 
     override fun args(args: List<String>) {
         if (args.isNotEmpty()) {
-            pattern = DateTimeFormatter.ofPattern(args[0])
+            pattern = args[0]
+            formatter = DateTimeFormatter.ofPattern(pattern)
             if (args.size == 2) {
                 if (args[1].startsWith("$")) {
                     path = args[1].removePrefix("$").trim()
                 } else {
                     try {
                         zoneId = ZoneId.of(args[1])
-                        pattern = pattern.withZone(zoneId)
+                        formatter = formatter.withZone(zoneId)
                     } catch (ex: Exception) {
                     }
                 }
             } else {
-                pattern = pattern.withZone(zoneId)
+                formatter = formatter.withZone(zoneId)
             }
         }
     }
@@ -52,9 +55,10 @@ class ParseDatePipe : PipeTransform {
     override fun transform(value: Any?, context: ExprContext): Any? {
         return if (value != null) {
             try {
-                val date = LocalDate.parse(value.toString(), pattern)
-                val epoch = date.atStartOfDay(zoneId).toEpochSecond() * 1000
-                Date(epoch)
+                val sdf = SimpleDateFormat(pattern)
+                sdf.parse(value.toString())
+                //val epoch = date.atStartOfDay(zoneId).toEpochSecond() * 1000
+                //Date(epoch)
             } catch (ex: java.lang.Exception) {
                 null
             }

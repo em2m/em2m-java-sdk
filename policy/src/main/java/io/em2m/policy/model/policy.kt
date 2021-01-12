@@ -3,17 +3,19 @@ package io.em2m.policy.model
 import com.fasterxml.jackson.annotation.JsonFormat
 import io.em2m.simplex.model.ConditionExpr
 import io.em2m.simplex.model.ConstConditionExpr
+import io.em2m.simplex.model.Expr
 
 enum class Effect { Allow, Deny }
+
+data class Rewrite(val key: String, val value: Expr,  val condition: ConditionExpr = ConstConditionExpr(true))
 
 data class Statement(val id: String? = null,
                      val effect: Effect = Effect.Allow,
                      val actions: List<String> = emptyList(),
-                     val allow: Map<String, List<Any>> = emptyMap(),
-                     val deny: Map<String, List<Any>> = emptyMap(),
                      @JsonFormat(with = [JsonFormat.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY, JsonFormat.Feature.WRITE_SINGLE_ELEM_ARRAYS_UNWRAPPED])
                      val resource: List<String> = emptyList(),
-                     val condition: ConditionExpr = ConstConditionExpr(true))
+                     val condition: ConditionExpr = ConstConditionExpr(true),
+                     val rewrite: List<Rewrite> = emptyList())
 
 data class Role(val id: String,
                 val label: String = id,

@@ -7,7 +7,11 @@ import io.em2m.simplex.model.Key
 import io.em2m.utils.coerceNonNull
 import org.junit.Test
 import java.text.SimpleDateFormat
+import java.time.temporal.Temporal
+import java.time.temporal.TemporalAccessor
+import java.time.temporal.TemporalField
 import java.util.*
+import kotlin.test.Ignore
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
@@ -58,7 +62,10 @@ class DateTest {
         val expr = requireNotNull(simplex.parser.parse(exprString))
         val result = expr.call(emptyMap())
         @Suppress("DEPRECATION")
-        assertEquals("2015", (result as Date).year.toString())
+        val date = result as Date
+        val calendar = GregorianCalendar()
+        calendar.time = date
+        assertEquals(2015, calendar.get(Calendar.YEAR))
     }
 
     @Test
