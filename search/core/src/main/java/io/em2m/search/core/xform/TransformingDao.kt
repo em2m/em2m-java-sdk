@@ -8,7 +8,11 @@ class TransformingDao<T>(private val transformer: Transformer<T>, delegate: Sync
 
     fun search(request: SearchRequest, context: ExprContext): SearchResult<T> {
         val req = transformer.transformRequest(request, context)
-        val result = delegate.search(req)
+        val result = if (delegate is TransformingDao) {
+            delegate.search(req, context)
+        } else {
+            delegate.search(req)
+        }
         return transformer.transformResult(request, result, context).transformItems { transformer.transformItem(it, context) }
     }
 

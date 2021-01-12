@@ -33,7 +33,7 @@ class BasicConditionResolver(conditions: Map<String, ConditionHandler> = emptyMa
     }
 
     fun delegate(delegate: ConditionResolver): BasicConditionResolver {
-        delegates.add(delegate)
+        delegates.add(0, delegate)
         return this
     }
 
@@ -63,7 +63,8 @@ class ValueConditionExpr(val value: Expr?) : ConditionExpr {
     }
 }
 
-class SingleConditionExpr(val condition: String, val handler: ConditionHandler, val first: Expr, val second: Expr) : ConditionExpr {
+class SingleConditionExpr(val condition: String, val handler: ConditionHandler, val first: Expr, val second: Expr) :
+    ConditionExpr {
 
     override fun call(context: ExprContext): Boolean {
 

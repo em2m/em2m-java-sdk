@@ -10,7 +10,8 @@ class Priorities {
         val PARSE = 3000
         val PRE_AUTHORIZE = 3500
         val AUTHORIZE = 4000
-        val POST_AUTHORIZE = 4500
+        val POST_AUTHORIZE = 4250
+        val REWRITE = 4500
         val MAIN = 5000
         val AUDIT = 6000
         val RESPONSE = 7000

@@ -8,11 +8,6 @@
         "ident:UpdateMyAccount",
         "ident:ChangeMyPassword"
       ],
-      "allow": {
-        "actions": [
-
-        ]
-      },
       "resource": "em2m:ident:account:*"
     }
   ]

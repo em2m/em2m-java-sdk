@@ -7,7 +7,11 @@ import io.em2m.simplex.model.Key
 import io.em2m.utils.coerceNonNull
 import org.junit.Test
 import java.text.SimpleDateFormat
+import java.time.temporal.Temporal
+import java.time.temporal.TemporalAccessor
+import java.time.temporal.TemporalField
 import java.util.*
+import kotlin.test.Ignore
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
@@ -17,6 +21,7 @@ class DateTest {
 
     private val keyResolver = BasicKeyResolver(mapOf(
             Key("ns", "dateKey") to ConstKeyHandler("2015-04-21T17:31:06-07"),
+            Key("ns", "dateKey2") to ConstKeyHandler("04/21/2015"),
             //Key("ns", "dateKey") to ConstKeyHandler(1429641066000),
             Key("ns", "duration") to ConstKeyHandler(210_000)))
             .delegate(Numbers.keys)
@@ -49,6 +54,18 @@ class DateTest {
         val expr = requireNotNull(simplex.parser.parse(exprString))
         val result = expr.call(emptyMap())
         assertEquals("2015", result)
+    }
+
+    @Test
+    fun testParseDate() {
+        val exprString = "\${ns:dateKey2 | parseDate:MM/dd/yyyy}"
+        val expr = requireNotNull(simplex.parser.parse(exprString))
+        val result = expr.call(emptyMap())
+        @Suppress("DEPRECATION")
+        val date = result as Date
+        val calendar = GregorianCalendar()
+        calendar.time = date
+        assertEquals(2015, calendar.get(Calendar.YEAR))
     }
 
     @Test
