@@ -7,6 +7,7 @@ import io.em2m.policy.model.PolicyContext
 import io.em2m.simplex.model.BasicKeyResolver
 import io.em2m.simplex.model.Key
 import io.em2m.simplex.model.KeyHandler
+import io.em2m.utils.coerce
 import java.io.InputStream
 import java.util.*
 import kotlin.collections.HashMap
@@ -48,6 +49,24 @@ data class ActionContext(val actionName: String,
     fun toPolicyContext(): PolicyContext {
         val keyResolver = BasicKeyResolver(keyHandlers)
         return PolicyContext(mapOf("actionContext" to this), claims, Environment(environment), resource, keyResolver)
+    }
+
+    inline fun <reified T : Any> scopeValues(key: String): List<T?> {
+        val value = scope[key]
+        return if (value is List<*>) {
+            value.map { it.coerce<T>() }
+        } else {
+            listOf(value.coerce())
+        }
+    }
+
+    inline fun <reified T : Any> scopeValue(key: String): T? {
+        val value = scope[key]
+        return if (value is List<*>) {
+            value.last().coerce()
+        } else {
+            value.coerce()
+        }
     }
 
 }
