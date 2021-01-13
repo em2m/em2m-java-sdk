@@ -11,7 +11,7 @@ class RewriteTransformer(override val priority: Int = Priorities.REWRITE) : Acti
         val actionName = ctx.actionName
         val requestContext = ctx.toPolicyContext().map
         val rewrites = ctx.actionCheck?.rewrites ?: emptyList()
-        rewrites.mapNotNull { rewrite ->
+        ctx.rewrites = rewrites.mapNotNull { rewrite ->
             try {
                 if (rewrite.condition.call(requestContext)) {
                     val key = rewrite.key
