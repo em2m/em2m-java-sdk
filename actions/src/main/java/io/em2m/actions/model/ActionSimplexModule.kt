@@ -13,7 +13,7 @@ class ActionSimplexModule() : BasicSimplexModule() {
         //key(Key("config", "*") to ConfigKeyHandler(config))
         key(Key("ident", "orgPath"), PathKeyHandler("actionContext.scope"))
         key(Key("ident", "role"), ClaimsKeyHandler())
-        key(Key("env", "*"), EnvironmentKeyHandler())
+        key(Key("env", "*"), PathKeyHandler("actionContext.environment"))
         key(Key("claims", "*"), ClaimsKeyHandler())
         key(Key("f", "*"), PathKeyHandler())
         key(Key("field", "*"), PathKeyHandler())
