@@ -8,7 +8,6 @@ import io.em2m.simplex.model.PathKeyHandler
 import io.em2m.utils.coerceNonNull
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
-import org.junit.Ignore
 import org.junit.Test
 
 
@@ -66,6 +65,14 @@ class PathTest {
 
         expr.setValue(map, "value2")
         assertEquals("value2", expr.call(map))
+    }
+
+    @Test
+    fun testSingletonMap() {
+        val expr = PathExpr("a.b")
+        val map = mapOf("a" to (mapOf("b" to "value")))
+        val value = expr.call(map)
+        assertEquals("value", value)
     }
 
     @Test
