@@ -17,6 +17,7 @@ class AuthorizationCheckTransformer(val policyEngine: PolicyEngine, override val
         val actionName = ctx.actionName
         val requestContext = ctx.toPolicyContext()
         val check = policyEngine.checkAction(actionName, requestContext)
+        ctx.actionCheck = check
 
         log.debug("$actionName allowed: ${check.allowed}")
 
