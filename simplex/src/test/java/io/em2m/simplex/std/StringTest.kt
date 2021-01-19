@@ -17,6 +17,9 @@ class StringTest : Assert() {
             Key("ns", "key4") to ConstKeyHandler(listOf("value1, value2", "value3", "value4, value5")),
             Key("ns", "key5") to ConstKeyHandler("a:b"),
             Key("ns", "key6") to ConstKeyHandler("a/b"),
+            Key("ns", "key7") to ConstKeyHandler("3112114111"),
+            Key("ns", "key8") to ConstKeyHandler("31121141112"),
+            Key("ns", "key9") to ConstKeyHandler(null),
             Key("ns", "pie") to ConstKeyHandler(3.14),
             Key("ns", "duration") to ConstKeyHandler(210_000),
             Key("ns", "five") to ConstKeyHandler(5)))
@@ -93,4 +96,25 @@ class StringTest : Assert() {
         assertEquals("a:b", simplex.eval(roundTripExpr, emptyMap()))
     }
 
+    @Test
+    fun testFormatPhonePipe() {
+        val exprString1 = "\${ns:key7 | formatPhone}"
+        val expected1 = "(311) 211-4111"
+        val expr1 = requireNotNull(simplex.parser.parse(exprString1))
+        val actual1 = expr1.call(emptyMap())
+
+        val exprString2 = "\${ns:key8 | formatPhone}"
+        val expected2 = "31121141112"
+        val expr2 = requireNotNull(simplex.parser.parse(exprString2))
+        val actual2 = expr2.call(emptyMap())
+
+        val exprString3 = "\${ns:key9 | formatPhone}"
+        val expected3 = null
+        val expr3 = requireNotNull(simplex.parser.parse(exprString3))
+        val actual3 = expr3.call(emptyMap())
+
+        assertEquals(expected1, actual1)
+        assertEquals(expected2, actual2)
+        assertEquals(expected3, actual3)
+    }
 }
