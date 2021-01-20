@@ -42,6 +42,28 @@ class TrimPipe : PipeTransform {
     }
 }
 
+class FormatPhonePipe : PipeTransform {
+
+    override fun transform(value: Any?, context: ExprContext): Any? {
+        return if (value is Iterable<*>) {
+            value.map { phoneFormat(it) }
+        } else if (value is Array<*>) {
+            value.map { phoneFormat(it) }
+        } else {
+            phoneFormat(value)
+        }
+    }
+
+    fun phoneFormat(value: Any?): Any? {
+        val phoneNumber = value?.toString()?.trim() ?: return null
+        if (phoneNumber.length == 10) {
+            return "(" + phoneNumber.substring(0,3) + ") " + phoneNumber.substring(3,6) + "-" + phoneNumber.substring(6,10)
+        } else {
+            return phoneNumber
+        }
+    }
+}
+
 class UrlEncodePipe : PipeTransform {
 
     override fun transform(value: Any?, context: ExprContext): Any? {
@@ -294,6 +316,7 @@ object Strings {
             .transform("split") { Split() }
             .transform("urlEncode", UrlEncodePipe())
             .transform("urlDecode", UrlDecodePipe())
+            .transform("formatPhone", FormatPhonePipe())
     val keys = BasicKeyResolver()
     val conditions = BasicConditionResolver(StandardStringConditions)
 
