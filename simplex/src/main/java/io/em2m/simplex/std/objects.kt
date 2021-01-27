@@ -19,6 +19,7 @@ class PathPipe() : PipeTransform {
             path.isNullOrEmpty() -> null
             (value is List<*>) -> transformList(value)
             (value is Array<*>) -> transformList(value)
+            (value is Iterable<*>) -> transformList(value)
             else -> value.evalPath(path!!)
         }
     }
@@ -41,6 +42,7 @@ class EntriesPipe : PipeTransform {
         return when {
             (value is List<*>) -> transformObject(value.firstOrNull())
             (value is Array<*>) -> transformObject(value.firstOrNull())
+            (value is Iterable<*>) -> transformObject(value.firstOrNull())
             else -> transformObject(value)
         }
     }
