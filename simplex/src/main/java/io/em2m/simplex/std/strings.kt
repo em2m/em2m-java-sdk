@@ -1,5 +1,6 @@
 package io.em2m.simplex.std
 
+import com.fasterxml.jackson.databind.node.ArrayNode
 import io.em2m.simplex.model.*
 import io.em2m.utils.coerce
 import java.net.URLDecoder
@@ -10,8 +11,9 @@ import java.util.regex.Matcher
 class UpperCasePipe : PipeTransform {
     override fun transform(value: Any?, context: ExprContext): Any? {
         return when (value) {
-            is Iterable<*> -> value.map { it?.toString()?.toUpperCase() }
+            is List<*> -> value.map { it?.toString()?.toUpperCase() }
             is Array<*> -> value.map { it?.toString()?.toUpperCase() }
+            is ArrayNode -> value.map { it?.toString()?.toUpperCase() }
             else -> value?.toString()?.toUpperCase()
         }
     }

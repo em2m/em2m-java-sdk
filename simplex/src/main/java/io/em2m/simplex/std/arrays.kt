@@ -1,5 +1,6 @@
 package io.em2m.simplex.std
 
+import com.fasterxml.jackson.databind.node.ArrayNode
 import io.em2m.simplex.model.*
 
 class NotNullPipe : PipeTransform {
@@ -8,7 +9,7 @@ class NotNullPipe : PipeTransform {
         return when (value) {
             is List<*> -> value.filterNotNull()
             is Array<*> -> value.filterNotNull()
-            is Iterable<*> -> value.filterNotNull()
+            is ArrayNode -> value.firstOrNull()
             else -> value
         }
     }
@@ -20,7 +21,7 @@ class ReversedPipe : PipeTransform {
         return when (value) {
             is List<*> -> value.reversed()
             is Array<*> -> value.reversed()
-            is Iterable<*> -> value.filterNotNull()
+            is ArrayNode -> value.firstOrNull()
             else -> value
         }
     }
@@ -31,7 +32,7 @@ class FilterNotNullPipe : PipeTransform {
         return when (value) {
             is List<*> -> value.filterNotNull()
             is Array<*> -> value.filterNotNull()
-            is Iterable<*> -> value.filterNotNull()
+            is ArrayNode -> value.firstOrNull()
             else -> value
         }
     }
@@ -42,7 +43,7 @@ class FilterNotBlankPipe : PipeTransform {
         return when (value) {
             is List<*> -> value.filterNot { it?.toString().isNullOrBlank() }
             is Array<*> -> value.filterNot { it?.toString().isNullOrBlank() }
-            is Iterable<*> -> value.filterNotNull()
+            is ArrayNode -> value.firstOrNull()
             else -> value
         }
     }
@@ -53,7 +54,7 @@ class FirstPipe : PipeTransform {
         return when (value) {
             is List<*> -> value.firstOrNull()
             is Array<*> -> value.firstOrNull()
-            is Iterable<*> -> value.firstOrNull()
+            is ArrayNode -> value.firstOrNull()
             else -> value
         }
     }
@@ -64,7 +65,7 @@ class FirstNotBlankPipe : PipeTransform {
         return when (value) {
             is List<*> -> value.find { !it?.toString().isNullOrBlank() }
             is Array<*> -> value.find { !it?.toString().isNullOrBlank() }
-            is Iterable<*> -> value.firstOrNull()
+            is ArrayNode -> value.firstOrNull()
             else -> value
         }
     }
@@ -75,7 +76,7 @@ class LastPipe : PipeTransform {
         return when (value) {
             is List<*> -> value.lastOrNull()
             is Array<*> -> value.lastOrNull()
-            is Iterable<*> -> value.firstOrNull()
+            is ArrayNode -> value.firstOrNull()
             else -> value
         }
     }
@@ -86,7 +87,7 @@ class LastNotBlankPipe : PipeTransform {
         return when (value) {
             is List<*> -> value.findLast { !it?.toString().isNullOrBlank() }
             is Array<*> -> value.findLast { !it?.toString().isNullOrBlank() }
-            is Iterable<*> -> value.firstOrNull()
+            is ArrayNode -> value.firstOrNull()
             else -> value
         }
     }
@@ -97,7 +98,7 @@ class SizePipe : PipeTransform {
         return when (value) {
             is List<*> -> value.size
             is Array<*> -> value.size
-            is Iterable<*> -> value.firstOrNull()
+            is ArrayNode -> value.firstOrNull()
             is String -> value.length
             else -> null
         }
@@ -136,7 +137,7 @@ class SlicePipe : PipeTransform {
         return when (value) {
             is List<*> -> value.slice(range)
             is Array<*> -> value.slice(range)
-            is Iterable<*> -> value.firstOrNull()
+            is ArrayNode -> value.firstOrNull()
             is String -> value.slice(range)
             else -> null
         }
