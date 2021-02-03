@@ -1,5 +1,6 @@
 package io.em2m.simplex.std
 
+import com.fasterxml.jackson.databind.node.ArrayNode
 import io.em2m.simplex.model.*
 import io.em2m.utils.coerce
 import java.math.BigDecimal
@@ -40,8 +41,9 @@ class RoundPipe : PipeTransform {
 
     override fun transform(value: Any?, context: ExprContext): Any? {
         return when (value) {
-            is Iterable<*> ->  value.map { it?.round()}
+            is List<*> ->  value.map { it?.round()}
             is Array<*> -> value.map { it?.round() }
+            is ArrayNode -> value.map { it?.round() }
             else -> value?.round()
         }
     }
