@@ -98,7 +98,7 @@ class SizePipe : PipeTransform {
         return when (value) {
             is List<*> -> value.size
             is Array<*> -> value.size
-            is ArrayNode -> value.firstOrNull()
+            is ArrayNode -> value.size()
             is String -> value.length
             else -> null
         }
