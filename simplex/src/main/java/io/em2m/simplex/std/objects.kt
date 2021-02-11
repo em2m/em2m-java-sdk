@@ -1,5 +1,6 @@
 package io.em2m.simplex.std
 
+import com.fasterxml.jackson.databind.node.ArrayNode
 import io.em2m.simplex.evalPath
 import io.em2m.simplex.model.*
 import io.em2m.utils.coerce
@@ -19,6 +20,7 @@ class PathPipe() : PipeTransform {
             path.isNullOrEmpty() -> null
             (value is List<*>) -> transformList(value)
             (value is Array<*>) -> transformList(value)
+            (value is ArrayNode) -> transformList(value)
             else -> value.evalPath(path!!)
         }
     }
@@ -41,6 +43,7 @@ class EntriesPipe : PipeTransform {
         return when {
             (value is List<*>) -> transformObject(value.firstOrNull())
             (value is Array<*>) -> transformObject(value.firstOrNull())
+            (value is ArrayNode) -> transformObject(value.firstOrNull())
             else -> transformObject(value)
         }
     }

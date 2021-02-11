@@ -6,7 +6,7 @@ import io.em2m.simplex.model.ConditionExpr
 import io.em2m.simplex.model.Expr
 
 
-class SimplexModule(simplex: Simplex = Simplex()) : SimpleModule() {
+open class SimplexModule(simplex: Simplex = Simplex()) : SimpleModule() {
 
     init {
         addDeserializer(Expr::class.java, TreeDeserializer(simplex))

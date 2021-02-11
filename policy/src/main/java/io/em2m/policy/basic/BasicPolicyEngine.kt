@@ -14,9 +14,9 @@ class BasicPolicyEngine(policySource: PolicySource, val simplex: Simplex = Simpl
     override fun findAllowedActions(context: PolicyContext): List<String> {
         val roles = context.claims.roles.plus("anonymous").distinct()
         val statements = statementsForRoles(roles)
-                .filter { testResource(it, context) }
-                .filter { it.condition.call(context.map) }
-                .filter { it.effect == Effect.Allow }
+            .filter { testResource(it, context) }
+            .filter { it.condition.call(context.map) }
+            .filter { it.effect == Effect.Allow }
         return statements.flatMap { it.actions }.distinct()
     }
 
@@ -27,14 +27,21 @@ class BasicPolicyEngine(policySource: PolicySource, val simplex: Simplex = Simpl
     override fun checkAction(actionName: String, context: PolicyContext): ActionCheck {
         val roles = context.claims.roles.plus("anonymous").distinct()
         val statements = statementsForRolesAndAction(roles, actionName).filter { testResource(it, context) }
-        val matches = statements.filter { it.condition.call(context.map) }
+        val matches = statements.filter {
+            try {
+                it.condition.call(context.map)
+            } catch (ex: Exception) {
+                false
+            }
+        }
         val nDeny = matches.count { it.effect == Effect.Deny }
         val nAllow = matches.count { it.effect == Effect.Allow }
+        val rewrites = matches.flatMap { it.scope }
         val allowed = if (nDeny > 0) {
             LOG.warn("User attempted to execute an explicitly denied action: Account ID = ${context.claims.sub}, Action = $actionName")
             false
         } else nAllow > 0
-        return ActionCheck(allowed, statements.size, nAllow, nDeny)
+        return ActionCheck(allowed, statements.size, nAllow, nDeny, rewrites)
     }
 
     private fun expandRole(roleId: String): List<String> {
@@ -49,7 +56,9 @@ class BasicPolicyEngine(policySource: PolicySource, val simplex: Simplex = Simpl
         val resources = statement.resource
         val contextResource = context.resource
 
-        if (contextResource == null || contextResource.isNullOrBlank()) return resources.isEmpty() || resources.contains("*")
+        if (contextResource == null || contextResource.isNullOrBlank()) return resources.isEmpty() || resources.contains(
+            "*"
+        )
 
         resources.forEach { resource ->
             val value = simplex.eval(resource, context.map) as String
@@ -67,8 +76,8 @@ class BasicPolicyEngine(policySource: PolicySource, val simplex: Simplex = Simpl
     private fun statementsForRoles(roleIds: List<String>): List<Statement> {
         val roles = roleIds.flatMap { expandRole(it) }.distinct().mapNotNull { roles[it] }
         return roles.flatMap { policiesForRole(it.id) }.distinct()
-                .flatMap { it.statements }
-                .plus(roles.flatMap { it.statements })
+            .flatMap { it.statements }
+            .plus(roles.flatMap { it.statements })
     }
 
     private fun matchesAction(statement: Statement, actionName: String): Boolean {
