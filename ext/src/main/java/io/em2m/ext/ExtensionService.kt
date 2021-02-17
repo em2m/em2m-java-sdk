@@ -23,7 +23,6 @@ import io.em2m.simplex.Simplex
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.io.File
-import java.net.URL
 import java.nio.file.FileSystems
 import java.nio.file.Path
 import java.nio.file.StandardWatchEventKinds.*
@@ -34,7 +33,7 @@ import kotlin.concurrent.thread
 interface ExtensionService {
     fun findExtensions(predicate: (Extension) -> Boolean, context: Map<String, Any?>): List<Extension>
     fun findExtensions(type: String): List<Extension>
-    fun getResource(bundleId: String, path: String): URL?
+    fun getResource(bundleId: String, path: String): Path?
     fun startMonitoring()
     fun stopMonitoring()
 }
@@ -69,15 +68,14 @@ class ExtensionServiceImpl @Inject constructor(val config: Config, val simplex: 
             .sortedByDescending { it.priority }
     }
 
-    override fun getResource(bundleId: String, path: String): URL? {
+    override fun getResource(bundleId: String, path: String): Path? {
         val bundle = bundles.find { it.id == bundleId }
-        if (bundle != null) {
-            val file = File(bundle.dir, path)
-            if (file.exists()) {
-                return file.toURI().toURL()
-            }
-        }
-        return null
+        return if (bundle != null) {
+            val resourcePath = bundle.dir.toPath().resolve(path)
+            if (resourcePath.toFile().exists()) {
+                resourcePath
+            } else null
+        } else null
     }
 
     private fun reload() {
