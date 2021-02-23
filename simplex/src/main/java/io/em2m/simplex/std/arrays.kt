@@ -1,7 +1,9 @@
 package io.em2m.simplex.std
 
 import com.fasterxml.jackson.databind.node.ArrayNode
+import io.em2m.simplex.evalPath
 import io.em2m.simplex.model.*
+import io.em2m.utils.coerce
 
 class NotNullPipe : PipeTransform {
 
@@ -144,6 +146,33 @@ class SlicePipe : PipeTransform {
     }
 }
 
+class AssociateByPipe() : PipeTransform {
+
+    private var path: String? = null
+
+    override fun args(args: List<String>) {
+        if (args.isNotEmpty()) {
+            path = args[0].trim()
+        }
+    }
+
+    override fun transform(value: Any?, context: ExprContext): Any? {
+        return when {
+            path.isNullOrEmpty() -> null
+            (value is List<*>) -> transformList(value)
+            (value is Array<*>) -> transformList(value)
+            (value is ArrayNode) -> transformList(value)
+            else -> mapOf(value.evalPath(path!!) to value)
+        }
+    }
+
+    private fun transformList(values: Any?): Any {
+        val items: List<Any?> = values.coerce() ?: emptyList()
+        return items.associateBy { it.evalPath(path!!) }
+    }
+
+}
+
 
 val StandardArrayConditions = emptyMap<String, ConditionHandler>()
 
@@ -160,7 +189,8 @@ object Arrays {
             "last" to LastPipe(),
             "lastNotBlank" to LastNotBlankPipe(),
             "size" to SizePipe(),
-            "slice" to SlicePipe()
+            "slice" to SlicePipe(),
         )
     )
+        .transform("associateBy") { AssociateByPipe() }
 }
