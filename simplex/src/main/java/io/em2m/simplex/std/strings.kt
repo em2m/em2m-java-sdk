@@ -68,7 +68,7 @@ class FormatPhonePipe : PipeTransform {
 
 class RemoveCharsPipe : PipeTransform {
 
-    var chars = charArrayOf()
+    var chars = ""
 
 
     override fun transform(value: Any?, context: ExprContext): Any? {
@@ -83,15 +83,15 @@ class RemoveCharsPipe : PipeTransform {
 
     override fun args(args: List<String>) {
         if (args.isNotEmpty()) {
-            chars = args[0].toCharArray()
+            chars = args[0]
         }
     }
 
     fun removeChar(value: Any?): Any? {
         var phoneNumber = value?.toString()
 
-        for (i in 0..(chars.size-1)) {
-            phoneNumber = phoneNumber?.replace(chars[i].toString(), "")
+        for (c in chars) {
+            phoneNumber = phoneNumber?.replace(c.toString(), "")
         }
         return phoneNumber
     }
