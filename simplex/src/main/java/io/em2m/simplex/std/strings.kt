@@ -66,6 +66,37 @@ class FormatPhonePipe : PipeTransform {
     }
 }
 
+class RemoveCharsPipe : PipeTransform {
+
+    var chars = charArrayOf()
+
+
+    override fun transform(value: Any?, context: ExprContext): Any? {
+        return if (value is Iterable<*>) {
+            value.map { removeChar(it) }
+        } else if (value is Array<*>) {
+            value.map { removeChar(it) }
+        } else {
+            removeChar(value)
+        }
+    }
+
+    override fun args(args: List<String>) {
+        if (args.isNotEmpty()) {
+            chars = args[0].toCharArray()
+        }
+    }
+
+    fun removeChar(value: Any?): Any? {
+        var phoneNumber = value?.toString()
+
+        for (i in 0..(chars.size-1)) {
+            phoneNumber = phoneNumber?.replace(chars[i].toString(), "")
+        }
+        return phoneNumber
+    }
+}
+
 class UrlEncodePipe : PipeTransform {
 
     override fun transform(value: Any?, context: ExprContext): Any? {
@@ -319,6 +350,7 @@ object Strings {
             .transform("urlEncode", UrlEncodePipe())
             .transform("urlDecode", UrlDecodePipe())
             .transform("formatPhone", FormatPhonePipe())
+            .transform("removeChars", RemoveCharsPipe())
     val keys = BasicKeyResolver()
     val conditions = BasicConditionResolver(StandardStringConditions)
 

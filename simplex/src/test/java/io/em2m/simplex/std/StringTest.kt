@@ -20,6 +20,7 @@ class StringTest : Assert() {
             Key("ns", "key7") to ConstKeyHandler("3112114111"),
             Key("ns", "key8") to ConstKeyHandler("31121141112"),
             Key("ns", "key9") to ConstKeyHandler(null),
+            Key("ns", "key10") to ConstKeyHandler("(123) 456-7890"),
             Key("ns", "pie") to ConstKeyHandler(3.14),
             Key("ns", "duration") to ConstKeyHandler(210_000),
             Key("ns", "five") to ConstKeyHandler(5)))
@@ -116,5 +117,21 @@ class StringTest : Assert() {
         assertEquals(expected1, actual1)
         assertEquals(expected2, actual2)
         assertEquals(expected3, actual3)
+    }
+
+    @Test
+    fun RemoveCharsPipe() {
+        val exprString1 = "\${ns:key10 | removeChars:() -}"
+        val expected1 = "1234567890"
+        val expr1 = requireNotNull(simplex.parser.parse(exprString1))
+        val actual1 = expr1.call(emptyMap())
+
+        val exprString2 = "\${ns:key10 | removeChars:}"
+        val expected2 = "(123) 456-7890"
+        val expr2 = requireNotNull(simplex.parser.parse(exprString2))
+        val actual2 = expr2.call(emptyMap())
+
+        assertEquals(expected1, actual1)
+        assertEquals(expected2, actual2)
     }
 }
