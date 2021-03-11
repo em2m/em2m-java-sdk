@@ -31,8 +31,9 @@ class ObjectsTest {
     @Test
     fun testSingleObjectWithPath() {
         val data = mapOf(
-                "taco" to mapOf("foo" to "bar1", "foo2" to "bar2"),
-                "pizza" to mapOf("foo" to "bar3", "foo2" to "bar4"))
+            "taco" to mapOf("foo" to "bar1", "foo2" to "bar2"),
+            "pizza" to mapOf("foo" to "bar3", "foo2" to "bar4")
+        )
         val context = mapOf("fieldValues" to mapOf("data" to data))
         val bar1 = simplex.eval("\${f:data | path:taco.foo}", context)
         val bar2 = simplex.eval("\${f:data | path:taco.foo2}", context)
@@ -45,11 +46,29 @@ class ObjectsTest {
     }
 
     @Test
+    fun testSingleObjectWithPathBy() {
+        val data = mapOf(
+            "taco" to mapOf("foo" to "bar1", "foo2" to "bar2"),
+            "pizza" to mapOf("foo" to "bar3", "foo2" to "bar4")
+        )
+        val context = mapOf(
+            "fieldValues" to mapOf("data" to data),
+            "taco" to "taco.foo", "pizza" to "pizza.foo"
+        )
+        val bar1 = simplex.eval("\${f:data | pathBy:taco}", context)
+        val bar2 = simplex.eval("\${f:data | pathBy:pizza}", context)
+        assertEquals("bar1", bar1)
+        assertEquals("bar3", bar2)
+    }
+
+
+    @Test
     fun testListObjectPath() {
         val data = listOf(
-                mapOf("foo" to "bar1", "foo2" to "bar2"),
-                mapOf("foo" to "bar3", "foo2" to "bar4"),
-                mapOf("foo" to "bar5", "foo2" to "bar6"))
+            mapOf("foo" to "bar1", "foo2" to "bar2"),
+            mapOf("foo" to "bar3", "foo2" to "bar4"),
+            mapOf("foo" to "bar5", "foo2" to "bar6")
+        )
         val context = mapOf("fieldValues" to mapOf("data" to data))
         val bar135 = simplex.eval("\${f:data | path:foo}", context)
         val bar246 = simplex.eval("\${f:data | path:foo2}", context)
@@ -60,8 +79,9 @@ class ObjectsTest {
     @Test
     fun testListObjectWithPath() {
         val data = listOf(
-                mapOf("taco" to mapOf("foo" to "bar1", "foo2" to "bar2")),
-                mapOf("taco" to mapOf("foo" to "bar3", "foo2" to "bar4")))
+            mapOf("taco" to mapOf("foo" to "bar1", "foo2" to "bar2")),
+            mapOf("taco" to mapOf("foo" to "bar3", "foo2" to "bar4"))
+        )
         val context = mapOf("fieldValues" to mapOf("data" to data))
         val bar13 = simplex.eval("\${f:data | path:taco.foo}", context)
         val bar24 = simplex.eval("\${f:data | path:taco.foo2}", context)
@@ -72,9 +92,10 @@ class ObjectsTest {
     @Test
     fun testListObjectPathWithJoin() {
         val data = listOf(
-                mapOf("foo" to "bar1", "foo2" to "bar2"),
-                mapOf("foo" to "bar3", "foo2" to "bar4"),
-                mapOf("foo" to "bar5", "foo2" to "bar6"))
+            mapOf("foo" to "bar1", "foo2" to "bar2"),
+            mapOf("foo" to "bar3", "foo2" to "bar4"),
+            mapOf("foo" to "bar5", "foo2" to "bar6")
+        )
         val context = mapOf("fieldValues" to mapOf("data" to data))
         val bar135 = simplex.eval("\${f:data | path:foo | join}", context)
         val bar246 = simplex.eval("\${f:data | path:foo2 | join}", context)
@@ -85,8 +106,9 @@ class ObjectsTest {
     @Test
     fun testListObjectWithPathAndJoin() {
         val data = listOf(
-                mapOf("taco" to mapOf("foo" to "bar1", "foo2" to "bar2")),
-                mapOf("taco" to mapOf("foo" to "bar3", "foo2" to "bar4")))
+            mapOf("taco" to mapOf("foo" to "bar1", "foo2" to "bar2")),
+            mapOf("taco" to mapOf("foo" to "bar3", "foo2" to "bar4"))
+        )
         val context = mapOf("fieldValues" to mapOf("data" to data))
         val bar13 = simplex.eval("\${f:data | path:taco.foo | join}", context)
         val bar24 = simplex.eval("\${f:data | path:taco.foo2 | join}", context)

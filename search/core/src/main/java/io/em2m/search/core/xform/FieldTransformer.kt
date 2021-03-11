@@ -182,9 +182,10 @@ class FieldTransformer<T>(val simplex: Simplex, fields: List<FieldModel>) : Tran
         val delegateField: String? = null,
         val delegateExpr: String? = null,
         val expr: Expr? = null,
-        val settings: Map<String, Any?> = emptyMap()
+        val settings: Map<String, Any?> = emptyMap(),
+        extraFields: List<String> = emptyList()
     ) {
-        val delegateFields = if (expr != null) FieldKeyHandler.fields(expr) else listOfNotNull(delegateField)
+        val delegateFields = extraFields + if (expr != null) FieldKeyHandler.fields(expr) else listOfNotNull(delegateField)
     }
 
     class FieldQueryTransformer(private val aliases: Map<String, FieldModel>) : QueryTransformer() {
