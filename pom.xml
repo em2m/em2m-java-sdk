@@ -289,8 +289,9 @@
 
     <distributionManagement>
         <repository>
-            <id>bintray-em2m-maven</id>
-            <url>https://api.bintray.com/maven/em2m/em2m-maven/em2m-java-sdk/;publish=1</url>
+            <id>github</id>
+            <name>Github EM2M Apache Maven Packages</name>
+            <url>https://maven.pkg.github.com/em2m/em2m-java-sdk</url>
         </repository>
     </distributionManagement>
 
