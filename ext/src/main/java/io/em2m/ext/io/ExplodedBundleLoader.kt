@@ -79,7 +79,7 @@ class ExplodedBundleLoader() {
                         try {
                             loadExtension(id, dir, specs.key, spec)
                         } catch (ex: Exception) {
-                            log.error("Error loading spec ${spec?.id} from ${specFile}")
+                            log.error("Error loading spec ${spec.id} from ${specFile}")
                             null
                         }
                     }
