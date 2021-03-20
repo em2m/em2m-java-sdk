@@ -50,7 +50,7 @@
         <aws.version>1.11.740</aws.version>
         <jts.version>1.16.1</jts.version>
         <jetty.version>9.4.27.v20200227</jetty.version>
-        <feign.version>9.6.0</feign.version>
+        <feign.version>10.12</feign.version>
     </properties>
     <dependencies>
 
@@ -166,19 +166,19 @@
             <dependency>
                 <groupId>io.github.openfeign</groupId>
                 <artifactId>feign-core</artifactId>
-                <version>9.4.0</version>
+                <version>${feign.version}</version>
             </dependency>
 
             <dependency>
                 <groupId>io.github.openfeign</groupId>
                 <artifactId>feign-jackson</artifactId>
-                <version>9.4.0</version>
+                <version>${feign.version}</version>
             </dependency>
 
             <dependency>
                 <groupId>com.squareup.okhttp3</groupId>
                 <artifactId>okhttp</artifactId>
-                <version>3.10.0</version>
+                <version>4.9.1</version>
             </dependency>
 
             <dependency>
