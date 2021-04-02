@@ -107,6 +107,66 @@ class SizePipe : PipeTransform {
     }
 }
 
+class TakePipe : PipeTransform {
+    var n = 0
+
+    override fun args(args: List<String>) {
+        if (args.isNotEmpty()) {
+            n = if (args.isNotEmpty()) {
+                try {
+                    args[0].toInt()
+                } catch (ex: RuntimeException) {
+                    0
+                }
+            } else {
+                0
+            }
+        }
+    }
+
+    override fun transform(value: Any?, context: ExprContext): Any? {
+        return when (value) {
+            is List<*> -> value.take(n)
+            is Array<*> -> value.take(n)
+            is ArrayNode -> value.take(n)
+            is String -> value.take(n)
+            else -> null
+        }
+    }
+}
+
+class TakeLastPipe : PipeTransform {
+    var n = 0
+
+    override fun args(args: List<String>) {
+        if (args.isNotEmpty()) {
+            n = if (args.isNotEmpty()) {
+                try {
+                    args[0].toInt()
+                } catch (ex: RuntimeException) {
+                    0
+                }
+            } else {
+                0
+            }
+        }
+    }
+
+    override fun transform(value: Any?, context: ExprContext): Any? {
+        return when (value) {
+            is List<*> -> value.takeLast(n)
+            is Array<*> -> value.takeLast(n)
+            is ArrayNode -> convertToArray(value)?.takeLast(n)
+            is String -> value.takeLast(n)
+            else -> null
+        }
+    }
+
+    private fun convertToArray(node: ArrayNode): Array<*>? {
+        return node.coerce()
+    }
+}
+
 class SlicePipe : PipeTransform {
 
     var range = IntRange(0, 0)
@@ -190,6 +250,8 @@ object Arrays {
             "lastNotBlank" to LastNotBlankPipe(),
             "size" to SizePipe(),
             "slice" to SlicePipe(),
+            "take" to TakePipe(),
+            "takeLast" to TakeLastPipe()
         )
     )
         .transform("associateBy") { AssociateByPipe() }
