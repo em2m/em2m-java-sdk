@@ -111,17 +111,7 @@ class TakePipe : PipeTransform {
     var n = 0
 
     override fun args(args: List<String>) {
-        if (args.isNotEmpty()) {
-            n = if (args.isNotEmpty()) {
-                try {
-                    args[0].toInt()
-                } catch (ex: RuntimeException) {
-                    0
-                }
-            } else {
-                0
-            }
-        }
+        n = args.firstOrNull()?.toInt() ?:0
     }
 
     override fun transform(value: Any?, context: ExprContext): Any? {
@@ -139,30 +129,20 @@ class TakeLastPipe : PipeTransform {
     var n = 0
 
     override fun args(args: List<String>) {
-        if (args.isNotEmpty()) {
-            n = if (args.isNotEmpty()) {
-                try {
-                    args[0].toInt()
-                } catch (ex: RuntimeException) {
-                    0
-                }
-            } else {
-                0
-            }
-        }
+        n = args.firstOrNull()?.toInt() ?:0
     }
 
     override fun transform(value: Any?, context: ExprContext): Any? {
         return when (value) {
             is List<*> -> value.takeLast(n)
             is Array<*> -> value.takeLast(n)
-            is ArrayNode -> convertToArray(value)?.takeLast(n)
+            is ArrayNode -> convertToList(value)?.takeLast(n)
             is String -> value.takeLast(n)
             else -> null
         }
     }
 
-    private fun convertToArray(node: ArrayNode): Array<*>? {
+    private fun convertToList(node: ArrayNode): List<*>? {
         return node.coerce()
     }
 }
