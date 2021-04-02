@@ -111,7 +111,7 @@ class TakePipe : PipeTransform {
     var n = 0
 
     override fun args(args: List<String>) {
-        n = args.firstOrNull()?.toInt() ?:0
+        n = args.firstOrNull()?.toInt() ?: 0
     }
 
     override fun transform(value: Any?, context: ExprContext): Any? {
@@ -129,7 +129,7 @@ class TakeLastPipe : PipeTransform {
     var n = 0
 
     override fun args(args: List<String>) {
-        n = args.firstOrNull()?.toInt() ?:0
+        n = args.firstOrNull()?.toInt() ?: 0
     }
 
     override fun transform(value: Any?, context: ExprContext): Any? {
