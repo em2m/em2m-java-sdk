@@ -1,7 +1,9 @@
 package io.em2m.simplex.std
 
 import com.fasterxml.jackson.databind.node.ArrayNode
+import io.em2m.simplex.evalPath
 import io.em2m.simplex.model.*
+import io.em2m.utils.coerce
 
 class NotNullPipe : PipeTransform {
 
@@ -98,10 +100,50 @@ class SizePipe : PipeTransform {
         return when (value) {
             is List<*> -> value.size
             is Array<*> -> value.size
-            is ArrayNode -> value.firstOrNull()
+            is ArrayNode -> value.size()
             is String -> value.length
             else -> null
         }
+    }
+}
+
+class TakePipe : PipeTransform {
+    var n = 0
+
+    override fun args(args: List<String>) {
+        n = args.firstOrNull()?.toInt() ?: 0
+    }
+
+    override fun transform(value: Any?, context: ExprContext): Any? {
+        return when (value) {
+            is List<*> -> value.take(n)
+            is Array<*> -> value.take(n)
+            is ArrayNode -> value.take(n)
+            is String -> value.take(n)
+            else -> null
+        }
+    }
+}
+
+class TakeLastPipe : PipeTransform {
+    var n = 0
+
+    override fun args(args: List<String>) {
+        n = args.firstOrNull()?.toInt() ?: 0
+    }
+
+    override fun transform(value: Any?, context: ExprContext): Any? {
+        return when (value) {
+            is List<*> -> value.takeLast(n)
+            is Array<*> -> value.takeLast(n)
+            is ArrayNode -> convertToList(value)?.takeLast(n)
+            is String -> value.takeLast(n)
+            else -> null
+        }
+    }
+
+    private fun convertToList(node: ArrayNode): List<*>? {
+        return node.coerce()
     }
 }
 
@@ -144,6 +186,33 @@ class SlicePipe : PipeTransform {
     }
 }
 
+class AssociateByPipe() : PipeTransform {
+
+    private var path: String? = null
+
+    override fun args(args: List<String>) {
+        if (args.isNotEmpty()) {
+            path = args[0].trim()
+        }
+    }
+
+    override fun transform(value: Any?, context: ExprContext): Any? {
+        return when {
+            path.isNullOrEmpty() -> null
+            (value is List<*>) -> transformList(value)
+            (value is Array<*>) -> transformList(value)
+            (value is ArrayNode) -> transformList(value)
+            else -> mapOf(value.evalPath(path!!) to value)
+        }
+    }
+
+    private fun transformList(values: Any?): Any {
+        val items: List<Any?> = values.coerce() ?: emptyList()
+        return items.associateBy { it.evalPath(path!!) }
+    }
+
+}
+
 
 val StandardArrayConditions = emptyMap<String, ConditionHandler>()
 
@@ -160,7 +229,10 @@ object Arrays {
             "last" to LastPipe(),
             "lastNotBlank" to LastNotBlankPipe(),
             "size" to SizePipe(),
-            "slice" to SlicePipe()
+            "slice" to SlicePipe(),
+            "take" to TakePipe(),
+            "takeLast" to TakeLastPipe()
         )
     )
+        .transform("associateBy") { AssociateByPipe() }
 }
