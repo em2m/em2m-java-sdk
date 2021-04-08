@@ -62,6 +62,12 @@ class AndQuery(
     override fun negate(): OrQuery {
         return OrQuery(of.map { it.negate() })
     }
+
+    companion object {
+        fun of(vararg query: Query?) : Query {
+            return AndQuery(query.filterNotNull()).simplify()
+        }
+    }
 }
 
 class OrQuery(
@@ -87,6 +93,12 @@ class OrQuery(
     override fun negate(): AndQuery {
         return AndQuery(of.map { it.negate() })
     }
+
+    companion object {
+        fun of(vararg query: Query?) : Query {
+            return OrQuery(query.filterNotNull()).simplify()
+        }
+    }
 }
 
 class NotQuery(
@@ -101,6 +113,12 @@ class NotQuery(
 
     override fun negate(): Query {
         return AndQuery(of)
+    }
+
+    companion object {
+        fun of(vararg query: Query?) : Query {
+            return NotQuery(query.filterNotNull()).simplify()
+        }
     }
 }
 
