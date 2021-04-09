@@ -26,7 +26,7 @@
     <artifactId>em2m-java-sdk-pom</artifactId>
     <packaging>pom</packaging>
     <name>em2m-java-sdk-pom</name>
-    <version>2.50.0</version>
+    <version>2.51.0</version>
 
     <modules>
         <module>utils</module>
@@ -44,13 +44,13 @@
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
         <maven-compiler-plugin.version>3.5.1</maven-compiler-plugin.version>
-        <kotlin.version>1.4.21-2</kotlin.version>
+        <kotlin.version>1.4.31</kotlin.version>
         <kotlin.compiler.jvmTarget>1.8</kotlin.compiler.jvmTarget>
-        <jackson.version>2.10.3</jackson.version>
+        <jackson.version>2.12.0</jackson.version>
         <aws.version>1.11.740</aws.version>
         <jts.version>1.16.1</jts.version>
         <jetty.version>9.4.27.v20200227</jetty.version>
-        <feign.version>9.6.0</feign.version>
+        <feign.version>10.12</feign.version>
     </properties>
     <dependencies>
 
@@ -166,19 +166,19 @@
             <dependency>
                 <groupId>io.github.openfeign</groupId>
                 <artifactId>feign-core</artifactId>
-                <version>9.4.0</version>
+                <version>${feign.version}</version>
             </dependency>
 
             <dependency>
                 <groupId>io.github.openfeign</groupId>
                 <artifactId>feign-jackson</artifactId>
-                <version>9.4.0</version>
+                <version>${feign.version}</version>
             </dependency>
 
             <dependency>
                 <groupId>com.squareup.okhttp3</groupId>
                 <artifactId>okhttp</artifactId>
-                <version>3.10.0</version>
+                <version>4.9.1</version>
             </dependency>
 
             <dependency>
@@ -289,8 +289,9 @@
 
     <distributionManagement>
         <repository>
-            <id>bintray-em2m-maven</id>
-            <url>https://api.bintray.com/maven/em2m/em2m-maven/em2m-java-sdk/;publish=1</url>
+            <id>github</id>
+            <name>Github EM2M Apache Maven Packages</name>
+            <url>https://maven.pkg.github.com/em2m/em2m-java-sdk</url>
         </repository>
     </distributionManagement>
 

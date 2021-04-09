@@ -19,9 +19,6 @@ import org.eclipse.jetty.servlet.ServletContextHandler
 import org.eclipse.jetty.servlet.ServletHolder
 import org.slf4j.LoggerFactory
 import javax.servlet.MultipartConfigElement
-import javax.servlet.http.HttpServlet
-import javax.servlet.http.HttpServletRequest
-import javax.servlet.http.HttpServletResponse
 
 
 class ExampleServer {
@@ -95,6 +92,6 @@ class ExampleServer {
 
 }
 
-fun main(args: Array<String>) {
+fun main() {
     ExampleServer().start()
 }

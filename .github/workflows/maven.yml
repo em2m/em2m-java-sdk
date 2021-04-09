@@ -1,0 +1,44 @@
+name: Java CI
+
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Set up JDK 1.8
+        uses: actions/setup-java@v1
+        with:
+          java-version: 11
+
+      - name: Create mongo docker container
+        id: build_mongo_docker
+        uses: DigiPie/mongo-action@v1.0.1
+        with:
+          image_version: 3.6
+          port: 27017
+
+      - name: Configure sysctl limits
+        run: |
+          sudo swapoff -a
+          sudo sysctl -w vm.swappiness=1
+          sudo sysctl -w fs.file-max=262144
+          sudo sysctl -w vm.max_map_count=262144
+
+      - name: Create elastic search docker container
+        id: build_es_container
+        uses: getong/elasticsearch-action@v1.2
+        with:
+          elasticsearch version: '2.3'
+          host port: 9200
+          container port: 9200
+          host node port: 9300
+          node port: 9300
+          discovery type: 'single-node'
+
+      - name: Build with Maven
+        run: mvn --batch-mode --update-snapshots verify
