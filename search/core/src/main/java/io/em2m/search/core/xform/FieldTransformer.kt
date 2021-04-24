@@ -6,7 +6,7 @@ import io.em2m.simplex.Simplex
 import io.em2m.simplex.model.Expr
 import io.em2m.simplex.model.ExprContext
 
-class FieldTransformer<T>(val simplex: Simplex, fields: List<FieldModel>) : Transformer<T> {
+class FieldTransformer<T>(val simplex: Simplex, fields: List<FieldModel> = emptyList()) : Transformer<T> {
 
     private val fieldModels = fields.associateBy { it.name }
     private val queryXform = FieldQueryTransformer(fieldModels)
