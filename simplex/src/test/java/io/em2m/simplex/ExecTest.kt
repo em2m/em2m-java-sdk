@@ -4,6 +4,7 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import io.em2m.simplex.model.*
 import io.em2m.simplex.parser.SimplexModule
+import org.junit.Ignore
 import org.junit.Test
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -41,6 +42,7 @@ class ExecTest {
     }
 
     @Test
+    @Ignore
     fun testHttp() {
         val exec: Expr = mapper.readValue(
                 """
@@ -48,7 +50,7 @@ class ExecTest {
                    "@exec": "http:get",
                    "url": "https://jsonplaceholder.typicode.com/posts/1",
                    "@value": "#{result.body}"
-                 }   
+                 }
                 """.replace("#", "$"))
         val result = exec.call(emptyMap())
         assertTrue(result is String)
