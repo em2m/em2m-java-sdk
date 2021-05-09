@@ -19,9 +19,8 @@ package io.em2m.search.bean
 
 import io.em2m.search.core.daos.AbstractSyncDao
 import io.em2m.search.core.model.*
-import java.util.*
 
-class MapBackedSyncDao<T>(idMapper: IdMapper<T>, val items: MutableMap<String, T> = HashMap()) : AbstractSyncDao<T>(idMapper) {
+class MapBackedSyncDao<T>(idMapper: IdMapper<T>, val items: MutableMap<String, T> = HashMap()) : AbstractSyncDao<T>(idMapper), StreamableDao<T> {
 
     override fun create(entity: T): T? {
         throw NotImplementedError()
@@ -84,6 +83,21 @@ class MapBackedSyncDao<T>(idMapper: IdMapper<T>, val items: MutableMap<String, T
         return matches.map { item ->
             getters.map { if (item == null) null else it.invoke(item as Any) }
         }
+    }
+
+    override fun streamRows(
+        fields: List<Field>,
+        query: Query,
+        sorts: List<DocSort>,
+        params: Map<String, Any>
+    ): Iterator<List<Any?>> {
+        val request = SearchRequest(fields = fields, query = query, sorts = sorts, params = params, limit = 1_000_0000)
+        return (search(request).rows ?: emptyList()).iterator()
+    }
+
+    override fun streamItems(query: Query, sorts: List<DocSort>, params: Map<String, Any>): Iterator<T> {
+        val request = SearchRequest(query = query, sorts = sorts, params = params, limit = 1_000_0000)
+        return (search(request).items ?: emptyList()).iterator()
     }
 
     class CompositeComparator<T>(sorts: List<DocSort>) : Comparator<T> {

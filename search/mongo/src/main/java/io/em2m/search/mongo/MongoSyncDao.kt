@@ -33,10 +33,14 @@ import io.em2m.search.core.parser.SimpleSchemaMapper
 import org.bson.Document
 import org.bson.conversions.Bson
 import org.slf4j.LoggerFactory
-import java.util.*
 
-class MongoSyncDao<T>(idMapper: IdMapper<T>, val documentMapper: DocumentMapper<T>, val collection: MongoCollection<Document>, schemaMapper: SchemaMapper = SimpleSchemaMapper("")) :
-        AbstractSyncDao<T>(idMapper) {
+class MongoSyncDao<T>(
+    idMapper: IdMapper<T>,
+    val documentMapper: DocumentMapper<T>,
+    val collection: MongoCollection<Document>,
+    schemaMapper: SchemaMapper = SimpleSchemaMapper("")
+) :
+    AbstractSyncDao<T>(idMapper), StreamableDao<T> {
 
     private val log = LoggerFactory.getLogger(javaClass)
 
@@ -62,12 +66,12 @@ class MongoSyncDao<T>(idMapper: IdMapper<T>, val documentMapper: DocumentMapper<
     fun doSearch(request: SearchRequest, mongoQuery: Bson): List<Document> {
         return if (request.limit > 0) {
             val fields = Document()
-            request.fields.forEach { fields.put(it.name, "1") }
+            request.fields.forEach { fields[it.name] = "1" }
             collection.find(mongoQuery)
-                    .projection(fields)
-                    .sort(queryConverter.convertSorts(request.sorts))
-                    .limit(request.limit.toInt()).skip(request.offset.toInt())
-                    .toList()
+                .projection(fields)
+                .sort(queryConverter.convertSorts(request.sorts))
+                .limit(request.limit.toInt()).skip(request.offset.toInt())
+                .toList()
         } else emptyList()
     }
 
@@ -80,22 +84,28 @@ class MongoSyncDao<T>(idMapper: IdMapper<T>, val documentMapper: DocumentMapper<
     fun doAggs(request: SearchRequest, mongoQuery: Bson, mongoAggs: Bson): List<Document> {
         return if (request.aggs.isNotEmpty()) {
             collection
-                    .withReadPreference(ReadPreference.secondary())
-                    .aggregate(listOf(Aggregates.match(mongoQuery), mongoAggs)).toList()
+                .withReadPreference(ReadPreference.secondary())
+                .aggregate(listOf(Aggregates.match(mongoQuery), mongoAggs)).toList()
         } else {
             emptyList()
         }
     }
 
-    fun handleResult(request: SearchRequest, docs: List<Document>, totalItems: Long, aggs: List<Document>): SearchResult<T> {
+    fun handleResult(
+        request: SearchRequest,
+        docs: List<Document>,
+        totalItems: Long,
+        aggs: List<Document>
+    ): SearchResult<T> {
         val fields = request.fields
         val items = if (fields.isEmpty()) docs.map { decodeItem(it) } else null
         val rows = if (fields.isNotEmpty()) docs.map { decodeRow(request.fields, it) } else null
         return SearchResult(
-                items = items, rows = rows,
-                totalItems = if (totalItems > 0) totalItems else docs.size.toLong(),
-                fields = fields,
-                aggs = decodeAggs(request, aggs.firstOrNull()))
+            items = items, rows = rows,
+            totalItems = if (totalItems > 0) totalItems else docs.size.toLong(),
+            fields = fields,
+            aggs = decodeAggs(request, aggs.firstOrNull())
+        )
     }
 
     override fun search(request: SearchRequest): SearchResult<T> {
@@ -106,7 +116,7 @@ class MongoSyncDao<T>(idMapper: IdMapper<T>, val documentMapper: DocumentMapper<
         val aggs = doAggs(request, mongoQuery, mongoAggs)
         return handleResult(request, docs, totalItems, aggs)
     }
-    
+
     override fun save(id: String, entity: T): T? {
         collection.replaceOne(Document("_id", id), encode(entity), UpdateOptions().upsert(true))
         return entity
@@ -193,12 +203,40 @@ class MongoSyncDao<T>(idMapper: IdMapper<T>, val documentMapper: DocumentMapper<
         return result
     }
 
+    override fun streamRows(
+        fields: List<Field>,
+        query: Query,
+        sorts: List<DocSort>,
+        params: Map<String, Any>
+    ): Iterator<List<Any?>> {
+        val mongoQuery = queryConverter.convertQuery(query)
+        val mongoSorts = queryConverter.convertSorts(sorts)
+        val projection = Document()
+        fields.forEach { projection[it.name] = "1" }
+        return collection.find(mongoQuery)
+            .projection(projection)
+            .sort(mongoSorts)
+            .map { row ->
+                decodeRow(fields, row)
+            }.iterator()
+    }
+
+    override fun streamItems(query: Query, sorts: List<DocSort>, params: Map<String, Any>): Iterator<T> {
+        val mongoQuery = queryConverter.convertQuery(query)
+        val mongoSorts = queryConverter.convertSorts(sorts)
+        return collection.find(mongoQuery)
+            .sort(mongoSorts)
+            .map { item ->
+                decodeItem(item)
+            }.iterator()
+    }
+
     companion object {
         fun collection(hostName: String, dbName: String, collectionName: String): MongoCollection<Document> {
 
             /*val settings = MongoClientSettings.builder()
-                    .clusterSettings(ClusterSettings.builder().hosts(listOf(ServerAddress(hostName))).build())
-                    .build()*/
+                .clusterSettings(ClusterSettings.builder().hosts(listOf(ServerAddress(hostName))).build())
+                .build()*/
 
             val client = MongoClient(listOf(ServerAddress(hostName)))
             val database = client.getDatabase(dbName)

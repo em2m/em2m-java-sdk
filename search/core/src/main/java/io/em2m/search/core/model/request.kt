@@ -13,6 +13,7 @@ data class SearchRequest(var offset: Long = 0, var limit: Long = 0, var query: Q
                          var aggs: List<Agg> = emptyList()) {
 
     var countTotal: Boolean = true
+    var deepPage: Boolean = false
 
     fun fields(vararg fields: String): SearchRequest {
         this.fields = this.fields.plus(fields.map { Field(name = it) })
@@ -21,6 +22,11 @@ data class SearchRequest(var offset: Long = 0, var limit: Long = 0, var query: Q
 
     fun countTotal(value: Boolean): SearchRequest {
         this.countTotal = value
+        return this
+    }
+
+    fun deepPage(value: Boolean = true) : SearchRequest {
+        this.deepPage = value
         return this
     }
 

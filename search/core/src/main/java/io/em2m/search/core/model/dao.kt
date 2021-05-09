@@ -6,8 +6,12 @@ import com.fasterxml.jackson.databind.node.ObjectNode
 import java.io.Closeable
 import java.util.*
 
+interface Searchable<T> {
+    fun search(request: SearchRequest): SearchResult<T>
+}
 
-interface SyncDao<T> : Closeable {
+
+interface SyncDao<T> : Searchable<T>, Closeable {
 
     fun create(entity: T): T?
 
@@ -15,7 +19,7 @@ interface SyncDao<T> : Closeable {
 
     fun exists(id: String): Boolean
 
-    fun search(request: SearchRequest): SearchResult<T>
+    override fun search(request: SearchRequest): SearchResult<T>
 
     fun count(query: Query): Long
 
@@ -27,6 +31,11 @@ interface SyncDao<T> : Closeable {
 
     fun saveBatch(entities: List<T>): List<T>
 
+}
+
+interface StreamableDao<T> : SyncDao<T> {
+    fun streamRows(fields: List<Field>, query: Query = MatchAllQuery(), sorts: List<DocSort> = emptyList(), params: Map<String, Any> = emptyMap()) : Iterator<List<Any?>>
+    fun streamItems(query: Query = MatchAllQuery(), sorts: List<DocSort> = emptyList(), params: Map<String, Any> = emptyMap()): Iterator<T>
 }
 
 interface IdMapper<T> {
