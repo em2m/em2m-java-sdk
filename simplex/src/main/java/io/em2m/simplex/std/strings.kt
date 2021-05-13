@@ -237,10 +237,10 @@ open class SingleStringHandler(private val op: (String?, String?) -> Boolean) : 
 
     override fun test(keyValue: Any?, conditionValue: Any?): Boolean {
         val keyString: String? = if (keyValue is Iterable<*>) {
-            keyValue.first()?.coerce()
+            keyValue.firstOrNull()?.coerce()
         } else keyValue?.coerce()
         val valueString: String? = if (conditionValue is Iterable<*>) {
-            conditionValue.first()?.coerce()
+            conditionValue.firstOrNull()?.coerce()
         } else conditionValue?.coerce()
 
         return op(keyString, valueString)
