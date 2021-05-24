@@ -66,7 +66,7 @@ class MongoSyncDao<T>(
     fun doSearch(request: SearchRequest, mongoQuery: Bson): List<Document> {
         return if (request.limit > 0) {
             val fields = Document()
-            request.fields.forEach { fields[it.name] = "1" }
+            request.fields.forEach { fields[it.name] = 1 }
             collection.find(mongoQuery)
                 .projection(fields)
                 .sort(queryConverter.convertSorts(request.sorts))
