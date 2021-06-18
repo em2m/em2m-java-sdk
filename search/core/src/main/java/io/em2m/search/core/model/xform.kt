@@ -111,6 +111,9 @@ open class AggTransformer {
 
     fun transform(agg: Agg, context: ExprContext): Agg = when (agg) {
 
+        is CardinalityAgg -> {
+            transformCardinalityAgg(agg, context)
+        }
         is DateHistogramAgg -> {
             transformDateHistogramAgg(agg, context)
         }
@@ -161,6 +164,7 @@ open class AggTransformer {
         }
     }
 
+    open fun transformCardinalityAgg(agg: CardinalityAgg, context: ExprContext): Agg = agg
     open fun transformDateHistogramAgg(agg: DateHistogramAgg, context: ExprContext): Agg = agg
     open fun transformDateRangeAgg(agg: DateRangeAgg, context: ExprContext): Agg = agg
     open fun transformFiltersAgg(agg: FiltersAgg, context: ExprContext): Agg = agg

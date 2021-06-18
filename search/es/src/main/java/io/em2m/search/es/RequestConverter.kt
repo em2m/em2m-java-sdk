@@ -119,6 +119,9 @@ class RequestConverter(val objectMapper: ObjectMapper = jacksonObjectMapper(), v
                 is MissingAgg -> {
                     result.missing(it.key, it.field, subAggs).minDocCount(it.minDocCount)
                 }
+                is CardinalityAgg -> {
+                    result.cardinality(it.key, it.field).minDocCount(it.minDocCount)
+                }
                 is HistogramAgg -> {
                     result.histogram(it.key, it.field, it.interval, it.offset, subAggs).minDocCount(it.minDocCount)
                 }
