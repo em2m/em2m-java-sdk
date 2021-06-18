@@ -203,6 +203,12 @@ class EsAggs() {
         return body
     }
 
+    fun cardinality(name: String, field: String, subAggs: EsAggs? = null): ObjectNode {
+        val body = agg(name, "cardinality", subAggs)
+        body.put("field", field)
+        return body
+    }
+
     fun dateHistogram(name: String, field: String, format: String? = null, interval: String, offset: String?, timeZone: String?, subAggs: EsAggs? = null): ObjectNode {
         val body = agg(name, "date_histogram", subAggs)
         body.put("field", field)

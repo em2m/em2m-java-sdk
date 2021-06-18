@@ -54,6 +54,17 @@ class MapBackedDaoAggTest : Assert() {
     }
 
     @Test
+    fun testCardinality() {
+        val request = SearchRequest(0, 0, MatchAllQuery(), aggs = listOf(CardinalityAgg("properties.tz", key = "tz")))
+        val result = searchDao.search(request)
+        val tz = result.aggs["tz"] ?: error("tz should not be null")
+        val buckets = tz.buckets ?: error("buckets should not be null")
+        assertEquals(46, result.totalItems)
+        assertEquals(0, result.items?.size)
+        assertEquals(11, buckets[0].count)
+    }
+
+    @Test
     fun testFilters() {
         val request = SearchRequest(0, 0, MatchAllQuery(), aggs = listOf(FiltersAgg(mapOf("green_alerts" to TermQuery("properties.alert", "green")), "test")))
         val result = searchDao.search(request)
