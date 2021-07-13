@@ -15,6 +15,7 @@ class NamedAggTransformer(val namedAggs: Map<String, Agg>) : AggTransformer() {
 
     class KeyAggTransformer(val key: String) : AggTransformer() {
 
+        override fun transformCardinalityAgg(agg: CardinalityAgg, context: ExprContext) = CardinalityAgg(agg.field, key)
         override fun transformDateHistogramAgg(agg: DateHistogramAgg, context: ExprContext) = DateHistogramAgg(agg.field, agg.format, agg.interval, agg.offset, agg.timeZone, agg.missing, key, agg.aggs, agg.extensions, agg.minDocCount)
         override fun transformDateRangeAgg(agg: DateRangeAgg, context: ExprContext) = DateRangeAgg(agg.field, agg.format, agg.timeZone, agg.ranges, key, agg.aggs, agg.extensions, agg.minDocCount)
         override fun transformFiltersAgg(agg: FiltersAgg, context: ExprContext) = FiltersAgg(agg.filters, key, agg.aggs, agg.extensions, agg.minDocCount)

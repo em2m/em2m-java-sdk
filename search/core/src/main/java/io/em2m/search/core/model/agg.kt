@@ -7,6 +7,7 @@ import org.locationtech.jts.geom.Coordinate
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "op")
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonSubTypes(
+        JsonSubTypes.Type(value = CardinalityAgg::class, name = "cardinality"),
         JsonSubTypes.Type(value = DateHistogramAgg::class, name = "date_histogram"),
         JsonSubTypes.Type(value = DateRangeAgg::class, name = "date_range"),
         JsonSubTypes.Type(value = FiltersAgg::class, name = "filters"),
@@ -78,6 +79,12 @@ interface Fielded {
 }
 
 data class Range(val to: Any? = null, val from: Any? = null, val key: String? = null)
+
+class CardinalityAgg(
+    override val field: String,
+    key: String? = null,) : Agg(key ?: field, ext = emptyMap(), minDocCount = null), Fielded {
+    override fun op() = "cardinality"
+}
 
 class DateHistogramAgg(
         override val field: String,

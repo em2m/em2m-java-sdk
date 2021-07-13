@@ -50,6 +50,9 @@ class NamedAggQueryTransformer(private val namedAggs: Map<String, Agg>, val time
             is StatsAgg -> {
                 TermQuery(agg.field, value)
             }
+            is CardinalityAgg -> {
+                TermQuery(agg.field, value)
+            }
             else -> {
                 super.transformNamedQuery(query, context)
             }
