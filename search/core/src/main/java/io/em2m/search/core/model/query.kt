@@ -159,3 +159,4 @@ class BboxQuery(field: String, val value: Envelope) : FieldedQuery(field)
 class LuceneQuery(val query: String, val defaultField: String? = null) : Query()
 
 class ExistsQuery(field: String, val value: Boolean = true) : FieldedQuery(field)
+
