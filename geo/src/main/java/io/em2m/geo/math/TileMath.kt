@@ -36,6 +36,10 @@ class TileMath
         return metersToTile(lngLatToMeters(coord), zoomLevel)
     }
 
+    fun lngLatToTileCoordinate(coord: Coordinate, zoomLevel: Int): TileCoordinate {
+        return metersToTileCoordinate(lngLatToMeters(coord), zoomLevel)
+    }
+
     fun matrixSize(zoomLevel: Int): Int {
         return 1 shl zoomLevel
     }
@@ -92,6 +96,16 @@ class TileMath
     }
 
     /**
+     * Returns the tile coordinate of the meters coordinate
+     */
+    fun metersToTileCoordinate(coord: Coordinate, zoomLevel: Int): TileCoordinate {
+        val pixels = metersToPixels(coord.x, coord.y, zoomLevel)
+        val tx = pixels.x.toInt() / 256
+        val ty = pixels.y.toInt() / 256
+        return TileCoordinate(tx, ty, zoomLevel)
+    }
+
+    /**
      * Converts pixel coordinates in given zoom level of pyramid to EPSG:3857
      *
      * @param px        the X pixel coordinate
@@ -102,7 +116,7 @@ class TileMath
     fun pixelsToMeters(px: Double, py: Double, zoomLevel: Int): Coordinate {
         val res = resolution(zoomLevel)
         val mx = px * res - originShift
-        val my = -py * res + originShift
+        val my = py * res - originShift
 
         return Coordinate(mx, my)
     }
