@@ -9,7 +9,7 @@ import io.em2m.search.core.model.*
 import java.util.*
 
 class EsSyncDao<T>(val esApi: EsApi, val index: String, val type: String, tClass: Class<T>, idMapper: IdMapper<T>, docMapper: DocMapper<T>? = null) :
-        AbstractSyncDao<T>(idMapper) {
+        AbstractSyncDao<T>(idMapper), StreamableDao<T> {
 
     val objectMapper: ObjectMapper = jacksonObjectMapper().registerModule(GeoJsonModule())
     val docMapper: DocMapper<T> = docMapper ?: JacksonDocMapper(tClass, objectMapper)
@@ -48,23 +48,21 @@ class EsSyncDao<T>(val esApi: EsApi, val index: String, val type: String, tClass
     fun scrollItems(request: SearchRequest, result: SearchResult<T>): Iterable<T> {
         // TODO - Consider creating a different request signature or validating search request is compatible
         val scroll = request.params["scroll"] as String
-        val iterable = object : Iterable<T> {
+        return object : Iterable<T> {
             override fun iterator(): Iterator<T> {
                 return ItemScrollIterator(request, result, scroll)
             }
         }
-        return iterable
     }
 
     fun scrollRows(request: SearchRequest, result: SearchResult<T>): Iterable<Any?> {
         // TODO - Consider creating a different request signature or validating search request is compatible
         val scroll = request.params["scroll"] as String
-        val iterable = object : Iterable<List<Any?>> {
+        return object : Iterable<List<Any?>> {
             override fun iterator(): Iterator<List<Any?>> {
                 return RowScrollIterator(request, result, scroll)
             }
         }
-        return iterable
     }
 
     override fun save(id: String, entity: T): T? {
@@ -83,7 +81,7 @@ class EsSyncDao<T>(val esApi: EsApi, val index: String, val type: String, tClass
     }
 
     override fun saveBatch(entities: List<T>): List<T> {
-        val bulkRequest = entities.map { bulkIndex(index, type, idMapper.getId(it), it) }.joinToString("")
+        val bulkRequest = entities.joinToString("") { bulkIndex(index, type, idMapper.getId(it), it) }
         val bulkResult = esApi.bulkUpdate(bulkRequest)
         return if (bulkResult.errors) {
             val errorIds = bulkResult.items.filter {
@@ -99,15 +97,39 @@ class EsSyncDao<T>(val esApi: EsApi, val index: String, val type: String, tClass
         return docMapper.toDoc(obj)
     }
 
-    internal fun scroll(request: SearchRequest, scroll: String, scrollId: String): SearchResult<T> {
-        val esRes = esApi.scroll(scroll, scrollId)
-        return resultConverter.convert(request, esRes)
+    override fun streamRows(
+        fields: List<Field>,
+        query: Query,
+        sorts: List<DocSort>,
+        params: Map<String, Any>
+    ): Iterator<List<Any?>> {
+        val request = SearchRequest(fields = fields, query = query, sorts = sorts, params = params)
+        return RowScrollIterator(request)
     }
 
-    internal inner class ItemScrollIterator(val request: SearchRequest, result: SearchResult<T>, val scroll: String = "1m") : Iterator<T> {
+    override fun streamItems(query: Query, sorts: List<DocSort>, params: Map<String, Any>): Iterator<T> {
+        val request = SearchRequest(query = query, sorts = sorts, params = params)
+        return ItemScrollIterator(request)
+    }
 
-        var queue: ArrayDeque<T> = ArrayDeque(result.items)
-        var scrollId = result.headers["scrollId"] as String?
+    internal inner class ItemScrollIterator(private val request: SearchRequest, result: SearchResult<T>? = null, val scroll: String = "1m") : Iterator<T> {
+
+        private var queue: ArrayDeque<T>
+        private var scrollId: String?
+
+        init {
+            if (result == null) {
+                val esReq = requestConverter.convert(request.copy(offset = 0, limit = 100))
+                val esResult = esApi.search(index, type, esReq)
+                val items = resultConverter.convert(request, esApi.search(index, type, scroll, esReq)).items
+                queue = ArrayDeque(items)
+                scrollId = esResult.scrollId
+                // initialize
+            } else {
+                queue = ArrayDeque(result.items)
+                scrollId = result.headers["scrollId"]?.toString()
+            }
+        }
 
         override fun next(): T {
             if (!hasNext()) {
@@ -135,10 +157,24 @@ class EsSyncDao<T>(val esApi: EsApi, val index: String, val type: String, tClass
         }
     }
 
-    internal inner class RowScrollIterator(val request: SearchRequest, result: SearchResult<T>, val scroll: String = "1m") : Iterator<List<Any?>> {
+    internal inner class RowScrollIterator(private val request: SearchRequest, result: SearchResult<T>? = null, val scroll: String = "1m") : Iterator<List<Any?>> {
 
-        var queue: ArrayDeque<List<Any?>> = ArrayDeque(result.rows)
-        var scrollId = result.headers["scrollId"] as String?
+        private var queue: ArrayDeque<List<Any?>>
+        private var scrollId: String?
+
+        init {
+            if (result == null) {
+                val esReq = requestConverter.convert(request.copy(offset = 0, limit = 100))
+                val esResult = esApi.search(index, type, esReq)
+                val rows = resultConverter.convert(request, esApi.search(index, type, scroll, esReq)).rows
+                queue = ArrayDeque(rows)
+                scrollId = esResult.scrollId
+                // initialize
+            } else {
+                queue = ArrayDeque(result.rows)
+                scrollId = result.headers.get("scrollId")?.toString()
+            }
+        }
 
         override fun next(): List<Any?> {
             if (!hasNext()) {
@@ -165,4 +201,5 @@ class EsSyncDao<T>(val esApi: EsApi, val index: String, val type: String, tClass
             }
         }
     }
+
 }

@@ -6,10 +6,9 @@ import com.fasterxml.jackson.databind.node.ArrayNode
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.em2m.geo.geojson.GeoJsonModule
 import io.em2m.search.core.model.*
+import io.em2m.utils.coerce
 import org.locationtech.jts.geom.Coordinate
 import org.locationtech.jts.geom.Envelope
-import java.util.*
-import kotlin.collections.HashMap
 
 class ResultConverter<T>(private val mapper: DocMapper<T>) {
 
@@ -91,7 +90,7 @@ class ResultConverter<T>(private val mapper: DocMapper<T>) {
             val key = agg.key
             val esValue = esAggResults[agg.key]
             if (esValue != null) {
-                val op: String? = agg.op()
+                val op: String = agg.op()
                 val field: String? = (agg as? Fielded)?.field
                 var buckets = esValue.buckets?.map {
                     val subAggs = convertSubAggs(agg.aggs, it.other)
@@ -134,6 +133,11 @@ class ResultConverter<T>(private val mapper: DocMapper<T>) {
                     val y1 = topLeft["lat"] as Double
                     val y2 = bottomRight["lat"] as Double
                     value = Envelope(x1, x2, y1, y2)
+                }
+                if (buckets == null && agg is CardinalityAgg) {
+                    val count: Long = esValue.other["value"].coerce() ?: 0
+                    val stats = Stats(count, count.toDouble(), count.toDouble(), count.toDouble(), count.toDouble())
+                    buckets = listOf(Bucket(key = key, count = count, stats = stats))
                 }
                 if (buckets == null && value == null) {
                     value = esValue.other

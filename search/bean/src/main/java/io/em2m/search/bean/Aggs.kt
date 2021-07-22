@@ -46,6 +46,9 @@ class Aggs {
                     is MissingAgg -> {
                         processMissingAgg(agg, matches)
                     }
+                    is CardinalityAgg -> {
+                        processCardinality(agg, matches)
+                    }
                     is GeoHashAgg -> {
                         processGeoHashAgg(agg, matches)
                     }
@@ -266,6 +269,13 @@ class Aggs {
                 }
             }
             val buckets = listOf(Bucket("missing", missingCount))
+            return AggResult(agg.key, buckets, op = agg.op(), field = agg.field)
+        }
+
+        private fun <T> processCardinality(agg: CardinalityAgg, matches: List<T>): AggResult {
+            val fieldGetter = Functions.field(agg.field)
+            val distinctCount = matches.flatMap { fieldGetter.invoke(it as Any)}.distinct().size.toLong()
+            val buckets = listOf(Bucket("cardinality", distinctCount))
             return AggResult(agg.key, buckets, op = agg.op(), field = agg.field)
         }
 

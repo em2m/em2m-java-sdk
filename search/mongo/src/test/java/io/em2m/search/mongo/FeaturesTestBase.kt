@@ -9,6 +9,7 @@ import io.em2m.geo.feature.FeatureCollection
 import io.em2m.geo.feature.FeatureCollectionHandler
 import io.em2m.geo.geojson.GeoJsonParser
 import io.em2m.search.core.model.FnIdMapper
+import io.em2m.search.core.model.StreamableDao
 import io.em2m.search.core.model.SyncDao
 import io.em2m.search.core.parser.SimpleSchemaMapper
 import org.junit.Assert
@@ -20,10 +21,9 @@ import kotlin.properties.Delegates
 open class FeaturesTestBase : Assert() {
 
     private var schemaMapper: SimpleSchemaMapper by Delegates.notNull()
-    var syncDao: SyncDao<Feature> by Delegates.notNull()
+    var syncDao: StreamableDao<Feature> by Delegates.notNull()
     private val config: Config = ConfigFactory.load()
     private val idMapper = FnIdMapper<Feature>("id", { it.id!! }, { f, id -> f.id = id; f })
-
 
     @Before
     fun syncDaoSetup() {
@@ -32,7 +32,6 @@ open class FeaturesTestBase : Assert() {
         schemaMapper.withMapping("properties.mag", Double::class.java)
         schemaMapper.withMapping("_id", String::class.java)
         schemaMapper.withMapping("properties.time", Date::class.java)
-
 
         // Mongo Database
         val mongoUri = config.getString("mongo.uri")
@@ -49,7 +48,6 @@ open class FeaturesTestBase : Assert() {
             syncDao.save(feature.id!!, feature)
         }
     }
-
 
     private fun earthquakes(): FeatureCollection {
         val handler = FeatureCollectionHandler()
