@@ -32,12 +32,12 @@ data class TileCoordinate(val x: Int, val y: Int, val z: Int) {
         return ax == other.x && ay == other.y
     }
 
-    fun bboxLngLat() : Envelope {
-        return TileMath.std256.tileBboxLngLat(x,y,z)
+    fun bboxLngLat(): Envelope {
+        return TileMath.std256.tileBboxLngLat(x, y, z)
     }
 
     fun bboxMeters(): Envelope {
-        return TileMath.std256.tileBbox(x,y,z)
+        return TileMath.std256.tileBbox(x, y, z)
     }
 
     fun toCode(): String {
@@ -63,6 +63,14 @@ data class TileCoordinate(val x: Int, val y: Int, val z: Int) {
             val low = pairs[1]
             (high * 4 + low).toString(16)
         }.uppercase()
+    }
+
+    fun toCodeSet(): List<String> {
+        val code = toCode()
+        return (1..code.length).map { i ->
+            //i.toString(16).uppercase() + "-" + code.take(i)
+            code.take(i)
+        }
     }
 
     val isValid: Boolean
@@ -123,7 +131,7 @@ data class TileCoordinate(val x: Int, val y: Int, val z: Int) {
                 }
 
             }
-            return TileCoordinate(x,y,z)
+            return TileCoordinate(x, y, z)
         }
     }
 
