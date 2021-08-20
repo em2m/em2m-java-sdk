@@ -37,31 +37,31 @@ class Problem(val type: String? = null,
 
     companion object {
 
-        fun notAuthorized(title: () -> Any? = { "Not Authorized" }, detail: () -> Any? = {}, ext: Map<String, Any?> = emptyMap()): Nothing {
-            Problem(title = title().toString(), status = Status.NOT_AUTHORIZED, detail = detail().toString(), ext = ext).throwException()
+        fun notAuthorized(title: () -> Any? = { "Not Authorized" }, detail: () -> Any? = {null}, ext: Map<String, Any?> = emptyMap()): Nothing {
+            Problem(title = title().toString(), status = Status.NOT_AUTHORIZED, detail = detail()?.toString(), ext = ext).throwException()
         }
 
-        fun badRequest(title: () -> Any? = { "Bad Request" }, detail: () -> Any? = {}, ext: Map<String, Any?> = emptyMap()): Nothing {
-            Problem(title = title().toString(), status = Status.BAD_REQUEST, detail = detail().toString(), ext = ext).throwException()
+        fun badRequest(title: () -> Any? = { "Bad Request" }, detail: () -> Any? = {null}, ext: Map<String, Any?> = emptyMap()): Nothing {
+            Problem(title = title().toString(), status = Status.BAD_REQUEST, detail = detail()?.toString(), ext = ext).throwException()
         }
 
-        fun notFound(title: () -> Any? = { "Not Found" }, detail: () -> Any? = {}, ext: Map<String, Any?> = emptyMap()): Nothing {
-            Problem(title = title().toString(), status = Status.NOT_FOUND, detail = detail().toString(), ext = ext).throwException()
+        fun notFound(title: () -> Any? = { "Not Found" }, detail: () -> Any? = {null}, ext: Map<String, Any?> = emptyMap()): Nothing {
+            Problem(title = title().toString(), status = Status.NOT_FOUND, detail = detail()?.toString(), ext = ext).throwException()
         }
 
-        fun conflict(title: () -> Any? = { "Conflict" }, detail: () -> Any? = {}, ext: Map<String, Any?> = emptyMap()): Nothing {
+        fun conflict(title: () -> Any? = { "Conflict" }, detail: () -> Any? = {null}, ext: Map<String, Any?> = emptyMap()): Nothing {
             Problem(title = title().toString(), status = Status.CONFLICT, detail = detail()?.toString(), ext = ext).throwException()
         }
 
-        fun unexpectedError(title: () -> Any? = { "Unexpected Error" }, detail: () -> Any? = {}, ext: Map<String, Any?> = emptyMap()): Nothing {
-            Problem(title = title().toString(), status = Status.INTERNAL_SERVER_ERROR, detail = detail().toString(), ext = ext).throwException()
+        fun unexpectedError(title: () -> Any? = { "Unexpected Error" }, detail: () -> Any? = {null}, ext: Map<String, Any?> = emptyMap()): Nothing {
+            Problem(title = title().toString(), status = Status.INTERNAL_SERVER_ERROR, detail = detail()?.toString(), ext = ext).throwException()
         }
 
-        fun <T> valueOrNotFound(value: T?, title: () -> Any? = { "Not Found" }, detail: () -> Any? = {}, ext: Map<String, Any?> = emptyMap()): T {
+        fun <T> valueOrNotFound(value: T?, title: () -> Any? = { "Not Found" }, detail: () -> Any? = {null}, ext: Map<String, Any?> = emptyMap()): T {
             return value ?: notFound(title, detail, ext)
         }
 
-        fun <T> valueOrConflict(value: T?, title: () -> Any? = { "Not Found" }, detail: () -> Any? = {}, ext: Map<String, Any?> = emptyMap()): T {
+        fun <T> valueOrConflict(value: T?, title: () -> Any? = { "Not Found" }, detail: () -> Any? = {null}, ext: Map<String, Any?> = emptyMap()): T {
             return value ?: conflict(title, detail, ext)
         }
 

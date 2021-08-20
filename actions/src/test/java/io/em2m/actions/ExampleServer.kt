@@ -32,8 +32,15 @@ class ExampleServer {
         context.contextPath = "/"
         // context.addServlet(ServletHolder(SampleSseServlet()), "/sse")
         val holder = ServletHolder(TestActionServlet())
-        holder.registration.setMultipartConfig(MultipartConfigElement("/tmp/uploads", 1024 * 1024 * 50, 1024 * 1024 * 50, (1024 * 1024).toInt()))
-        context.addServlet(holder, "/actions/*")
+        holder.registration.setMultipartConfig(
+            MultipartConfigElement(
+                "/tmp/uploads",
+                1024 * 1024 * 50,
+                1024 * 1024 * 50,
+                (1024 * 1024).toInt()
+            )
+        )
+        context.addServlet(holder, "/demo/actions/*")
 
         val handlers = HandlerList(context)
         server.handler = handlers
@@ -55,7 +62,7 @@ class ExampleServer {
 
     class Log : ActionFlow {
         override val transformers = listOf(
-                LoggingTransformer(LoggerFactory.getLogger(javaClass), { it.toString() }, MAIN)
+            LoggingTransformer(LoggerFactory.getLogger(javaClass), { it.toString() }, MAIN)
         )
     }
 
@@ -77,14 +84,15 @@ class ExampleServer {
     class TestActionServlet : ActionServlet() {
 
         private val processor = ActionProcessorBuilder()
-                .prefix("demo")
-                .flow(Log::class)
-                .flow(ExampleServer.Echo::class)
-                .flow(ExampleServer.Upload::class)
-                .module(ExampleServer.TestModule())
-                .transformer(JacksonRequestTransformer())
-                .transformer(JacksonResponseTransformer())
-                .build()
+            .prefix("demo")
+            .flow(Log::class)
+            .flow(Echo::class)
+            .flow(Upload::class)
+            .flow("demo:stream", StreamingActionFlow::class)
+            .module(TestModule())
+            .transformer(JacksonRequestTransformer())
+            .transformer(JacksonResponseTransformer())
+            .build()
 
         override val runtime = ServletRuntime("demo", processor)
 
