@@ -28,10 +28,12 @@ class TileCoordTest {
         val coordinate = Coordinate(-77.364375, 38.9555)
         val tileCoordinate = tm.lngLatToTileCoordinate(coordinate, 20)
         val code = tileCoordinate.toCode()
+        val codeSet = tileCoordinate.toCodeSet()
         val bbox = tileCoordinate.bboxLngLat()
         println("Coord: $coordinate")
         println("Tile: $tileCoordinate")
         println("Code: $code")
+        println("CodeSet: $codeSet")
         println("Bbox(LL): $bbox")
     }
 
