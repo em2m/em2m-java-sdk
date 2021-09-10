@@ -69,8 +69,8 @@ open class ServletRuntime(private val actionPrefix: String, private val processo
         val userAgent = servletRequest.getHeader("user-agent")
         val secureTransport = servletRequest.isSecure
         val contentType = servletRequest.contentType
-        val contentEncoding = servletRequest.getHeader("Content-Encoding")?.toLowerCase()
-        val headers = servletRequest.headerNames.toList().associate { it to servletRequest.getHeaders(it).toList() }
+        val contentEncoding = servletRequest.getHeader("Content-Encoding").lowercase(Locale.getDefault())
+        val headers = servletRequest.headerNames.toList().associateWith { servletRequest.getHeaders(it).toList() }
         val cookies = servletRequest.cookies?.toList() ?: emptyList()
 
         return mapOf(

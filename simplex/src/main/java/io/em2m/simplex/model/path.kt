@@ -27,17 +27,17 @@ object BeanHelper {
 
     private val loader = BeanPropertiesLoader()
 
-    fun getProperties(clazz: Class<*>): Map<String, PropertyDescriptor>? {
-        return cache.getOrPut(clazz, { loader.apply(clazz) })
+    private fun getProperties(clazz: Class<*>): Map<String, PropertyDescriptor>? {
+        return cache.getOrPut(clazz) { loader.apply(clazz) }
     }
 
-    fun getPropertyDescriptor(clazz: Class<*>?, property: String): PropertyDescriptor? {
+    private fun getPropertyDescriptor(clazz: Class<*>?, property: String): PropertyDescriptor? {
         return if (clazz != null) getProperties(clazz)?.get(property) else null
     }
 
     fun getPropertyValue(obj: Any?, property: String): Any? {
         return try {
-            val descriptor = BeanHelper.getPropertyDescriptor(obj?.javaClass, property)
+            val descriptor = getPropertyDescriptor(obj?.javaClass, property)
             descriptor?.readMethod?.invoke(obj)
         } catch (ex: Exception) {
             null
@@ -46,7 +46,7 @@ object BeanHelper {
 
     fun putPropertyValue(obj: Any?, property: String, value: Any?) {
         try {
-            val descriptor = BeanHelper.getPropertyDescriptor(obj?.javaClass, property)
+            val descriptor = getPropertyDescriptor(obj?.javaClass, property)
             descriptor?.writeMethod?.invoke(obj, value)
         } catch (ex: Exception) {
         }
@@ -91,7 +91,7 @@ class PropertyPathPart(val property: String) : PathPart {
             is ObjectNode -> {
                 val result = obj.get(property)
                 if (result is MissingNode || result is NullNode) {
-                    obj.set<JsonNode>(property, JsonNodeFactory.instance.objectNode())
+                    obj.set(property, JsonNodeFactory.instance.objectNode())
                 } else result
             }
             is MutableMap<*, *> -> {
@@ -140,7 +140,7 @@ class PropertyPathPart(val property: String) : PathPart {
             is ObjectNode -> obj.remove(property)
             else -> {
                 if (obj is MutableList<*> && index != null) {
-                    (obj as MutableList<Any?>).removeAt(index)
+                    obj.removeAt(index)
                 } else if (obj is Array<*> && index != null) {
                     (obj as Array<Any?>)[index] = null
                 } else {
@@ -169,7 +169,7 @@ class PropertyPathPart(val property: String) : PathPart {
 
 class PathExpr(val path: String) {
 
-    val parts: List<PathPart> = parse(path)
+    private val parts: List<PathPart> = parse(path)
 
     fun call(context: Any?): Any? {
         return parts.fold(context) { acc, next -> next.get(acc) }
@@ -178,9 +178,9 @@ class PathExpr(val path: String) {
     fun parse(expr: String): List<PathPart> {
         // split by '.'
         return expr.split(".")
-                .map {
-                    PropertyPathPart(it)
-                }
+            .map {
+                PropertyPathPart(it)
+            }
     }
 
     fun setValue(context: Any?, value: Any?) {
@@ -199,7 +199,7 @@ class PathExpr(val path: String) {
 
 }
 
-class PathKeyHandler(val prefix: String? = null, val addSeparator: Boolean = true) : KeyHandler {
+class PathKeyHandler(private val prefix: String? = null, private val addSeparator: Boolean = true) : KeyHandler {
 
     private fun keyNames(key: Key): List<String> {
         return key.name.split(',').map { it.trim() }

@@ -12,6 +12,7 @@ import org.junit.Test
 import org.locationtech.jts.geom.Coordinate
 import org.locationtech.jts.geom.Envelope
 import java.io.FileInputStream
+import java.util.*
 import kotlin.properties.Delegates
 
 class MapBackedDaoAggTest : Assert() {
@@ -239,7 +240,9 @@ class MapBackedDaoAggTest : Assert() {
         val result = handler.collection;
         assertEquals(46, result.features.size);
         // loweCase status to tests work same as for ElasticSearch
-        result.features.forEach { it.properties.put("status", (it.properties.get("status") as String).toLowerCase()) }
+        result.features.forEach { it.properties.put("status",
+            (it.properties.get("status") as String).lowercase(Locale.getDefault())
+        ) }
         return result;
     }
 

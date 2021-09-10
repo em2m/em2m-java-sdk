@@ -5,16 +5,17 @@ import io.em2m.simplex.model.*
 import io.em2m.utils.coerce
 import java.net.URLDecoder
 import java.net.URLEncoder
+import java.util.*
 import java.util.regex.Matcher
 
 
 class UpperCasePipe : PipeTransform {
     override fun transform(value: Any?, context: ExprContext): Any? {
         return when (value) {
-            is List<*> -> value.map { it?.toString()?.toUpperCase() }
-            is Array<*> -> value.map { it?.toString()?.toUpperCase() }
-            is ArrayNode -> value.map { it?.toString()?.toUpperCase() }
-            else -> value?.toString()?.toUpperCase()
+            is List<*> -> value.map { it?.toString()?.uppercase(Locale.getDefault()) }
+            is Array<*> -> value.map { it?.toString()?.uppercase(Locale.getDefault()) }
+            is ArrayNode -> value.map { it?.toString()?.uppercase(Locale.getDefault()) }
+            else -> value?.toString()?.uppercase(Locale.getDefault())
         }
     }
 }
@@ -23,11 +24,14 @@ class UpperCasePipe : PipeTransform {
 class CapitalizePipe : PipeTransform {
     override fun transform(value: Any?, context: ExprContext): Any? {
         return if (value is Iterable<*>) {
-            value.map { it?.toString()?.capitalize() }
+            value.map { it?.toString()
+                ?.replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() } }
         } else if (value is Array<*>) {
-            value.map { it?.toString()?.capitalize() }
+            value.map { it?.toString()
+                ?.replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() } }
         } else {
-            value?.toString()?.capitalize()
+            value?.toString()
+                ?.replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() }
         }
     }
 }

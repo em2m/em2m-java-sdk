@@ -42,7 +42,6 @@ data class TileCoordinate(val x: Int, val y: Int, val z: Int) {
 
     fun toCode(): String {
         //
-        val zs = z..0
         var currentX = x
         var currentY = y
         var currentZ = z
