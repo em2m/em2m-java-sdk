@@ -2,8 +2,8 @@ package io.em2m.geo.geojson
 
 import io.em2m.geo.math.TileCoordinate
 import io.em2m.geo.math.TileMath
+import org.junit.Test
 import org.locationtech.jts.geom.Coordinate
-import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 

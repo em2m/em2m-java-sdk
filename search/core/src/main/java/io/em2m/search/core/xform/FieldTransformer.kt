@@ -61,7 +61,7 @@ class FieldTransformer<T>(val simplex: Simplex, fields: List<FieldModel> = empty
                     if (model.delegateExpr != null) {
                         listOf(Field(expr = model.delegateExpr))
                     } else {
-                        model.delegateFields.map { Field(it) } ?: listOf(field)
+                        model.delegateFields.map { Field(it) }
                     }
                 } else {
                     listOf(field)

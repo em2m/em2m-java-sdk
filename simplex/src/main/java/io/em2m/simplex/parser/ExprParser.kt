@@ -54,8 +54,6 @@ class ExprParser(private val keyResolver: KeyResolver, private val pipeTransform
         require(xformParts.isNotEmpty()) { "Invalid pipe expressions" }
         val pipeName = xformParts.first().trim()
         val args = xformParts.drop(1).map(::parseArg)
-
-        val handler = pipeTransformResolver.find(pipeName)
         return requireNotNull(pipeTransformResolver.find(pipeName)) { "Unknown pipe: $pipeName" }.apply { args(args) }
     }
 

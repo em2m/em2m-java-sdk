@@ -11,6 +11,7 @@ import io.em2m.actions.model.TypedActionFlow
 import io.em2m.problem.Problem
 import org.xerial.snappy.SnappyInputStream
 import java.io.IOException
+import java.util.*
 import java.util.zip.DeflaterInputStream
 import java.util.zip.GZIPInputStream
 
@@ -26,7 +27,7 @@ class JacksonRequestTransformer(
             flow.requestType
         } else ObjectNode::class.java
 
-        val contentType = (ctx.environment["ContentType"] as? String ?: "").toLowerCase()
+        val contentType = (ctx.environment["ContentType"] as? String ?: "").lowercase(Locale.getDefault())
 
         if (contentType.contains("xml")) return
 

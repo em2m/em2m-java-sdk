@@ -161,8 +161,8 @@ class DateTest {
         assertEquals(expected, actual)
 
         val exprString2 = "\${ns:dateKey | datePlus:\$offset:d}"
-        val expr2 = requireNotNull(simplex.parser.parse(exprString))
-        val result2 = expr.call(mapOf("offset" to 1))
+        val expr2 = requireNotNull(simplex.parser.parse(exprString2))
+        val result2 = expr2.call(mapOf("offset" to 1))
         val sdf2 = SimpleDateFormat("yyyy-MM-dd HH:mm")
         sdf2.timeZone = TimeZone.getTimeZone("America/Los_Angeles")
         val actual2 = sdf2.format(result2)
