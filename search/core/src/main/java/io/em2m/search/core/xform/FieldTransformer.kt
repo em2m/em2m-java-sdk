@@ -243,7 +243,7 @@ class FieldTransformer<T>(val simplex: Simplex, fields: List<FieldModel> = empty
         private val queryTransformer = FieldQueryTransformer(fields)
 
         private fun applyAlias(field: String): String {
-            return fields.getOrElse(field, { null })?.delegateFields?.firstOrNull() ?: field
+            return fields.getOrElse(field) { null }?.delegateFields?.firstOrNull() ?: field
         }
 
         override fun transformDateHistogramAgg(agg: DateHistogramAgg, context: ExprContext) = DateHistogramAgg(
