@@ -45,7 +45,18 @@ class JacksonRequestTransformer(
                 val form = ctx.multipart?.form
                 if (form != null) {
                     val body = form["body"]
-                    val formContentType = form["contentType"] ?: "".lowercase(Locale.getDefault())
+                    val accept = form["accept"]
+                    val filename = form["filename"]
+                    val formContentType = form["contentType"]
+                    if (accept != null) {
+                        (ctx.environment["Headers"] as (MutableMap<String, Any?>))["accept"] = listOf(accept)
+                    }
+                    if (formContentType != null) {
+                        ctx.environment["ContentType"] = contentType
+                    }
+                    if (filename != null) {
+                        ctx.response.headers.set("Content-Disposition", "attachment;filename=$filename")
+                    }
                     if (formContentType.contains("json") && body != null) {
                         ctx.request = objectMapper.readValue(body, type)
                     } else {
