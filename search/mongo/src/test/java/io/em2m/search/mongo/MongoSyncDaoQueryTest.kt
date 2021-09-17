@@ -77,7 +77,8 @@ class MongoSyncDaoQueryTest : FeaturesTestBase() {
 
     @Test
     fun testFields() {
-        val request = SearchRequest(0, 1, query = TermQuery("properties.mag", 5.2), fields = listOf(Field("properties.mag")))
+        val request =
+            SearchRequest(0, 1, query = TermQuery("properties.mag", 5.2), fields = listOf(Field("properties.mag")))
         val result = syncDao.search(request)
         val mag = requireNotNull(result.rows?.get(0)?.get(0)) as Double
         assertEquals(5.2, mag, 0.01)
@@ -85,9 +86,11 @@ class MongoSyncDaoQueryTest : FeaturesTestBase() {
 
     @Test
     fun testNativeQuery() {
-        val type = "\$type"
-        val mongoQuery = jacksonObjectMapper().readTree(""" { "properties.nst": { "$type": 10 } } """)
-        val request = SearchRequest(0, 1, query = NativeQuery(mongoQuery), fields = listOf(Field("properties.nst")))
+        val request = SearchRequest(
+            limit = 1,
+            query = NativeQuery(mapOf("properties.nst" to mapOf("\$type" to 10))),
+            fields = listOf(Field("properties.nst"))
+        )
         val result = syncDao.search(request)
         val nst = result.rows?.get(0)?.get(0)
         assertEquals(null, nst)
@@ -96,7 +99,8 @@ class MongoSyncDaoQueryTest : FeaturesTestBase() {
 
     @Test
     fun testNullTermQuery() {
-        val request = SearchRequest(0, 1, query = TermQuery("properties.nst", null), fields = listOf(Field("properties.nst")))
+        val request =
+            SearchRequest(0, 1, query = TermQuery("properties.nst", null), fields = listOf(Field("properties.nst")))
         val result = syncDao.search(request)
         val nst = result.rows?.get(0)?.get(0)
         assertEquals(null, nst)
@@ -105,14 +109,18 @@ class MongoSyncDaoQueryTest : FeaturesTestBase() {
 
     @Test
     fun testStarMatchQuery() {
-        val request = SearchRequest(0, 0, query = MatchQuery("properties.nst", "*"), fields = listOf(Field("properties.nst")))
+        val request =
+            SearchRequest(0, 0, query = MatchQuery("properties.nst", "*"), fields = listOf(Field("properties.nst")))
         val result = syncDao.search(request)
         assertEquals(19, result.totalItems)
     }
 
     @Test
     fun testNotStarMatchQuery() {
-        val request = SearchRequest(0, 0, query = NotQuery(MatchQuery("properties.nst", "*")), fields = listOf(Field("properties.nst")))
+        val request = SearchRequest(
+            query = NotQuery(MatchQuery("properties.nst", "*")),
+            fields = listOf(Field("properties.nst"))
+        )
         val result = syncDao.search(request)
         assertEquals(27, result.totalItems)
     }

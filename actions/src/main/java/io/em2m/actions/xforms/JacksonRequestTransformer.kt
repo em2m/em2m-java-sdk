@@ -44,7 +44,13 @@ class JacksonRequestTransformer(
             } else if (contentType.contains("multipart")) {
                 val form = ctx.multipart?.form
                 if (form != null) {
-                    ctx.request = objectMapper.convertValue(form, type)
+                    val body = form["body"]
+                    val formContentType = form["contentType"] ?: "".lowercase(Locale.getDefault())
+                    if (formContentType.contains("json") && body != null) {
+                        ctx.request = objectMapper.readValue(body, type)
+                    } else {
+                        ctx.request = objectMapper.convertValue(form, type)
+                    }
                 }
             }
         } catch (jsonEx: JsonProcessingException) {
