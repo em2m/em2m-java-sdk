@@ -8,7 +8,7 @@ import io.em2m.simplex.parser.DateMathParser
 import org.joda.time.DateTimeZone
 import java.util.*
 
-class RequestConverter(val objectMapper: ObjectMapper = jacksonObjectMapper(), val es6: Boolean = false) {
+class RequestConverter(private val objectMapper: ObjectMapper = jacksonObjectMapper()) {
 
     fun convert(request: SearchRequest): EsSearchRequest {
 
@@ -22,7 +22,7 @@ class RequestConverter(val objectMapper: ObjectMapper = jacksonObjectMapper(), v
         return EsSearchRequest(from = from, size = size, query = query, aggs = aggs, sort = sort, source = fields)
     }
 
-    fun convertQuery(query: Query?, params: Map<String, Any>?): EsQuery = when (query) {
+    private fun convertQuery(query: Query?, params: Map<String, Any>?): EsQuery = when (query) {
         is AndQuery -> {
             EsBoolQuery(must = query.of.map { convertQuery(it, params) })
         }
@@ -86,7 +86,7 @@ class RequestConverter(val objectMapper: ObjectMapper = jacksonObjectMapper(), v
         }
     }
 
-    fun sortType(sort: Agg.Sort?): EsSortType {
+    private fun sortType(sort: Agg.Sort?): EsSortType {
         return if (sort?.type == Agg.Sort.Type.Lexical) {
             EsSortType.TERM
         } else {
@@ -94,7 +94,7 @@ class RequestConverter(val objectMapper: ObjectMapper = jacksonObjectMapper(), v
         }
     }
 
-    fun sortDirection(sort: Agg.Sort?): EsSortDirection {
+    private fun sortDirection(sort: Agg.Sort?): EsSortDirection {
         return if (sort?.direction == Direction.Ascending) {
             EsSortDirection.ASC
         } else {
@@ -103,10 +103,10 @@ class RequestConverter(val objectMapper: ObjectMapper = jacksonObjectMapper(), v
     }
 
 
-    fun convertAggs(aggs: List<Agg>, params: Map<String, Any>): EsAggs {
+    private fun convertAggs(aggs: List<Agg>, params: Map<String, Any>): EsAggs {
         val result = EsAggs()
         val timeZone = DateTimeZone.forID(params["timeZone"] as? String)
-        aggs.forEach {
+        aggs.forEach { it ->
             val subAggs = if (it.aggs.isNotEmpty()) {
                 convertAggs(it.aggs, params)
             } else {
@@ -114,7 +114,15 @@ class RequestConverter(val objectMapper: ObjectMapper = jacksonObjectMapper(), v
             }
             when (it) {
                 is TermsAgg -> {
-                    result.term(it.key, it.field, it.size, sortType(it.sort), sortDirection(it.sort), it.missing, subAggs).minDocCount(it.minDocCount)
+                    result.term(
+                        it.key,
+                        it.field,
+                        it.size,
+                        sortType(it.sort),
+                        sortDirection(it.sort),
+                        it.missing,
+                        subAggs
+                    ).minDocCount(it.minDocCount)
                 }
                 is MissingAgg -> {
                     result.missing(it.key, it.field, subAggs).minDocCount(it.minDocCount)
@@ -129,17 +137,20 @@ class RequestConverter(val objectMapper: ObjectMapper = jacksonObjectMapper(), v
                     result.stats(it.key, it.field).minDocCount(it.minDocCount)
                 }
                 is DateHistogramAgg -> {
-                    result.dateHistogram(it.key, it.field, it.format, it.interval, it.offset, timeZone.id, subAggs).minDocCount(it.minDocCount)
+                    result.dateHistogram(it.key, it.field, it.format, it.interval, it.offset, timeZone.id, subAggs)
+                        .minDocCount(it.minDocCount)
                 }
                 is RangeAgg -> {
-                    val esRanges = result.agg(it.key, "range", subAggs).put("field", it.field).minDocCount(it.minDocCount)
+                    val esRanges =
+                        result.agg(it.key, "range", subAggs).put("field", it.field).minDocCount(it.minDocCount)
                             .withArray("ranges")
                     it.ranges.forEach {
                         esRanges.addPOJO(it)
                     }
                 }
                 is DateRangeAgg -> {
-                    val esAgg = result.agg(it.key, "date_range", subAggs).put("field", it.field).minDocCount(it.minDocCount)
+                    val esAgg =
+                        result.agg(it.key, "date_range", subAggs).put("field", it.field).minDocCount(it.minDocCount)
                     if (it.format != null) esAgg.put("format", it.format)
                     //if (it.timeZone != null) esAgg.put("time_zone", timeZone.id)
                     val esRanges = esAgg.withArray("ranges")
@@ -165,7 +176,8 @@ class RequestConverter(val objectMapper: ObjectMapper = jacksonObjectMapper(), v
                     }
                 }
                 is GeoHashAgg -> {
-                    val esAgg = result.agg(it.key, "geohash_grid", subAggs).put("field", it.field).minDocCount(it.minDocCount)
+                    val esAgg =
+                        result.agg(it.key, "geohash_grid", subAggs).put("field", it.field).minDocCount(it.minDocCount)
                     val precision = it.precision
                     val size = it.size
                     if (precision != null) esAgg.put("precision", precision)
@@ -178,7 +190,8 @@ class RequestConverter(val objectMapper: ObjectMapper = jacksonObjectMapper(), v
                     result.agg(it.key, "geo_bounds", subAggs).put("field", it.field).minDocCount(it.minDocCount)
                 }
                 is GeoDistanceAgg -> {
-                    val esAgg = result.agg(it.key, "geo_distance", subAggs).put("field", it.field).minDocCount(it.minDocCount)
+                    val esAgg =
+                        result.agg(it.key, "geo_distance", subAggs).put("field", it.field).minDocCount(it.minDocCount)
                     esAgg.putPOJO("origin", it.origin)
                     if (it.unit != null) esAgg.put("unit", it.unit)
                     val esRanges = esAgg.withArray("ranges")
@@ -197,8 +210,8 @@ class RequestConverter(val objectMapper: ObjectMapper = jacksonObjectMapper(), v
                 is FiltersAgg -> {
                     val esAgg = result.agg(it.key, "filters", subAggs)
                     val esFilters = esAgg.with("filters").minDocCount(it.minDocCount)
-                    it.filters.forEach {
-                        esFilters.putPOJO(it.key, convertQuery(it.value, params))
+                    it.filters.forEach { filter ->
+                        esFilters.putPOJO(filter.key, convertQuery(filter.value, params))
                     }
                 }
                 else -> {
@@ -209,11 +222,11 @@ class RequestConverter(val objectMapper: ObjectMapper = jacksonObjectMapper(), v
         return result
     }
 
-    fun convertFields(fields: List<Field>): List<String> {
-        return fields.map { requireNotNull(it.name, { "Field name cannot be null" }) }.sorted().distinct()
+    private fun convertFields(fields: List<Field>): List<String> {
+        return fields.map { requireNotNull(it.name) { "Field name cannot be null" } }.sorted().distinct()
     }
 
-    fun convertSorts(sorts: List<DocSort>): List<Map<String, String>> {
+    private fun convertSorts(sorts: List<DocSort>): List<Map<String, String>> {
         return sorts.map { sort -> mapOf(sort.field to if (sort.direction == Direction.Ascending) "asc" else "desc") }
     }
 
