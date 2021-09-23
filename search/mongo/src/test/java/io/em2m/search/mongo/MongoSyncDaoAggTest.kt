@@ -30,7 +30,8 @@ class MongoSyncDaoAggTest : FeaturesTestBase() {
 
     @Test
     fun testTerms() {
-        val request = SearchRequest(0, 0, MatchAllQuery(), aggs = listOf(TermsAgg("properties.status", key = "statuses")))
+        val request =
+            SearchRequest(0, 0, MatchAllQuery(), aggs = listOf(TermsAgg("properties.status", key = "statuses")))
         val result = syncDao.search(request)
         assertEquals(46, result.totalItems)
         assertEquals(0, result.items?.size)
@@ -45,7 +46,12 @@ class MongoSyncDaoAggTest : FeaturesTestBase() {
 
     @Test
     fun testMissingTerms() {
-        val request = SearchRequest(0, 0, MatchAllQuery(), aggs = listOf(TermsAgg("properties.alert", key = "alerts", missing = "No Alert")))
+        val request = SearchRequest(
+            0,
+            0,
+            MatchAllQuery(),
+            aggs = listOf(TermsAgg("properties.alert", key = "alerts", missing = "No Alert"))
+        )
         val result = syncDao.search(request)
         assertEquals(46, result.totalItems)
         assertEquals(0, result.items?.size)
@@ -60,7 +66,14 @@ class MongoSyncDaoAggTest : FeaturesTestBase() {
 
     @Test
     fun testTermsWithQuery() {
-        val request = SearchRequest(0, 0, RangeQuery("properties.mag", gte = 4), aggs = listOf(TermsAgg("properties.status", key = "statuses")))
+        val request = SearchRequest(
+            limit = 0,
+            query = RangeQuery("properties.mag", gte = 4),
+            aggs = listOf(
+                TermsAgg("properties.status", key = "statuses"),
+                TermsAgg("properties.alert", key = "alerts"),
+            )
+        )
         val result = syncDao.search(request)
         assertEquals(16, result.totalItems)
         assertEquals(0, result.items?.size)
@@ -74,7 +87,12 @@ class MongoSyncDaoAggTest : FeaturesTestBase() {
 
     @Test
     fun testTermsWithSize() {
-        val request = SearchRequest(0, 0, MatchAllQuery(), aggs = listOf(TermsAgg("properties.status", key = "statuses", size = 1)))
+        val request = SearchRequest(
+            0,
+            0,
+            MatchAllQuery(),
+            aggs = listOf(TermsAgg("properties.status", key = "statuses", size = 1))
+        )
         val result = syncDao.search(request)
         assertEquals(46, result.totalItems)
         assertEquals(0, result.items?.size)
@@ -88,7 +106,12 @@ class MongoSyncDaoAggTest : FeaturesTestBase() {
 
     @Test
     fun testFilters() {
-        val request = SearchRequest(0, 0, MatchAllQuery(), aggs = listOf(FiltersAgg(mapOf("green_alerts" to TermQuery("properties.alert", "green")), "test")))
+        val request = SearchRequest(
+            0,
+            0,
+            MatchAllQuery(),
+            aggs = listOf(FiltersAgg(mapOf("green_alerts" to TermQuery("properties.alert", "green")), "test"))
+        )
         val result = syncDao.search(request)
         val agg = result.aggs["test"] ?: error("agg should not be null")
         val buckets = agg.buckets ?: error("buckets should not be null")
@@ -98,7 +121,12 @@ class MongoSyncDaoAggTest : FeaturesTestBase() {
 
     @Test
     fun testHistogram() {
-        val request = SearchRequest(0, 0, MatchAllQuery(), aggs = listOf(HistogramAgg("properties.mag", null, 1.0, key = "magnitude")))
+        val request = SearchRequest(
+            0,
+            0,
+            MatchAllQuery(),
+            aggs = listOf(HistogramAgg("properties.mag", null, 1.0, key = "magnitude"))
+        )
         val result = syncDao.search(request)
         val missing = result.aggs["magnitude"] ?: error("agg should not be null")
         val buckets = missing.buckets ?: error("buckets should not be null")
@@ -108,7 +136,8 @@ class MongoSyncDaoAggTest : FeaturesTestBase() {
 
     @Test
     fun testMissing() {
-        val request = SearchRequest(0, 0, MatchAllQuery(), aggs = listOf(MissingAgg("properties.alert", key = "missing")))
+        val request =
+            SearchRequest(0, 0, MatchAllQuery(), aggs = listOf(MissingAgg("properties.alert", key = "missing")))
         val result = syncDao.search(request)
         val missing = result.aggs["missing"] ?: error("agg should not be null")
         val buckets = missing.buckets ?: error("buckets should not be null")
@@ -118,8 +147,14 @@ class MongoSyncDaoAggTest : FeaturesTestBase() {
 
     @Test
     fun testRange() {
-        val request = SearchRequest(0, 0, MatchAllQuery(), aggs = listOf(RangeAgg("properties.mag", key = "magnitude",
-                ranges = listOf(Range(from = 4.0, key = "4+")))))
+        val request = SearchRequest(
+            0, 0, MatchAllQuery(), aggs = listOf(
+                RangeAgg(
+                    "properties.mag", key = "magnitude",
+                    ranges = listOf(Range(from = 4.0, key = "4+"))
+                )
+            )
+        )
         val result = syncDao.search(request)
         val agg = result.aggs["magnitude"] ?: error("agg should not be null")
         val buckets = agg.buckets ?: error("buckets should not be null")
@@ -143,8 +178,14 @@ class MongoSyncDaoAggTest : FeaturesTestBase() {
 
     @Test
     fun testDateRange() {
-        val request = SearchRequest(0, 0, MatchAllQuery(), aggs = listOf(DateRangeAgg("properties.time", key = "time",
-                ranges = listOf(Range(from = "1408447319000", to = "now", key = "one")))))
+        val request = SearchRequest(
+            0, 0, MatchAllQuery(), aggs = listOf(
+                DateRangeAgg(
+                    "properties.time", key = "time",
+                    ranges = listOf(Range(from = "1408447319000", to = "now", key = "one"))
+                )
+            )
+        )
         val result = syncDao.search(request)
         val agg = result.aggs["time"] ?: error("agg should not be null")
         val buckets = agg.buckets ?: error("buckets should not be null")
@@ -156,7 +197,12 @@ class MongoSyncDaoAggTest : FeaturesTestBase() {
 
     @Test
     fun testDateHistogram() {
-        val request = SearchRequest(0, 0, MatchAllQuery(), aggs = listOf(DateHistogramAgg("properties.time", null, "hour", key = "time")))
+        val request = SearchRequest(
+            0,
+            0,
+            MatchAllQuery(),
+            aggs = listOf(DateHistogramAgg("properties.time", null, "hour", key = "time"))
+        )
         val result = syncDao.search(request)
         val agg = result.aggs["time"] ?: error("agg should not be null")
         val buckets = agg.buckets ?: error("buckets should not be null")
@@ -166,8 +212,16 @@ class MongoSyncDaoAggTest : FeaturesTestBase() {
 
     @Test
     fun testGeoDistance() {
-        val request = SearchRequest(0, 0, MatchAllQuery(), aggs = listOf(GeoDistanceAgg("geometry.coordinates", key = "test",
-                origin = Coordinate(-79.0, 38.0), ranges = listOf(Range(from = 0, to = 1000, key = "<1000miles"), Range(from = 1000)))))
+        val request = SearchRequest(
+            0, 0, MatchAllQuery(), aggs = listOf(
+                GeoDistanceAgg(
+                    "geometry.coordinates",
+                    key = "test",
+                    origin = Coordinate(-79.0, 38.0),
+                    ranges = listOf(Range(from = 0, to = 1000, key = "<1000miles"), Range(from = 1000))
+                )
+            )
+        )
         val result = syncDao.search(request)
         val agg = result.aggs["test"] ?: error("agg should not be null")
         val buckets = agg.buckets ?: error("buckets should not be null")
@@ -178,7 +232,12 @@ class MongoSyncDaoAggTest : FeaturesTestBase() {
 
     @Test
     fun testGeoHash() {
-        val request = SearchRequest(0, 0, MatchAllQuery(), aggs = listOf(GeoHashAgg("geometry.coordinates", precision = 1, key = "geohash")))
+        val request = SearchRequest(
+            0,
+            0,
+            MatchAllQuery(),
+            aggs = listOf(GeoHashAgg("geometry.coordinates", precision = 1, key = "geohash"))
+        )
         val result = syncDao.search(request)
         val agg = result.aggs["geohash"] ?: error("agg should not be null")
         val buckets = agg.buckets ?: error("buckets should not be null")
@@ -188,7 +247,12 @@ class MongoSyncDaoAggTest : FeaturesTestBase() {
 
     @Test
     fun testGeoBounds() {
-        val request = SearchRequest(0, 0, MatchAllQuery(), aggs = listOf(GeoBoundsAgg("geometry.coordinates", key = "geo_bounds")))
+        val request = SearchRequest(
+            0,
+            0,
+            MatchAllQuery(),
+            aggs = listOf(GeoBoundsAgg("geometry.coordinates", key = "geo_bounds"))
+        )
         val result = syncDao.search(request)
         val agg = result.aggs["geo_bounds"] ?: error("agg should not be null")
         agg.value as Envelope? ?: error("Envelope should not be null")
@@ -196,7 +260,12 @@ class MongoSyncDaoAggTest : FeaturesTestBase() {
 
     @Test
     fun testGeoCentroid() {
-        val request = SearchRequest(0, 0, MatchAllQuery(), aggs = listOf(GeoCentroidAgg("geometry.coordinates", key = "centroid")))
+        val request = SearchRequest(
+            0,
+            0,
+            MatchAllQuery(),
+            aggs = listOf(GeoCentroidAgg("geometry.coordinates", key = "centroid"))
+        )
         val result = syncDao.search(request)
         val agg = result.aggs["centroid"] ?: error("agg should not be null")
         agg.value as Coordinate? ?: error("Coordinate should not be null")
@@ -205,7 +274,8 @@ class MongoSyncDaoAggTest : FeaturesTestBase() {
     @Test
     fun testNative() {
         val x = "$"
-        val native = jacksonObjectMapper().readTree("""[{ "${x}unwind": "${x}type" },{ "${x}sortByCount": "${x}type" }]""")
+        val native =
+            jacksonObjectMapper().readTree("""[{ "${x}unwind": "${x}type" },{ "${x}sortByCount": "${x}type" }]""")
         val request = SearchRequest(0, 0, MatchAllQuery(), aggs = listOf(NativeAgg(native, key = "test")))
         val result = syncDao.search(request)
         val agg = result.aggs["test"] ?: error("agg should not be null")
