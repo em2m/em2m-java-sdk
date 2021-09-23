@@ -55,6 +55,8 @@ class JacksonRequestTransformer(
                         } else {
                             ctx.request = objectMapper.convertValue(form, type)
                         }
+                    } else {
+                        ctx.request = objectMapper.convertValue(form, type)
                     }
                     if (accept != null) {
                         (ctx.environment["Headers"] as (MutableMap<String, Any?>))["accept"] = listOf(accept)
