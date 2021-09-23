@@ -37,7 +37,7 @@ import java.util.stream.Collectors
 class MongoSyncDao<T>(
     idMapper: IdMapper<T>,
     private val documentMapper: DocumentMapper<T>,
-    private val collection: MongoCollection<Document>,
+    val collection: MongoCollection<Document>,
     schemaMapper: SchemaMapper = SimpleSchemaMapper("")
 ) :
     AbstractSyncDao<T>(idMapper), StreamableDao<T> {
@@ -225,19 +225,5 @@ class MongoSyncDao<T>(
                 decodeItem(item)
             }.iterator()
     }
-
-    companion object {
-        fun collection(hostName: String, dbName: String, collectionName: String): MongoCollection<Document> {
-
-            /*val settings = MongoClientSettings.builder()
-                .clusterSettings(ClusterSettings.builder().hosts(listOf(ServerAddress(hostName))).build())
-                .build()*/
-
-            val client = MongoClient(listOf(ServerAddress(hostName)))
-            val database = client.getDatabase(dbName)
-            return database.getCollection(collectionName)
-        }
-    }
-
 
 }
