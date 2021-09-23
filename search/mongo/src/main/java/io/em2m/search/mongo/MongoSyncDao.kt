@@ -17,7 +17,9 @@
  */
 package io.em2m.search.mongo
 
+import com.mongodb.MongoClient
 import com.mongodb.ReadPreference
+import com.mongodb.ServerAddress
 import com.mongodb.bulk.BulkWriteResult
 import com.mongodb.client.MongoCollection
 import com.mongodb.client.model.Aggregates
@@ -223,5 +225,19 @@ class MongoSyncDao<T>(
                 decodeItem(item)
             }.iterator()
     }
+
+    companion object {
+        fun collection(hostName: String, dbName: String, collectionName: String): MongoCollection<Document> {
+
+            /*val settings = MongoClientSettings.builder()
+                .clusterSettings(ClusterSettings.builder().hosts(listOf(ServerAddress(hostName))).build())
+                .build()*/
+
+            val client = MongoClient(listOf(ServerAddress(hostName)))
+            val database = client.getDatabase(dbName)
+            return database.getCollection(collectionName)
+        }
+    }
+
 
 }
