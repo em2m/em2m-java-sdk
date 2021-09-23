@@ -17,9 +17,7 @@
  */
 package io.em2m.search.mongo
 
-import com.mongodb.MongoClient
 import com.mongodb.ReadPreference
-import com.mongodb.ServerAddress
 import com.mongodb.bulk.BulkWriteResult
 import com.mongodb.client.MongoCollection
 import com.mongodb.client.model.Aggregates
@@ -32,7 +30,9 @@ import io.em2m.search.core.parser.SchemaMapper
 import io.em2m.search.core.parser.SimpleSchemaMapper
 import org.bson.Document
 import org.bson.conversions.Bson
+import java.util.concurrent.ForkJoinPool
 import java.util.stream.Collectors
+
 
 class MongoSyncDao<T>(
     idMapper: IdMapper<T>,
@@ -108,9 +108,14 @@ class MongoSyncDao<T>(
         val mongoQuery = queryConverter.convertQuery(request.query ?: MatchAllQuery())
         val docs = doSearch(request, mongoQuery)
         val totalItems: Long = doCount(request, mongoQuery)
-        val aggs = request.aggs.parallelStream().map { agg ->
-            doAggs(request, mongoQuery, queryConverter.convertAggs(listOf(agg))).first()
-        }.collect(Collectors.toList())
+        val customThreadPool = ForkJoinPool(request.aggs.size)
+        val aggs = customThreadPool.submit<List<Document>> {
+            request.aggs.parallelStream().map { agg ->
+                doAggs(request, mongoQuery, queryConverter.convertAggs(listOf(agg))).first()
+            }.collect(Collectors.toList())
+        }.get()
+        customThreadPool.shutdown()
+//        val aggs = doAggs(request, mongoQuery, queryConverter.convertAggs(request.aggs))
         return handleResult(request, docs, totalItems, aggs)
     }
 
