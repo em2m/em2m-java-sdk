@@ -46,7 +46,7 @@ class DeepPagingTransformer<T>(private val idField: String) : Transformer<T> {
                 )
             )
         }
-        return OrQuery(queries).simplify()
+        return AndQuery(query ?: MatchAllQuery(), OrQuery(queries)).simplify()
     }
 
     private fun transformFields(fields: List<Field>): List<Field> {
