@@ -19,7 +19,7 @@ class ResultConverter<T>(private val mapper: DocMapper<T>) {
         val totalItems = hits.total
         val aggs = convertAggs(request.aggs, result.aggregations)
 
-        val headers = mapOf("took" to result.took, "scrollId" to result.scrollId)
+        val headers = mapOf("took" to result.took, "scrollId" to result.scrollId).filter { it.value != null }
 
         return SearchResult(aggs, items, rows, totalItems = totalItems, fields = request.fields, headers = headers)
 

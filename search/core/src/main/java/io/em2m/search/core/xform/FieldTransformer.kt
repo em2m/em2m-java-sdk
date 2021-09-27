@@ -14,7 +14,7 @@ class FieldTransformer<T>(val simplex: Simplex, fields: List<FieldModel> = empty
 
     override fun transformRequest(request: SearchRequest, context: ExprContext): SearchRequest {
         val sorts = transformSorts(request.sorts)
-        val fields = transformFields(request.fields, context)
+        val fields = transformFields(request.fields)
         val query = transformQuery(request.query, context)
         val aggs = transformAggs(request.aggs, context)
         return request.copy(sorts = sorts, fields = fields, query = query, aggs = aggs)
@@ -27,8 +27,7 @@ class FieldTransformer<T>(val simplex: Simplex, fields: List<FieldModel> = empty
     ): SearchResult<T> {
         val aggResults = transformAggResults(request, result.aggs)
         val models = reqModels(request.fields)
-        val fields = delegateFields(models)
-        val rows = transformRows(request, result, models, fields, context)
+        val rows = transformRows(request, result, models, context)
         return result.copy(aggs = aggResults, rows = rows, fields = request.fields)
     }
 
@@ -40,7 +39,7 @@ class FieldTransformer<T>(val simplex: Simplex, fields: List<FieldModel> = empty
         return aggs.map { aggsXform.transform(it, context) }
     }
 
-    private fun transformFields(fields: List<Field>, context: ExprContext): List<Field> {
+    private fun transformFields(fields: List<Field>): List<Field> {
 
         // 1. map expression into fields
         // 2. apply aliases
@@ -87,7 +86,6 @@ class FieldTransformer<T>(val simplex: Simplex, fields: List<FieldModel> = empty
             val agg = reqAggs[key]
             val missing = (agg as? TermsAgg)?.missing
             val expr = (agg as? TermsAgg)?.format ?: (agg as? HistogramAgg)?.format
-            val field = (agg as? Fielded)
             val scope: Map<String, Any?> = agg?.extensions ?: emptyMap()
             object : AggResultTransformer() {
 
@@ -126,27 +124,12 @@ class FieldTransformer<T>(val simplex: Simplex, fields: List<FieldModel> = empty
         }
     }
 
-    private fun delegateFields(models: List<FieldModel>): List<Field> {
-        return models.flatMap { model ->
-            if (model.delegateExpr != null) {
-                listOf(Field(expr = model.delegateExpr))
-            } else {
-                model.delegateFields.map { delegate ->
-                    Field(name = delegate)
-                }
-            }
-        }.distinct()
-    }
-
     private fun transformRows(
         req: SearchRequest,
         result: SearchResult<T>,
         models: List<FieldModel>,
-        delegates: List<Field>,
         context: ExprContext
     ): List<List<Any?>>? {
-
-        val lookup = result.fields.mapIndexed { index, field -> field.name to index }
 
         return result.rows?.map { row ->
             val values = HashMap<String, Any?>()
