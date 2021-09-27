@@ -38,14 +38,14 @@ class EsSyncDaoStreamingTest : FeatureTestBase() {
     fun `deep paging transform`() {
         val pagingDao = TransformingDao(DeepPagingTransformer("id"), searchDao)
         val rows = ArrayList<List<Any?>>()
-        val params = mutableMapOf<String, Any>()
+        val params = mutableMapOf<String, Any>("deepPage" to true)
         do {
             val request = SearchRequest(
                 limit = 10,
                 query = MatchAllQuery(),
                 fields = listOf(Field("properties.mag")),
                 params = params
-            ).deepPage(true)
+            )
             val result = pagingDao.search(request)
             rows.addAll(result.rows ?: emptyList())
             val lastKey = result.headers["lastKey"]
