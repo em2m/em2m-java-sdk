@@ -35,8 +35,8 @@ class ExampleServer {
         holder.registration.setMultipartConfig(
             MultipartConfigElement(
                 "/tmp/uploads",
-                1024 * 1024 * 50,
-                1024 * 1024 * 50,
+                1024L * 1024L * 50L,
+                1024L * 1024L * 50L,
                 (1024 * 1024).toInt()
             )
         )

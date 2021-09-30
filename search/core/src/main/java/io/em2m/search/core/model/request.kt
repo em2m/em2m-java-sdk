@@ -2,18 +2,23 @@ package io.em2m.search.core.model
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonInclude
+import io.em2m.utils.coerce
 
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonIgnoreProperties(ignoreUnknown = true)
-data class SearchRequest(var offset: Long = 0, var limit: Long = 0, var query: Query? = null,
-                         var params: Map<String, Any> = emptyMap(),
-                         var fieldSet: String? = null,
-                         var fields: List<Field> = emptyList(),
-                         var sorts: List<DocSort> = emptyList(),
-                         var aggs: List<Agg> = emptyList()) {
+data class SearchRequest(
+    var offset: Long = 0, var limit: Long = 0, var query: Query? = null,
+    var params: Map<String, Any> = emptyMap(),
+    var fieldSet: String? = null,
+    var fields: List<Field> = emptyList(),
+    var sorts: List<DocSort> = emptyList(),
+    var aggs: List<Agg> = emptyList()
+) {
 
     var countTotal: Boolean = true
-    var deepPage: Boolean = false
+
+    val deepPage: Boolean
+        get() = params["deepPage"].coerce() ?: false
 
     fun fields(vararg fields: String): SearchRequest {
         this.fields = this.fields.plus(fields.map { Field(name = it) })
@@ -22,11 +27,6 @@ data class SearchRequest(var offset: Long = 0, var limit: Long = 0, var query: Q
 
     fun countTotal(value: Boolean): SearchRequest {
         this.countTotal = value
-        return this
-    }
-
-    fun deepPage(value: Boolean = true) : SearchRequest {
-        this.deepPage = value
         return this
     }
 
@@ -43,7 +43,12 @@ data class SearchRequest(var offset: Long = 0, var limit: Long = 0, var query: Q
 }
 
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
-data class Field(val name: String? = null, val label: String? = null, val expr: String? = null, val settings: Map<String, Any?> = emptyMap()) {
+data class Field(
+    val name: String? = null,
+    val label: String? = null,
+    val expr: String? = null,
+    val settings: Map<String, Any?> = emptyMap()
+) {
 
     init {
         require(name == null || expr == null) { "Cannot specify both name and expr" }

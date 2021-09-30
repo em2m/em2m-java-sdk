@@ -153,7 +153,7 @@ enum class EsSortType {
 }
 
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
-class EsAggs() {
+class EsAggs {
 
     @JsonIgnore
     private val aggs: MutableMap<String, ObjectNode> = HashMap()
@@ -259,7 +259,7 @@ class EsAggs() {
         return filterAgg
     }
 
-    fun toOrder(type: EsSortType, direction: EsSortDirection): JsonNode {
+    private fun toOrder(type: EsSortType, direction: EsSortDirection): JsonNode {
         val order = instance.objectNode()
         val sortType = if (type == EsSortType.TERM) "_term" else "_count"
         val sortDirection = if (direction == EsSortDirection.ASC) "asc" else "desc"
@@ -355,7 +355,7 @@ class EsSearchResult(
         @JsonProperty("_scroll_id") val scrollId: String?,
         val hits: EsHits) {
 
-    val other = HashMap<String, Any>()
+    private val other = HashMap<String, Any>()
     val aggregations: Map<String, EsAggResult> = emptyMap()
 
     @JsonAnySetter
@@ -377,7 +377,7 @@ class EsAliasAction(var add: EsAliasDefinition? = null, var remove: EsAliasDefin
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 class EsAliasDefinition(val index: String, val alias: String)
 
-class EsAliasRequest() {
+class EsAliasRequest {
     var actions: MutableList<EsAliasAction> = mutableListOf()
 }
 
@@ -459,8 +459,8 @@ interface EsApi {
 
 class EsScrollIterator(private val client: EsApi, result: EsSearchResult, private val scroll: String = "1m") : Iterator<EsHit> {
 
-    var queue: ArrayDeque<EsHit> = ArrayDeque(result.hits.hits)
-    var scrollId = result.scrollId
+    private var queue: ArrayDeque<EsHit> = ArrayDeque(result.hits.hits)
+    private var scrollId = result.scrollId
 
     override fun next(): EsHit {
         if (!hasNext()) {

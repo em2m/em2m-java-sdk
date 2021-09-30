@@ -19,7 +19,7 @@ class ResultConverter<T>(private val mapper: DocMapper<T>) {
         val totalItems = hits.total
         val aggs = convertAggs(request.aggs, result.aggregations)
 
-        val headers = mapOf("took" to result.took, "scrollId" to result.scrollId)
+        val headers = mapOf("took" to result.took, "scrollId" to result.scrollId).filter { it.value != null }
 
         return SearchResult(aggs, items, rows, totalItems = totalItems, fields = request.fields, headers = headers)
 
@@ -151,14 +151,14 @@ class ResultConverter<T>(private val mapper: DocMapper<T>) {
         // sort keyed buckets first in their original, then preserve resulting order for non-keyed buckets
         val order = ranges.mapIndexed { index, range -> range.key to index }.toMap()
         return buckets.mapIndexed { index, bucket -> index to bucket }.sortedBy {
-            order[it.second.key] ?: buckets.size + it.first
+            order[it.second.key] ?: (buckets.size + it.first)
         }.map { it.second }
     }
 
     private fun convertSubAggs(aggs: List<Agg>, other: Map<String, Any?>): Map<String, AggResult> {
         return try {
             val esAggs: MutableMap<String, EsAggResult> = HashMap()
-            other.forEach { key, value ->
+            other.forEach { (key, value) ->
                 val aggResult = objectMapper.convertValue(value, EsAggResult::class.java)
                 if (aggResult != null) {
                     esAggs[key] = aggResult

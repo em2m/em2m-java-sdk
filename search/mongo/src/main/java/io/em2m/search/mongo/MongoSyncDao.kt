@@ -17,9 +17,7 @@
  */
 package io.em2m.search.mongo
 
-import com.mongodb.MongoClient
 import com.mongodb.ReadPreference
-import com.mongodb.ServerAddress
 import com.mongodb.bulk.BulkWriteResult
 import com.mongodb.client.MongoCollection
 import com.mongodb.client.model.Aggregates
@@ -32,25 +30,23 @@ import io.em2m.search.core.parser.SchemaMapper
 import io.em2m.search.core.parser.SimpleSchemaMapper
 import org.bson.Document
 import org.bson.conversions.Bson
-import org.slf4j.LoggerFactory
+import java.util.concurrent.ForkJoinPool
+import java.util.stream.Collectors
+
 
 class MongoSyncDao<T>(
     idMapper: IdMapper<T>,
-    val documentMapper: DocumentMapper<T>,
+    private val documentMapper: DocumentMapper<T>,
     val collection: MongoCollection<Document>,
     schemaMapper: SchemaMapper = SimpleSchemaMapper("")
 ) :
     AbstractSyncDao<T>(idMapper), StreamableDao<T> {
 
-    private val log = LoggerFactory.getLogger(javaClass)
-
-    private val timeout = 10L
-
-    val queryConverter = RequestConverter(schemaMapper)
+    private val queryConverter = RequestConverter(schemaMapper)
 
     override fun create(entity: T): T? {
         val doc = encode(entity)
-        doc.put("_id", generateId())
+        doc["_id"] = generateId()
         collection.insertOne(doc)
         return decodeItem(doc)
     }
@@ -63,7 +59,7 @@ class MongoSyncDao<T>(
         return collection.deleteMany(queryConverter.convertQuery(query)).deletedCount
     }
 
-    fun doSearch(request: SearchRequest, mongoQuery: Bson): List<Document> {
+    private fun doSearch(request: SearchRequest, mongoQuery: Bson): List<Document> {
         return if (request.limit > 0) {
             val fields = Document()
             request.fields.forEach { fields[it.name] = 1 }
@@ -75,13 +71,13 @@ class MongoSyncDao<T>(
         } else emptyList()
     }
 
-    fun doCount(request: SearchRequest, mongoQuery: Bson): Long {
+    private fun doCount(request: SearchRequest, mongoQuery: Bson): Long {
         return if (request.countTotal) {
             collection.count(mongoQuery)
         } else 0L
     }
 
-    fun doAggs(request: SearchRequest, mongoQuery: Bson, mongoAggs: Bson): List<Document> {
+    private fun doAggs(request: SearchRequest, mongoQuery: Bson, mongoAggs: Bson): List<Document> {
         return if (request.aggs.isNotEmpty()) {
             collection
                 .withReadPreference(ReadPreference.secondary())
@@ -91,7 +87,7 @@ class MongoSyncDao<T>(
         }
     }
 
-    fun handleResult(
+    private fun handleResult(
         request: SearchRequest,
         docs: List<Document>,
         totalItems: Long,
@@ -104,16 +100,24 @@ class MongoSyncDao<T>(
             items = items, rows = rows,
             totalItems = if (totalItems > 0) totalItems else docs.size.toLong(),
             fields = fields,
-            aggs = decodeAggs(request, aggs.firstOrNull())
+            aggs = decodeAggs(request, aggs.flatMap { doc -> doc.entries.map { (key, value) -> key to value } }.toMap())
         )
     }
 
     override fun search(request: SearchRequest): SearchResult<T> {
         val mongoQuery = queryConverter.convertQuery(request.query ?: MatchAllQuery())
-        val mongoAggs = queryConverter.convertAggs(request.aggs)
         val docs = doSearch(request, mongoQuery)
         val totalItems: Long = doCount(request, mongoQuery)
-        val aggs = doAggs(request, mongoQuery, mongoAggs)
+        val aggs = if (request.aggs.size > 2) {
+            val customThreadPool = ForkJoinPool(request.aggs.size)
+            val result = customThreadPool.submit<List<Document>> {
+                request.aggs.parallelStream().map { agg ->
+                    doAggs(request, mongoQuery, queryConverter.convertAggs(listOf(agg))).first()
+                }.collect(Collectors.toList())
+            }.get()
+            customThreadPool.shutdown()
+            result
+        } else doAggs(request, mongoQuery, queryConverter.convertAggs(request.aggs))
         return handleResult(request, docs, totalItems, aggs)
     }
 
@@ -134,31 +138,29 @@ class MongoSyncDao<T>(
         return true
     }
 
-    fun encode(value: T): Document {
+    private fun encode(value: T): Document {
         return documentMapper.toDocument(value)
     }
 
-    fun decodeItem(doc: Document): T {
+    private fun decodeItem(doc: Document): T {
         return documentMapper.fromDocument(doc)
     }
 
-    fun getFieldValue(field: String, doc: Document): Any? {
+    private fun getFieldValue(field: String, doc: Document): Any? {
         return field.split(".").fold(doc as Any?)
         { value, property ->
             if (value is Map<*, *>) {
-                value.get(property)
+                value[property]
             } else value
         }
     }
 
-    fun decodeRow(fields: List<Field>, doc: Document): List<Any?> {
+    private fun decodeRow(fields: List<Field>, doc: Document): List<Any?> {
         return fields.map { getFieldValue(requireNotNull(it.name), doc) }
     }
 
-    fun decodeAggs(request: SearchRequest, document: Document?): Map<String, AggResult> {
-        if (document == null) return emptyMap()
+    private fun decodeAggs(request: SearchRequest, document: Map<String, Any>): Map<String, AggResult> {
 
-        log.debug(document.toString())
         val result = HashMap<String, AggResult>()
 
         val aggIndex = request.aggs.associateBy { it.key }
@@ -229,19 +231,6 @@ class MongoSyncDao<T>(
             .map { item ->
                 decodeItem(item)
             }.iterator()
-    }
-
-    companion object {
-        fun collection(hostName: String, dbName: String, collectionName: String): MongoCollection<Document> {
-
-            /*val settings = MongoClientSettings.builder()
-                .clusterSettings(ClusterSettings.builder().hosts(listOf(ServerAddress(hostName))).build())
-                .build()*/
-
-            val client = MongoClient(listOf(ServerAddress(hostName)))
-            val database = client.getDatabase(dbName)
-            return database.getCollection(collectionName)
-        }
     }
 
 }
