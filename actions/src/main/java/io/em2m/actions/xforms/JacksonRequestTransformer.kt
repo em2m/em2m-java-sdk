@@ -11,6 +11,7 @@ import io.em2m.actions.model.TypedActionFlow
 import io.em2m.problem.Problem
 import org.xerial.snappy.SnappyInputStream
 import java.io.IOException
+import java.util.*
 import java.util.zip.DeflaterInputStream
 import java.util.zip.GZIPInputStream
 
@@ -26,7 +27,7 @@ class JacksonRequestTransformer(
             flow.requestType
         } else ObjectNode::class.java
 
-        val contentType = (ctx.environment["ContentType"] as? String ?: "").toLowerCase()
+        val contentType = (ctx.environment["ContentType"] as? String ?: "").lowercase(Locale.getDefault())
 
         if (contentType.contains("xml")) return
 
@@ -43,7 +44,26 @@ class JacksonRequestTransformer(
             } else if (contentType.contains("multipart")) {
                 val form = ctx.multipart?.form
                 if (form != null) {
-                    ctx.request = objectMapper.convertValue(form, type)
+                    val body = form["body"]
+                    val accept = form["accept"]
+                    val filename = form["filename"]
+                    val formContentType = form["contentType"]
+                    if (formContentType != null) {
+                        ctx.environment["ContentType"] = formContentType
+                        if (formContentType.contains("json") && body != null) {
+                            ctx.request = objectMapper.readValue(body, type)
+                        } else {
+                            ctx.request = objectMapper.convertValue(form, type)
+                        }
+                    } else {
+                        ctx.request = objectMapper.convertValue(form, type)
+                    }
+                    if (accept != null) {
+                        (ctx.environment["Headers"] as (MutableMap<String, Any?>))["accept"] = listOf(accept)
+                    }
+                    if (filename != null) {
+                        ctx.response.headers.set("Content-Disposition", "attachment;filename=$filename")
+                    }
                 }
             }
         } catch (jsonEx: JsonProcessingException) {

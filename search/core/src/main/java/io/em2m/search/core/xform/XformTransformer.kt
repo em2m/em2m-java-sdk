@@ -27,7 +27,7 @@ class XformTransformer<T>(val objectMapper: ObjectMapper) : Transformer<T> {
     private fun transformAggResult(request: SearchRequest, agg: XformAgg, result: AggResult): AggResult {
         val expr: Expr? = agg.bucket.coerce(objectMapper = objectMapper)
 
-        var buckets: List<Bucket>? = result.buckets?.mapNotNull { bucket ->
+        val buckets: List<Bucket>? = result.buckets?.mapNotNull { bucket ->
             val fieldValues = mapOf("bucket" to bucket)
             val context = BucketContext(request, emptyMap(), bucket).toMap().plus("fieldValues" to fieldValues)
             expr?.call(context).coerce<Bucket>()

@@ -63,7 +63,7 @@ open class LambdaRuntime(
         val userAgent = headers["User-Agent"]
         val secureTransport = true
         val contentType = request.contentType
-        val contentEncoding = headers["Content-Encoding"]?.toLowerCase()
+        val contentEncoding = headers["Content-Encoding"]?.lowercase(Locale.getDefault())
 
         return mapOf(
                 "CurrentTime" to currentTime,

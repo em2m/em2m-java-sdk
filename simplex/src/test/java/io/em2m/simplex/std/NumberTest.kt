@@ -10,17 +10,20 @@ import org.junit.Test
 
 class NumberTest : Assert() {
 
-    private val keyResolver = BasicKeyResolver(mapOf(
+    private val keyResolver = BasicKeyResolver(
+        mapOf(
             Key("ns", "key1") to ConstKeyHandler("value1"),
             Key("ns", "key2") to ConstKeyHandler("value2"),
             Key("ns", "pie") to ConstKeyHandler(3.14),
             Key("ns", "duration") to ConstKeyHandler(210_000),
-            Key("ns", "five") to ConstKeyHandler(5)))
-            .delegate(Numbers.keys)
+            Key("ns", "five") to ConstKeyHandler(5),
+            Key("ns", "long") to ConstKeyHandler(15115006704646)
+        )
+    ).delegate(Numbers.keys)
 
 
     val simplex = Simplex()
-            .keys(keyResolver)
+        .keys(keyResolver)
 
     @Test
     fun testArgs() {
@@ -61,6 +64,15 @@ class NumberTest : Assert() {
     fun testAdditionError() {
         val exprString = "\${ns:key1 | add:2}"
         val expected = null
+        val expr = requireNotNull(simplex.parser.parse(exprString))
+        val actual = expr.call(emptyMap())
+        assertEquals(expected, actual)
+    }
+
+    @Test
+    fun testNumberPiper() {
+        val expected = "15,115,006,704,646"
+        val exprString = "\${ns:long | number}"
         val expr = requireNotNull(simplex.parser.parse(exprString))
         val actual = expr.call(emptyMap())
         assertEquals(expected, actual)
