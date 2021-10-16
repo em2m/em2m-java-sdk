@@ -108,7 +108,7 @@ class MongoSyncDao<T>(
         val mongoQuery = queryConverter.convertQuery(request.query ?: MatchAllQuery())
         val docs = doSearch(request, mongoQuery)
         val totalItems: Long = doCount(request, mongoQuery)
-        val aggs = if (request.aggs.size > 2) {
+        val aggs = if (request.aggs.size > 2 && false) {
             val customThreadPool = ForkJoinPool(request.aggs.size)
             val result = customThreadPool.submit<List<Document>> {
                 request.aggs.parallelStream().map { agg ->
