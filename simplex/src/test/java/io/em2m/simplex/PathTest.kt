@@ -19,7 +19,8 @@ class PathTest {
 
     val bean = Bean(A(B(c = "value")))
 
-    val json = jacksonObjectMapper().readTree("""
+    val json = jacksonObjectMapper().readTree(
+        """
         {
           "a": {
             "b": {
@@ -28,9 +29,11 @@ class PathTest {
           },
           "d": "dval",
           "e": "eval",
-          "f": ["a", "b", "c"]
+          "f": ["a", "b", "c"],
+          "g": [ { "x" : 1}, { "x": 2} ]
         }
-    """)
+    """
+    )
 
     val map: Map<String, *> = json.coerceNonNull()
 
@@ -103,6 +106,13 @@ class PathTest {
     }
 
     @Test
+    fun testArrayNested() {
+        val expr = PathExpr("g.x")
+        val value = expr.call(map)
+        assertEquals(listOf(1,2), value)
+    }
+
+    @Test
     fun testSimplex() {
         val simplex = Simplex()
         assertEquals("value", simplex.getPath(path, bean))
@@ -122,7 +132,7 @@ class PathTest {
     @Test
     fun testKeyHandlerPrefix() {
         val simplex = Simplex()
-        simplex.keys(BasicKeyResolver().key(Key("field", "*"), PathKeyHandler( "a")))
+        simplex.keys(BasicKeyResolver().key(Key("field", "*"), PathKeyHandler("a")))
         val expr = "\${b.c}"
         val context = map
         assertEquals("value", simplex.eval(expr, context))
