@@ -75,6 +75,14 @@ class PropertyPathPart(val property: String) : PathPart {
                     obj[index]
                 } else if (obj is Array<*> && index != null) {
                     obj[index]
+                } else if (obj is Array<*>) {
+                    obj.map {
+                        get(it)
+                    }
+                } else if (obj is List<*>) {
+                    obj.map {
+                        get(it)
+                    }
                 } else {
                     BeanHelper.getPropertyValue(obj, property)
                 }

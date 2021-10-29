@@ -98,6 +98,12 @@ class Claims(initial: Map<String, Any?> = emptyMap()) {
         set(value) {
             map["roles"] = value
         }
+
+    var app: String?
+        get() = map["app"].coerce()
+        set(value) {
+            map["app"] = value
+        }
 }
 
 
