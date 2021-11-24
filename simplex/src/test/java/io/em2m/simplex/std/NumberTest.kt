@@ -17,7 +17,8 @@ class NumberTest : Assert() {
             Key("ns", "pie") to ConstKeyHandler(3.14),
             Key("ns", "duration") to ConstKeyHandler(210_000),
             Key("ns", "five") to ConstKeyHandler(5),
-            Key("ns", "long") to ConstKeyHandler(15115006704646)
+            Key("ns", "long") to ConstKeyHandler(15115006704646),
+            Key("ns", "string") to ConstKeyHandler("15,115,006,704,646")
         )
     ).delegate(Numbers.keys)
 
@@ -73,6 +74,15 @@ class NumberTest : Assert() {
     fun testNumberPiper() {
         val expected = "15,115,006,704,646"
         val exprString = "\${ns:long | number}"
+        val expr = requireNotNull(simplex.parser.parse(exprString))
+        val actual = expr.call(emptyMap())
+        assertEquals(expected, actual)
+    }
+
+    @Test
+    fun testToLongPiper() {
+        val expected = 15115006704646L
+        val exprString = "\${ns:string | toLong}"
         val expr = requireNotNull(simplex.parser.parse(exprString))
         val actual = expr.call(emptyMap())
         assertEquals(expected, actual)
