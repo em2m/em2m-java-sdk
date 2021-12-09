@@ -29,6 +29,13 @@ class NumberPipe : PipeTransform {
 
 }
 
+class ToLongPipe : PipeTransform {
+    override fun transform(value: Any?, context: ExprContext): Long? {
+
+        return toNumber(value)?.toLong()
+    }
+}
+
 class RoundPipe : PipeTransform {
 
     private var precision: Int = 0
@@ -57,7 +64,7 @@ class RoundPipe : PipeTransform {
 }
 
 
-class TimesPIpe : PipeTransform {
+class TimesPipe : PipeTransform {
 
     private var multiplier: Double = 0.0
 
@@ -186,7 +193,10 @@ class RandomKey : KeyHandler {
 fun toNumber(value: Any?): Number? {
     return when (value) {
         is Number -> value
-        is String -> value.toLongOrNull() ?: value.toDoubleOrNull()
+        is String -> {
+            val trimmedValue = value.replace(",", "").replace(" ", "")
+            trimmedValue.toLongOrNull() ?: trimmedValue.toDoubleOrNull()
+        }
         else -> null
     }
 }
@@ -237,15 +247,16 @@ object Numbers {
 
     val pipes = BasicPipeTransformResolver()
             .transform("number") { NumberPipe() }
+            .transform("toLong") { ToLongPipe() }
             .transform("round") { RoundPipe() }
             .transform("max") { MaxPipe() }
             .transform("min") { MinPipe() }
-            .transform("times") { TimesPIpe() }
+            .transform("times") { TimesPipe() }
             .transform("div") { DivPipe() }
             .transform("plus") { PlusPipe() }
             .transform("minus") { MinusPipe() }
             // deprecated?
-            .transform("multiply") { TimesPIpe() }
+            .transform("multiply") { TimesPipe() }
             .transform("add") { PlusPipe() }
 
     val keys = BasicKeyResolver()
