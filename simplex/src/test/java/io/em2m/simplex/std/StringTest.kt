@@ -62,6 +62,36 @@ class StringTest : Assert() {
     }
 
     @Test
+    fun testPrepend() {
+        val exprString = "\${ns:key3 | prepend:<li>}"
+        val expected = "<li>value1, value2"
+        val expr = requireNotNull(simplex.parser.parse(exprString))
+        val actual = expr.call(emptyMap())
+        assertEquals(expected, actual)
+
+        val listExprString = "\${ns:key4 | prepend:<li>}"
+        val expectedList = listOf("<li>value1, value2", "<li>value3", "<li>value4, value5")
+        val listExpr = requireNotNull(simplex.parser.parse(listExprString))
+        val actualList = listExpr.call(emptyMap())
+        assertEquals(expectedList, actualList)
+    }
+
+    @Test
+    fun testAppend() {
+        val exprString = "\${ns:key1 | append:<li>}"
+        val expected = "value1<li>"
+        val expr = requireNotNull(simplex.parser.parse(exprString))
+        val actual = expr.call(emptyMap())
+        assertEquals(expected, actual)
+
+        val listExprString = "\${ns:key4 | append:<li>}"
+        val expectedList = listOf("value1, value2<li>", "value3<li>", "value4, value5<li>")
+        val listExpr = requireNotNull(simplex.parser.parse(listExprString))
+        val actualList = listExpr.call(emptyMap())
+        assertEquals(expectedList, actualList)
+    }
+
+    @Test
     fun testSplit() {
         val exprString1 = "\${ns:key3 | split:, }"
         val expected1 = listOf("value1", "value2")
