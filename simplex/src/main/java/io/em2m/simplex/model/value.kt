@@ -181,7 +181,7 @@ class BasicPipeTransformResolver(handlers: Map<String, PipeTransform> = emptyMap
     }
 
     fun transform(key: String, transform: PipeTransform): BasicPipeTransformResolver {
-        handlers[key] = { _ -> transform }
+        handlers[key] = { transform }
         return this
     }
 
