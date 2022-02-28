@@ -90,19 +90,11 @@ class RemoveCharsPipe : PipeTransform {
 
     override fun args(args: List<String>) {
         if (args.isNotEmpty()) {
-            println(args)
             disallowedChars = args[0]
         }
     }
 
     private fun removeChars(value: String): String {
-        println(disallowedChars)
-        println(value)
-        println(value.filterNot { char ->
-            println(char)
-            disallowedChars.contains(char)
-        })
-
         return value.filterNot { char -> disallowedChars.contains(char) }
     }
 }
