@@ -146,10 +146,10 @@ class AppendPipe : PipeTransform {
     }
 
     override fun transform(value: Any?, context: ExprContext): Any? {
-        return if (value != null) {
-            value.toString() + text
-        } else {
-            return null
+        return when (value){
+            is Iterable<*> -> value.map { it?.toString()?.plus(text) }
+            is Array<*> -> value.map { it?.toString()?.plus(text) }
+            else -> value?.toString()?.plus(text)
         }
     }
 }
@@ -164,11 +164,15 @@ class PrependPipe : PipeTransform {
     }
 
     override fun transform(value: Any?, context: ExprContext): Any? {
-        return if (value != null) {
-            text + value.toString()
-        } else {
-            return null
+        return when (value){
+            is Iterable<*> -> value.map { it?.toString()?.prepend(text)}
+            is Array<*> -> value.map { it?.toString()?.prepend(text)}
+            else -> value?.toString()?.prepend(text)
         }
+    }
+
+    private fun String.prepend(prefix: String): String {
+        return prefix + this
     }
 }
 
