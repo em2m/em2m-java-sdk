@@ -72,32 +72,38 @@ class FormatPhonePipe : PipeTransform {
 
 class RemoveCharsPipe : PipeTransform {
 
-    var chars = ""
-
+    var disallowedChars = ""
 
     override fun transform(value: Any?, context: ExprContext): Any? {
-        return if (value is Iterable<*>) {
-            value.map { removeChar(it) }
-        } else if (value is Array<*>) {
-            value.map { removeChar(it) }
-        } else {
-            removeChar(value)
+        return when (value) {
+            is Iterable<*> -> {
+                value.map { removeChars(it.toString()) }
+            }
+            is Array<*> -> {
+                value.map { removeChars(it.toString()) }
+            }
+            else -> {
+                removeChars(value.toString())
+            }
         }
     }
 
     override fun args(args: List<String>) {
         if (args.isNotEmpty()) {
-            chars = args[0]
+            println(args)
+            disallowedChars = args[0]
         }
     }
 
-    fun removeChar(value: Any?): Any? {
-        var phoneNumber = value?.toString()
+    private fun removeChars(value: String): String {
+        println(disallowedChars)
+        println(value)
+        println(value.filterNot { char ->
+            println(char)
+            disallowedChars.contains(char)
+        })
 
-        for (c in chars) {
-            phoneNumber = phoneNumber?.replace(c.toString(), "")
-        }
-        return phoneNumber
+        return value.filterNot { char -> disallowedChars.contains(char) }
     }
 }
 
