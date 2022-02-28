@@ -360,7 +360,7 @@ object Strings {
             .transform("urlEncode", UrlEncodePipe())
             .transform("urlDecode", UrlDecodePipe())
             .transform("formatPhone", FormatPhonePipe())
-            .transform("removeChars", RemoveCharsPipe())
+            .transform("removeChars") { RemoveCharsPipe() }
     val keys = BasicKeyResolver()
     val conditions = BasicConditionResolver(StandardStringConditions)
 
