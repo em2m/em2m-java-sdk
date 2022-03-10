@@ -21,6 +21,7 @@ class StringTest : Assert() {
             Key("ns", "key8") to ConstKeyHandler("31121141112"),
             Key("ns", "key9") to ConstKeyHandler(null),
             Key("ns", "key10") to ConstKeyHandler("(123) 456-7890"),
+            Key("ns", "quotes-string") to ConstKeyHandler("\"noquotes\""),
             Key("ns", "pie") to ConstKeyHandler(3.14),
             Key("ns", "duration") to ConstKeyHandler(210_000),
             Key("ns", "five") to ConstKeyHandler(5)))
@@ -58,6 +59,36 @@ class StringTest : Assert() {
         val expr = requireNotNull(simplex.parser.parse(exprString))
         val actual = expr.call(emptyMap())
         assertEquals(expected, actual)
+    }
+
+    @Test
+    fun testPrepend() {
+        val exprString = "\${ns:key3 | prepend:<li>}"
+        val expected = "<li>value1, value2"
+        val expr = requireNotNull(simplex.parser.parse(exprString))
+        val actual = expr.call(emptyMap())
+        assertEquals(expected, actual)
+
+        val listExprString = "\${ns:key4 | prepend:<li>}"
+        val expectedList = listOf("<li>value1, value2", "<li>value3", "<li>value4, value5")
+        val listExpr = requireNotNull(simplex.parser.parse(listExprString))
+        val actualList = listExpr.call(emptyMap())
+        assertEquals(expectedList, actualList)
+    }
+
+    @Test
+    fun testAppend() {
+        val exprString = "\${ns:key1 | append:<li>}"
+        val expected = "value1<li>"
+        val expr = requireNotNull(simplex.parser.parse(exprString))
+        val actual = expr.call(emptyMap())
+        assertEquals(expected, actual)
+
+        val listExprString = "\${ns:key4 | append:<li>}"
+        val expectedList = listOf("value1, value2<li>", "value3<li>", "value4, value5<li>")
+        val listExpr = requireNotNull(simplex.parser.parse(listExprString))
+        val actualList = listExpr.call(emptyMap())
+        assertEquals(expectedList, actualList)
     }
 
     @Test
@@ -120,7 +151,7 @@ class StringTest : Assert() {
     }
 
     @Test
-    fun RemoveCharsPipe() {
+    fun testRemoveCharsPipe() {
         val exprString1 = "\${ns:key10 | removeChars:() -}"
         val expected1 = "1234567890"
         val expr1 = requireNotNull(simplex.parser.parse(exprString1))
@@ -131,7 +162,13 @@ class StringTest : Assert() {
         val expr2 = requireNotNull(simplex.parser.parse(exprString2))
         val actual2 = expr2.call(emptyMap())
 
+        val exprString3 = "\${ns:quotes-string | removeChars:\"}"
+        val expected3 = "noquotes"
+        val expr3 = requireNotNull(simplex.parser.parse(exprString3))
+        val actual3 = expr3.call(emptyMap())
+
         assertEquals(expected1, actual1)
         assertEquals(expected2, actual2)
+        assertEquals(expected3, actual3)
     }
 }
