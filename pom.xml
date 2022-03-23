@@ -26,7 +26,7 @@
     <artifactId>em2m-java-sdk-pom</artifactId>
     <packaging>pom</packaging>
     <name>em2m-java-sdk-pom</name>
-    <version>2.59.0</version>
+    <version>2.60.0</version>
 
     <modules>
         <module>utils</module>
@@ -47,7 +47,7 @@
         <kotlin.version>1.5.31</kotlin.version>
         <kotlin.compiler.jvmTarget>1.8</kotlin.compiler.jvmTarget>
         <jackson.version>2.12.4</jackson.version>
-        <aws.version>1.12.22</aws.version>
+        <aws.version>1.12.129</aws.version>
         <jts.version>1.18.1</jts.version>
         <jetty.version>9.4.27.v20200227</jetty.version>
         <feign.version>10.12</feign.version>
@@ -202,12 +202,6 @@
                 <groupId>com.amazonaws</groupId>
                 <artifactId>aws-java-sdk-sns</artifactId>
                 <version>${aws.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>org.glassfish.hk2</groupId>
-                <artifactId>hk2-api</artifactId>
-                <version>${hk2.version}</version>
             </dependency>
 
         </dependencies>

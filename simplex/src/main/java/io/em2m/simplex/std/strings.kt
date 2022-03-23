@@ -72,32 +72,30 @@ class FormatPhonePipe : PipeTransform {
 
 class RemoveCharsPipe : PipeTransform {
 
-    var chars = ""
-
+    var disallowedChars = ""
 
     override fun transform(value: Any?, context: ExprContext): Any? {
-        return if (value is Iterable<*>) {
-            value.map { removeChar(it) }
-        } else if (value is Array<*>) {
-            value.map { removeChar(it) }
-        } else {
-            removeChar(value)
+        return when (value) {
+            is Iterable<*> -> {
+                value.map { removeChars(it.toString()) }
+            }
+            is Array<*> -> {
+                value.map { removeChars(it.toString()) }
+            }
+            else -> {
+                removeChars(value.toString())
+            }
         }
     }
 
     override fun args(args: List<String>) {
         if (args.isNotEmpty()) {
-            chars = args[0]
+            disallowedChars = args[0]
         }
     }
 
-    fun removeChar(value: Any?): Any? {
-        var phoneNumber = value?.toString()
-
-        for (c in chars) {
-            phoneNumber = phoneNumber?.replace(c.toString(), "")
-        }
-        return phoneNumber
+    private fun removeChars(value: String): String {
+        return value.filterNot { char -> disallowedChars.contains(char) }
     }
 }
 
@@ -148,10 +146,10 @@ class AppendPipe : PipeTransform {
     }
 
     override fun transform(value: Any?, context: ExprContext): Any? {
-        return if (value != null) {
-            value.toString() + text
-        } else {
-            return null
+        return when (value){
+            is Iterable<*> -> value.map { it?.toString()?.plus(text) }
+            is Array<*> -> value.map { it?.toString()?.plus(text) }
+            else -> value?.toString()?.plus(text)
         }
     }
 }
@@ -166,11 +164,15 @@ class PrependPipe : PipeTransform {
     }
 
     override fun transform(value: Any?, context: ExprContext): Any? {
-        return if (value != null) {
-            text + value.toString()
-        } else {
-            return null
+        return when (value){
+            is Iterable<*> -> value.map { it?.toString()?.prepend(text)}
+            is Array<*> -> value.map { it?.toString()?.prepend(text)}
+            else -> value?.toString()?.prepend(text)
         }
+    }
+
+    private fun String.prepend(prefix: String): String {
+        return prefix + this
     }
 }
 
@@ -354,7 +356,7 @@ object Strings {
             .transform("urlEncode", UrlEncodePipe())
             .transform("urlDecode", UrlDecodePipe())
             .transform("formatPhone", FormatPhonePipe())
-            .transform("removeChars", RemoveCharsPipe())
+            .transform("removeChars") { RemoveCharsPipe() }
     val keys = BasicKeyResolver()
     val conditions = BasicConditionResolver(StandardStringConditions)
 

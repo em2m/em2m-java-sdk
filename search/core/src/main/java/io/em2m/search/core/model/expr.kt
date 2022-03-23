@@ -14,7 +14,7 @@ class RowContext(request: SearchRequest, scope: Map<String, Any?>, val fieldValu
             context["fieldValues"] as? Map<String, Any?> ?: emptyMap())
 
     override fun toMap(): Map<String, Any?> {
-        return mapOf("request" to request, "scope" to scope, "fieldValues" to fieldValues)
+        return (scope ?: emptyMap()).plus(listOf("request" to request, "scope" to scope, "fieldValues" to fieldValues))
     }
 }
 

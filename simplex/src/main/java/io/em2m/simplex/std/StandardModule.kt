@@ -23,10 +23,13 @@ class StandardModule : BasicSimplexModule() {
         transforms(Bytes.pipes)
         transforms(Bools.pipes(simplex))
         transforms(Objects.pipes)
+        transforms(Debug.pipes)
 
         conditions(Strings.conditions)
         conditions(Numbers.conditions)
         conditions(Bools.conditions)
         conditions(Dates.conditions)
+
+        execs(Debug.execs)
     }
 }
