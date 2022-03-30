@@ -11,6 +11,8 @@ import java.text.SimpleDateFormat
 import java.time.*
 import java.time.format.DateTimeFormatter
 import java.util.*
+import java.util.Date
+
 
 
 private fun Any?.toDate(): Date? {
@@ -328,6 +330,17 @@ class DatePlusPipe : PipeTransform {
     }
 }
 
+class DateToEpochPipe : PipeTransform {
+    override fun transform(value: Any?, context: ExprContext): Any? {
+        try {
+            return Date(value.coerce()).toInstant().toEpochMilli()
+        } catch (ex: Exception) {
+
+        }
+        return  null
+    }
+}
+
 
 class DateNowHandler : KeyHandler {
 
@@ -387,6 +400,7 @@ object Dates {
         .transform("fromNowUnits") { FromNowUnitsPipe() }
         .transform("nextWeekDay", NextBusinessDayPipe())
         .transform("datePlus") { DatePlusPipe() }
+        .transform("dateToEpoch") { DateToEpochPipe() }
 
     val keys = BasicKeyResolver()
         .key(Key("Date", "now")) { DateNowHandler() }
