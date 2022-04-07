@@ -4,7 +4,6 @@ import io.em2m.simplex.Simplex
 import io.em2m.simplex.model.BasicKeyResolver
 import io.em2m.simplex.model.ConstKeyHandler
 import io.em2m.simplex.model.Key
-import io.em2m.utils.coerce
 import io.em2m.utils.coerceNonNull
 import org.junit.Test
 import java.text.SimpleDateFormat
@@ -12,7 +11,6 @@ import java.util.*
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
-import java.util.Calendar
 
 
 class DateTest {
