@@ -4,6 +4,7 @@ import io.em2m.simplex.Simplex
 import io.em2m.simplex.model.BasicKeyResolver
 import io.em2m.simplex.model.ConstKeyHandler
 import io.em2m.simplex.model.Key
+import io.em2m.utils.coerce
 import io.em2m.utils.coerceNonNull
 import org.junit.Test
 import java.text.SimpleDateFormat
@@ -11,6 +12,7 @@ import java.util.*
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
+import java.util.Calendar
 
 
 class DateTest {
@@ -18,7 +20,9 @@ class DateTest {
     private val keyResolver = BasicKeyResolver(mapOf(
             Key("ns", "dateKey") to ConstKeyHandler("2015-04-21T17:31:06-07"),
             Key("ns", "dateKey2") to ConstKeyHandler("04/21/2015"),
-            //Key("ns", "dateKey") to ConstKeyHandler(1429641066000),
+            Key("ns", "dateKey3") to ConstKeyHandler("03/03/2020"),
+
+        //Key("ns", "dateKey") to ConstKeyHandler(1429641066000),
             Key("ns", "duration") to ConstKeyHandler(210_000)))
             .delegate(Numbers.keys)
 
@@ -62,6 +66,19 @@ class DateTest {
         val calendar = GregorianCalendar()
         calendar.time = date
         assertEquals(2015, calendar.get(Calendar.YEAR))
+    }
+    @Test
+    fun testParseDateEpoch() {
+        val exprString = "\${ns:dateKey3 | parseDate:ms}"
+        val expr = requireNotNull(simplex.parser.parse(exprString))
+        val sdf = SimpleDateFormat("dd/MM/YYYY")
+
+        var result = expr.call(emptyMap())
+        if( result is Long){
+            result = sdf.format(result)
+        }
+        @Suppress("DEPRECATION")
+        assertEquals("03/03/2020", result)
     }
 
     @Test
