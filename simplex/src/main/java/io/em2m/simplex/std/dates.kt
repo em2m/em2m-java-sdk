@@ -28,6 +28,7 @@ private fun Any?.toDate(): Date? {
 class ParseDatePipe : PipeTransform {
     private var zoneId = ZoneId.of("America/Los_Angeles")
     var pattern = "YYYY-mm-dd"
+    var transformToEpoch = false
     private var formatter: DateTimeFormatter = DateTimeFormatter.ofPattern("YYYY-mm-dd")
         .withZone(zoneId)
     private var path: String? = null
@@ -35,6 +36,10 @@ class ParseDatePipe : PipeTransform {
     override fun args(args: List<String>) {
         if (args.isNotEmpty()) {
             pattern = args[0]
+            if( pattern == "ms"){
+                transformToEpoch = true
+                return
+            }
             formatter = DateTimeFormatter.ofPattern(pattern)
             if (args.size == 2) {
                 if (args[1].startsWith("$")) {
@@ -53,16 +58,39 @@ class ParseDatePipe : PipeTransform {
     }
 
     override fun transform(value: Any?, context: ExprContext): Any? {
+        fun transformValue(value: Any): String{
+           var transformed = value.toString().replace("/","-").split("-")
+           if( transformed.last().length == 4 )
+           {
+               transformed = transformed.reversed()
+           }
+            return  transformed.joinToString("-")
+        }
         return if (value != null) {
             try {
-                val sdf = SimpleDateFormat(pattern)
-                sdf.parse(value.toString())
+                if (transformToEpoch) {
+                    val transformedValue =  transformValue(value)
+                    val localTimeHour = LocalDateTime.now().hour
+                    val time = LocalTime.of(localTimeHour,0 )
+                    val secondOffset = TimeZone.getDefault().rawOffset / 36000
+                    val offset = ZoneOffset.ofTotalSeconds(secondOffset)
+
+                    LocalDate.parse(transformedValue.coerce()).toEpochSecond(time,offset) * 1000
+
+                } else{
+                    val sdf = SimpleDateFormat(pattern)
+
+                    sdf.parse(value.toString())
+
+                }
                 //val epoch = date.atStartOfDay(zoneId).toEpochSecond() * 1000
                 //Date(epoch)
             } catch (ex: java.lang.Exception) {
                 null
             }
         } else null
+
+
     }
 
 }
@@ -327,6 +355,7 @@ class DatePlusPipe : PipeTransform {
         } else value
     }
 }
+
 
 
 class DateNowHandler : KeyHandler {
