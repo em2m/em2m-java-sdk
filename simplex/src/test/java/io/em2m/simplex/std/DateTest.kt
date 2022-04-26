@@ -235,6 +235,34 @@ class DateTest {
         val actual = sdf.format(result)
         assertEquals(expected, actual)
     }
+    @Test
+    fun testDatePlus() {
+        val expected = "2015-04-22 17:31"
+        val exprString = "\${ns:dateKey | datePlus:1:d}"
+        val expr = requireNotNull(simplex.parser.parse(exprString))
+        val result = expr.call(emptyMap())
+        val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm")
+        sdf.timeZone = TimeZone.getTimeZone("America/Los_Angeles")
+        val actual = sdf.format(result)
+        assertEquals(expected, actual)
+
+        val exprString2 = "\${ns:dateKey | datePlus:\$offset:d}"
+        val expr2 = requireNotNull(simplex.parser.parse(exprString2))
+        val result2 = expr2.call(mapOf("offset" to 1))
+        val sdf2 = SimpleDateFormat("yyyy-MM-dd HH:mm")
+        sdf2.timeZone = TimeZone.getTimeZone("America/Los_Angeles")
+        val actual2 = sdf2.format(result2)
+        assertEquals(expected, actual2)
+
+        val expected3 = "2015-04-22 17:31"
+        val exprString3 = "\${ns:dateKey | datePlus:1:d:\$timeZone}"
+        val expr3 = requireNotNull(simplex.parser.parse(exprString3))
+        val result3 = expr3.call(mapOf("timeZone" to "America/Chicago"))
+        val sdf3 = SimpleDateFormat("yyyy-MM-dd HH:mm")
+        sdf3.timeZone = TimeZone.getTimeZone("America/Los_Angeles")
+        val actual3 = sdf3.format(result3)
+        assertEquals(expected3, actual3)
+    }
 
 
 }
