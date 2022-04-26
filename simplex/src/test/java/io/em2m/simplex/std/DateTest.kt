@@ -19,6 +19,12 @@ class DateTest {
             Key("ns", "dateKey") to ConstKeyHandler("2015-04-21T17:31:06-07"),
             Key("ns", "dateKey2") to ConstKeyHandler("04/21/2015"),
             Key("ns", "dateKey3") to ConstKeyHandler("03/03/2020"),
+            Key("ns", "YearDayMonth") to ConstKeyHandler("2018/15/10"),
+            Key("ns", "YearMonthDay") to ConstKeyHandler("2018/11/18"),
+            Key("ns", "DayMonthYear") to ConstKeyHandler("18/11/2018"),
+            Key("ns", "DayMonthYearSlashes") to ConstKeyHandler("18-11-2018"),
+            Key("ns", "YearMonthDayNoSeparations") to ConstKeyHandler("20181118"),
+
 
         //Key("ns", "dateKey") to ConstKeyHandler(1429641066000),
             Key("ns", "duration") to ConstKeyHandler(210_000)))
@@ -67,7 +73,7 @@ class DateTest {
     }
     @Test
     fun testParseDateEpoch() {
-        val exprString = "\${ns:dateKey3 | parseDate:ms}"
+        val exprString = "\${ns:dateKey3 | parseDate:}"
         val expr = requireNotNull(simplex.parser.parse(exprString))
         val sdf = SimpleDateFormat("dd/MM/YYYY")
 
@@ -93,6 +99,19 @@ class DateTest {
         val result = pipe.transform(0, emptyMap())
         assertEquals("0 seconds", result)
     }
+    @Test
+    fun testParseDateYearMonthDay() {
+        val exprString = "\${ns:YearMonthDay| parseDate:}"
+        val expr = requireNotNull(simplex.parser.parse(exprString))
+        val sdf = SimpleDateFormat("dd/MM/YYYY")
+
+        var result = expr.call(emptyMap())
+        if( result is Long){
+            result = sdf.format(result)
+        }
+        @Suppress("DEPRECATION")
+        assertEquals("18/11/2018", result)
+    }
 
     @Test
     fun testFormatDateWithColon() {
@@ -101,7 +120,19 @@ class DateTest {
         val result = expr.call(emptyMap())
         assertEquals("2015-04-21 17:31", result)
     }
+    @Test
+    fun testParseDateYearMonthDayUTC() {
+        val exprString = "\${ns:YearMonthDay| parseDate::UTC}"
+        val expr = requireNotNull(simplex.parser.parse(exprString))
+        val sdf = SimpleDateFormat("dd/MM/YYYY Z")
 
+        var result = expr.call(emptyMap())
+        if( result is Long){
+            result = sdf.format(result)
+        }
+        @Suppress("DEPRECATION")
+        assertEquals("17/11/2018 -0500", result)
+    }
     @Test
     fun testFormatDateWithTimeZoneReference() {
         val exprString = "\${ns:dateKey | formatDate:yyyy-MM-dd HH\\:mm:\$timeZone}"
@@ -109,6 +140,47 @@ class DateTest {
         val result = expr.call(mapOf("timeZone" to "America/Los_Angeles"))
         assertEquals("2015-04-21 17:31", result)
     }
+    @Test
+    fun testParseDateDayMonthYear() {
+        val exprString = "\${ns:DayMonthYear | parseDate:}"
+        val expr = requireNotNull(simplex.parser.parse(exprString))
+        val sdf = SimpleDateFormat("dd/MM/YYYY")
+
+        var result = expr.call(emptyMap())
+        if( result is Long){
+            result = sdf.format(result)
+        }
+        @Suppress("DEPRECATION")
+        assertEquals("18/11/2018", result)
+    }
+
+    @Test
+    fun testParseDateYearMonthDayNotSeparated() {
+        val exprString = "\${ns:YearMonthDayNoSeparations | parseDate:}"
+        val expr = requireNotNull(simplex.parser.parse(exprString))
+        val sdf = SimpleDateFormat("dd/MM/YYYY")
+
+        var result = expr.call(emptyMap())
+        if( result is Long){
+            result = sdf.format(result)
+        }
+        @Suppress("DEPRECATION")
+        assertEquals("18/11/2018", result)
+    }
+    @Test
+    fun testParseDateYearMonthDaySeparatedBySlash() {
+        val exprString = "\${ns:DayMonthYearSlashes| parseDate:}"
+        val expr = requireNotNull(simplex.parser.parse(exprString))
+        val sdf = SimpleDateFormat("dd/MM/YYYY")
+
+        var result = expr.call(emptyMap())
+        if( result is Long){
+            result = sdf.format(result)
+        }
+        @Suppress("DEPRECATION")
+        assertEquals("18/11/2018", result)
+    }
+
 
 
     /*
@@ -163,7 +235,6 @@ class DateTest {
         val actual = sdf.format(result)
         assertEquals(expected, actual)
     }
-
     @Test
     fun testDatePlus() {
         val expected = "2015-04-22 17:31"
@@ -192,5 +263,6 @@ class DateTest {
         val actual3 = sdf3.format(result3)
         assertEquals(expected3, actual3)
     }
+
 
 }
