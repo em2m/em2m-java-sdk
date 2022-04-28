@@ -104,6 +104,12 @@ class Claims(initial: Map<String, Any?> = emptyMap()) {
         set(value) {
             map["app"] = value
         }
+
+    var via: String?
+        get() = map["via"].coerce()
+        set(value) {
+            map["via"] = value
+        }
 }
 
 

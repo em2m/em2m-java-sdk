@@ -10,16 +10,50 @@ import org.joda.time.DateTimeZone
 import java.text.SimpleDateFormat
 import java.time.*
 import java.time.format.DateTimeFormatter
+import java.time.format.DateTimeParseException
 import java.util.*
 
+private  val USformatter = DateTimeFormatter.ofPattern(
+    ""
+    + "[yyyy-MM-dd'T'HH:mm-ss]"
+    + "[yyyy-MM-dd'T'HH:mm:ssZ]"
+    + "[yyMMddHHmmssZ]"
+    + "[yyyy-MM-dd]"
+    + "[dd-MM-yyyy]"
+    + "[yyyyMMdd]"
+    + "[dd/MM/yyyy]"
+    + "[yyyy/MM/dd]"
+)
 
-private fun Any?.toDate(): Date? {
+private val EuropeanFormatter = DateTimeFormatter.ofPattern(
+    ""
+        + "[yyyy-MM-dd'T'HH:mm:ssZ]"
+        + "[yyddMMHHmmssZ]"
+        + "[yyyy-dd-MM]"
+        + "[MM-dd-yyyy]"
+        + "[yyyyddMM]"
+        + "[MM/dd/yyyy]"
+        + "[yyyy/dd/MM]"
+)
+
+fun Any?.toDate(zone:ZoneId? = ZoneId.of("America/Los_Angeles")): Date? {
     return when (this) {
         is Date -> {
             this
         }
         is Number -> {
             Date(this.toLong())
+        }
+        is String ->{
+            try{
+                Date.from(LocalDate.parse(this, USformatter).atStartOfDay(zone).toInstant())
+            }catch (ex: DateTimeParseException){
+                try{
+                    Date.from(LocalDate.parse(this, EuropeanFormatter).atStartOfDay(zone).toInstant())
+                }catch (ex: Exception){
+                    this.coerce()
+                }
+            }
         }
         else -> this.coerce()
     }
@@ -28,6 +62,7 @@ private fun Any?.toDate(): Date? {
 class ParseDatePipe : PipeTransform {
     private var zoneId = ZoneId.of("America/Los_Angeles")
     var pattern = "YYYY-mm-dd"
+    var returnMliseconds = false
     private var formatter: DateTimeFormatter = DateTimeFormatter.ofPattern("YYYY-mm-dd")
         .withZone(zoneId)
     private var path: String? = null
@@ -35,6 +70,13 @@ class ParseDatePipe : PipeTransform {
     override fun args(args: List<String>) {
         if (args.isNotEmpty()) {
             pattern = args[0]
+            if( pattern.isEmpty()){
+                returnMliseconds = true
+                if(args.size == 2  && args[1].isNotEmpty()){
+                    zoneId = ZoneId.of(args[1])
+                }
+                return
+            }
             formatter = DateTimeFormatter.ofPattern(pattern)
             if (args.size == 2) {
                 if (args[1].startsWith("$")) {
@@ -55,14 +97,22 @@ class ParseDatePipe : PipeTransform {
     override fun transform(value: Any?, context: ExprContext): Any? {
         return if (value != null) {
             try {
-                val sdf = SimpleDateFormat(pattern)
-                sdf.parse(value.toString())
+                if (returnMliseconds) {
+                        value.toDate(zoneId)?.time
+                } else{
+                    val sdf = SimpleDateFormat(pattern)
+
+                    sdf.parse(value.toString())
+
+                }
                 //val epoch = date.atStartOfDay(zoneId).toEpochSecond() * 1000
                 //Date(epoch)
             } catch (ex: java.lang.Exception) {
                 null
             }
         } else null
+
+
     }
 
 }
@@ -327,6 +377,7 @@ class DatePlusPipe : PipeTransform {
         } else value
     }
 }
+
 
 
 class DateNowHandler : KeyHandler {

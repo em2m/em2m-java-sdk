@@ -73,11 +73,17 @@ class BooleanLabelPipe : PipeTransform {
     }
 
     override fun transform(value: Any?, context: ExprContext): Any? {
+        val booleanValue = when (value) {
+            is Boolean -> value
+            is String -> value.toBoolean()
+            is Int -> value != 0
+            else -> null
+        }
         return when {
-            value == true -> {
+            booleanValue == true -> {
                 trueLabel
             }
-            value == false -> {
+            booleanValue == false -> {
                 falseLabel
             }
             nullLabel != null -> {
