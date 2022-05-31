@@ -186,7 +186,7 @@ class EsAggs {
         return agg.with(type)
     }
 
-    fun term(name: String, field: String, size: Int, sortType: EsSortType, sortDirection: EsSortDirection, missing: Any? = null, subAggs: EsAggs? = null): ObjectNode {
+    fun term(name: String, field: String, size: Int, sortType: EsSortType, sortDirection: EsSortDirection, missing: Any? = null, include: String? = null, subAggs: EsAggs? = null): ObjectNode {
         val body = agg(name, "terms", subAggs)
         body.put("field", field)
         body.put("size", size)

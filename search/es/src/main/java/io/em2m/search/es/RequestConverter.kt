@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.em2m.search.core.model.*
 import io.em2m.simplex.parser.DateMathParser
+import io.em2m.utils.coerce
 import org.joda.time.DateTimeZone
 import java.util.*
 
@@ -114,6 +115,7 @@ class RequestConverter(private val objectMapper: ObjectMapper = jacksonObjectMap
             }
             when (it) {
                 is TermsAgg -> {
+                    val include: String? = it.extensions["include"]?.coerce()
                     result.term(
                         it.key,
                         it.field,
@@ -121,7 +123,8 @@ class RequestConverter(private val objectMapper: ObjectMapper = jacksonObjectMap
                         sortType(it.sort),
                         sortDirection(it.sort),
                         it.missing,
-                        subAggs
+                        include,
+                        subAggs = subAggs
                     ).minDocCount(it.minDocCount)
                 }
                 is MissingAgg -> {
