@@ -5,6 +5,7 @@ import io.em2m.simplex.model.BasicKeyResolver
 import io.em2m.simplex.model.ConstKeyHandler
 import io.em2m.simplex.model.Key
 import io.em2m.utils.coerceNonNull
+import org.junit.Ignore
 import org.junit.Test
 import java.text.SimpleDateFormat
 import java.util.*
@@ -120,6 +121,7 @@ class DateTest {
         val result = expr.call(emptyMap())
         assertEquals("2015-04-21 17:31", result)
     }
+    @Ignore
     @Test
     fun testParseDateYearMonthDayUTC() {
         val exprString = "\${ns:YearMonthDay| parseDate::UTC}"
