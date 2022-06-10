@@ -190,6 +190,9 @@ class EsAggs {
         val body = agg(name, "terms", subAggs)
         body.put("field", field)
         body.put("size", size)
+        if  (include != null) {
+            body.put("include", include)
+        }
         body.set<JsonNode>("order", toOrder(sortType, sortDirection))
         if (missing != null) {
             body.putPOJO("missing", missing)
