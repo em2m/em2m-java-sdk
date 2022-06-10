@@ -18,7 +18,7 @@ import org.eclipse.jetty.server.handler.HandlerList
 import org.eclipse.jetty.servlet.ServletContextHandler
 import org.eclipse.jetty.servlet.ServletHolder
 import org.slf4j.LoggerFactory
-import javax.servlet.MultipartConfigElement
+import jakarta.servlet.MultipartConfigElement
 
 
 class ExampleServer {
