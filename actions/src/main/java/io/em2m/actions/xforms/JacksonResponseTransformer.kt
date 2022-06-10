@@ -7,7 +7,7 @@ import io.em2m.actions.model.ActionTransformer
 import io.em2m.actions.model.Priorities
 import io.em2m.problem.Problem
 import java.io.IOException
-import javax.servlet.http.HttpServletResponse
+import jakarta.servlet.http.HttpServletResponse
 
 class JacksonResponseTransformer(val objectMapper: ObjectMapper = jacksonObjectMapper(), override val priority: Int = Priorities.RESPONSE) : ActionTransformer {
 

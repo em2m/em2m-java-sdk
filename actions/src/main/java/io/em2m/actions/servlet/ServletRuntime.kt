@@ -9,9 +9,9 @@ import io.em2m.policy.model.Claims
 import io.em2m.problem.Problem
 import java.io.InputStream
 import java.util.*
-import javax.servlet.http.HttpServletRequest
-import javax.servlet.http.HttpServletResponse
-import javax.servlet.http.Part
+import jakarta.servlet.http.HttpServletRequest
+import jakarta.servlet.http.HttpServletResponse
+import jakarta.servlet.http.Part
 
 
 open class ServletRuntime(private val actionPrefix: String, private val processor: ActionProcessor, private val mapper: ObjectMapper = jacksonObjectMapper()) {
