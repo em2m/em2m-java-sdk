@@ -203,6 +203,7 @@ class PathExpr(val path: String) {
             next.getOrPut(acc) { HashMap<String, Any?>() }
         }
         when (val currentValue = parts.last().get(parent)) {
+            null -> setValue(context, value)
             is Collection<*> -> {
                 when (value) {
                     is Collection<*> -> setValue(context, currentValue + value)

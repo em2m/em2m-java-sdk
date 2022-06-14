@@ -31,7 +31,8 @@ class PathTest {
           "d": "dval",
           "e": "eval",
           "f": ["a", "b", "c"],
-          "g": [ { "x" : 1}, { "x": 2} ]
+          "g": [ { "x" : 1}, { "x": 2} ],
+          "h": null
         }
     """
     )
@@ -102,6 +103,14 @@ class PathTest {
         expr.addValue(map, "addedValue")
 
         assertEquals(listOf("0", "1", "2", "addedValue"), expr.call(map))
+    }
+
+    @Test
+    fun testAddToNull() {
+        val expr = PathExpr("h")
+        expr.addValue(map, listOf("addedValue", "anotherAddedValue"))
+
+        assertEquals(listOf("addedValue", "anotherAddedValue"), expr.call(map))
     }
 
     @Test
