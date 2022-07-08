@@ -7,12 +7,15 @@ import io.em2m.utils.coerce
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class SearchRequest(
-    var offset: Long = 0, var limit: Long = 0, var query: Query? = null,
+    var offset: Long = 0,
+    var limit: Long = 0,
+    var query: Query? = null,
     var params: Map<String, Any> = emptyMap(),
     var fieldSet: String? = null,
     var fields: List<Field> = emptyList(),
     var sorts: List<DocSort> = emptyList(),
-    var aggs: List<Agg> = emptyList()
+    var aggs: List<Agg> = emptyList(),
+    var collation: MongoCollation? = null
 ) {
 
     var countTotal: Boolean = true
@@ -39,6 +42,13 @@ data class SearchRequest(
         this.aggs = aggs.asList()
         return this
     }
+
+}
+
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
+data class MongoCollation(
+    val locale: String? = null
+) {
 
 }
 

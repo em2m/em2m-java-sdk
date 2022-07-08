@@ -21,6 +21,7 @@ import com.mongodb.ReadPreference
 import com.mongodb.bulk.BulkWriteResult
 import com.mongodb.client.MongoCollection
 import com.mongodb.client.model.Aggregates
+import com.mongodb.client.model.Collation
 import com.mongodb.client.model.Filters
 import com.mongodb.client.model.ReplaceOneModel
 import com.mongodb.client.model.UpdateOptions
@@ -62,10 +63,13 @@ class MongoSyncDao<T>(
     private fun doSearch(request: SearchRequest, mongoQuery: Bson): List<Document> {
         return if (request.limit > 0) {
             val fields = Document()
+            val localeValue = request.collation?.locale ?: "en_US";
+
             request.fields.forEach { fields[it.name] = 1 }
             collection.find(mongoQuery)
                 .projection(fields)
                 .sort(queryConverter.convertSorts(request.sorts))
+                .collation(Collation.builder().locale(localeValue).build())
                 .limit(request.limit.toInt()).skip(request.offset.toInt())
                 .toList()
         } else emptyList()
