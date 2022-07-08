@@ -2,7 +2,7 @@ package io.em2m.actions.servlet
 
 import io.em2m.actions.model.Response
 import java.io.OutputStream
-import javax.servlet.http.HttpServletResponse
+import jakarta.servlet.http.HttpServletResponse
 
 
 class ServletResponse(

@@ -198,6 +198,22 @@ class PathExpr(val path: String) {
         parts.last().put(parent, value)
     }
 
+    fun addValue(context: Any?, value: Any?) {
+        val parent = parts.dropLast(1).fold(context) { acc, next ->
+            next.getOrPut(acc) { HashMap<String, Any?>() }
+        }
+        when (val currentValue = parts.last().get(parent)) {
+            null -> setValue(context, value)
+            is Collection<*> -> {
+                when (value) {
+                    is Collection<*> -> setValue(context, currentValue + value)
+                    else -> setValue(context, currentValue + value)
+                }
+            }
+            else -> {}
+        }
+    }
+
     fun removeValue(context: Any?) {
         val parent = parts.dropLast(1).fold(context) { acc, next ->
             next.get(acc)
