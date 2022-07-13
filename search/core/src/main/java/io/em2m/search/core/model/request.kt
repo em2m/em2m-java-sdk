@@ -14,8 +14,7 @@ data class SearchRequest(
     var fieldSet: String? = null,
     var fields: List<Field> = emptyList(),
     var sorts: List<DocSort> = emptyList(),
-    var aggs: List<Agg> = emptyList(),
-    var collation: MongoCollation? = null
+    var aggs: List<Agg> = emptyList()
 ) {
 
     var countTotal: Boolean = true
@@ -42,13 +41,6 @@ data class SearchRequest(
         this.aggs = aggs.asList()
         return this
     }
-
-}
-
-@JsonInclude(JsonInclude.Include.NON_EMPTY)
-data class MongoCollation(
-    val locale: String? = null
-) {
 
 }
 

@@ -63,15 +63,22 @@ class MongoSyncDao<T>(
     private fun doSearch(request: SearchRequest, mongoQuery: Bson): List<Document> {
         return if (request.limit > 0) {
             val fields = Document()
-            val localeValue = request.collation?.locale ?: "en_US";
-
             request.fields.forEach { fields[it.name] = 1 }
-            collection.find(mongoQuery)
-                .projection(fields)
-                .sort(queryConverter.convertSorts(request.sorts))
-                .collation(Collation.builder().locale(localeValue).build())
-                .limit(request.limit.toInt()).skip(request.offset.toInt())
-                .toList()
+            val locale: String? = request.params["locale"]?.toString()
+            if (locale != null) {
+                collection.find(mongoQuery)
+                    .projection(fields)
+                    .collation(Collation.builder().locale(locale).build())
+                    .sort(queryConverter.convertSorts(request.sorts))
+                    .limit(request.limit.toInt()).skip(request.offset.toInt())
+                    .toList()
+            } else {
+                collection.find(mongoQuery)
+                    .projection(fields)
+                    .sort(queryConverter.convertSorts(request.sorts))
+                    .limit(request.limit.toInt()).skip(request.offset.toInt())
+                    .toList()
+            }
         } else emptyList()
     }
 
