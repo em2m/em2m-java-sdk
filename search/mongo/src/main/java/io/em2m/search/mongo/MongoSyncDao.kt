@@ -32,6 +32,7 @@ import org.bson.Document
 import org.bson.conversions.Bson
 import java.util.concurrent.ForkJoinPool
 import java.util.stream.Collectors
+import com.mongodb.client.model.Collation
 
 
 class MongoSyncDao<T>(
@@ -63,11 +64,21 @@ class MongoSyncDao<T>(
         return if (request.limit > 0) {
             val fields = Document()
             request.fields.forEach { fields[it.name] = 1 }
-            collection.find(mongoQuery)
-                .projection(fields)
-                .sort(queryConverter.convertSorts(request.sorts))
-                .limit(request.limit.toInt()).skip(request.offset.toInt())
-                .toList()
+            val locale: String? = request.params["locale"]?.toString()
+            if (locale != null) {
+                collection.find(mongoQuery)
+                    .projection(fields)
+                    .collation(Collation.builder().locale(locale).build())
+                    .sort(queryConverter.convertSorts(request.sorts))
+                    .limit(request.limit.toInt()).skip(request.offset.toInt())
+                    .toList()
+            } else {
+                collection.find(mongoQuery)
+                    .projection(fields)
+                    .sort(queryConverter.convertSorts(request.sorts))
+                    .limit(request.limit.toInt()).skip(request.offset.toInt())
+                    .toList()
+            }
         } else emptyList()
     }
 
