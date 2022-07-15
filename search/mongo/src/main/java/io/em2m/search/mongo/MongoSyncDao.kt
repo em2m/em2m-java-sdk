@@ -33,6 +33,7 @@ import org.bson.Document
 import org.bson.conversions.Bson
 import java.util.concurrent.ForkJoinPool
 import java.util.stream.Collectors
+import com.mongodb.client.model.Collation
 
 
 class MongoSyncDao<T>(
