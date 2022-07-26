@@ -21,6 +21,7 @@ import com.mongodb.ReadPreference
 import com.mongodb.bulk.BulkWriteResult
 import com.mongodb.client.MongoCollection
 import com.mongodb.client.model.Aggregates
+import com.mongodb.client.model.Collation
 import com.mongodb.client.model.Filters
 import com.mongodb.client.model.ReplaceOneModel
 import com.mongodb.client.model.UpdateOptions
@@ -63,11 +64,21 @@ class MongoSyncDao<T>(
         return if (request.limit > 0) {
             val fields = Document()
             request.fields.forEach { fields[it.name] = 1 }
-            collection.find(mongoQuery)
-                .projection(fields)
-                .sort(queryConverter.convertSorts(request.sorts))
-                .limit(request.limit.toInt()).skip(request.offset.toInt())
-                .toList()
+            val locale: String? = request.params["locale"]?.toString()
+            if (locale != null) {
+                collection.find(mongoQuery)
+                    .projection(fields)
+                    .collation(Collation.builder().locale(locale).build())
+                    .sort(queryConverter.convertSorts(request.sorts))
+                    .limit(request.limit.toInt()).skip(request.offset.toInt())
+                    .toList()
+            } else {
+                collection.find(mongoQuery)
+                    .projection(fields)
+                    .sort(queryConverter.convertSorts(request.sorts))
+                    .limit(request.limit.toInt()).skip(request.offset.toInt())
+                    .toList()
+            }
         } else emptyList()
     }
 

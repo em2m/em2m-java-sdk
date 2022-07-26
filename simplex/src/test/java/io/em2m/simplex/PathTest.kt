@@ -24,13 +24,15 @@ class PathTest {
         {
           "a": {
             "b": {
-              "c": "value"
+              "c": "value",
+              "d": ["0", "1", "2"]
             }
           },
           "d": "dval",
           "e": "eval",
           "f": ["a", "b", "c"],
-          "g": [ { "x" : 1}, { "x": 2} ]
+          "g": [ { "x" : 1}, { "x": 2} ],
+          "h": null
         }
     """
     )
@@ -85,6 +87,30 @@ class PathTest {
         expr.setValue(obj, "value")
         val value = expr.call(obj)
         assertEquals("value", value)
+    }
+
+    @Test
+    fun testAdd() {
+        val expr = PathExpr("f")
+        expr.addValue(map, listOf("addedValue", "anotherAddedValue"))
+
+        assertEquals(listOf("a", "b", "c", "addedValue", "anotherAddedValue"), expr.call(map))
+    }
+
+    @Test
+    fun testNestedAdd() {
+        val expr = PathExpr("a.b.d")
+        expr.addValue(map, "addedValue")
+
+        assertEquals(listOf("0", "1", "2", "addedValue"), expr.call(map))
+    }
+
+    @Test
+    fun testAddToNull() {
+        val expr = PathExpr("h")
+        expr.addValue(map, listOf("addedValue", "anotherAddedValue"))
+
+        assertEquals(listOf("addedValue", "anotherAddedValue"), expr.call(map))
     }
 
     @Test
