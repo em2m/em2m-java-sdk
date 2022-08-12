@@ -76,11 +76,11 @@ class Problem(val type: String? = null,
     }
 
     object Status {
-        val BAD_REQUEST = 400
-        val NOT_AUTHORIZED = 401
-        val FORBIDDEN = 403
-        val NOT_FOUND = 404
-        val CONFLICT = 409
-        val INTERNAL_SERVER_ERROR = 500
+        const val BAD_REQUEST = 400
+        const val NOT_AUTHORIZED = 401
+        const val FORBIDDEN = 403
+        const val NOT_FOUND = 404
+        const val CONFLICT = 409
+        const val INTERNAL_SERVER_ERROR = 500
     }
 }
