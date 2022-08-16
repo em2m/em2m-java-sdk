@@ -4,13 +4,11 @@ import io.em2m.search.core.model.Bucket
 import io.em2m.search.core.model.BucketContext
 import io.em2m.search.core.model.RowContext
 import io.em2m.search.core.model.SearchRequest
-import io.em2m.simplex.model.BasicKeyResolver
-import io.em2m.simplex.model.BasicPipeTransformResolver
-import io.em2m.simplex.model.ConstKeyHandler
-import io.em2m.simplex.model.Key
+import io.em2m.simplex.model.*
 import io.em2m.simplex.parser.ExprParser
 import io.em2m.simplex.std.Arrays
 import io.em2m.simplex.std.Numbers
+import io.em2m.simplex.std.StandardModule
 import io.em2m.simplex.std.Strings
 import org.junit.Assert
 import org.junit.Test
@@ -18,16 +16,20 @@ import org.junit.Test
 
 class FieldExprTest : Assert() {
 
-    private val keyResolver = BasicKeyResolver(mapOf(
+    private val keyResolver = BasicKeyResolver(
+        mapOf(
             Key("ns", "key1") to ConstKeyHandler("value1"),
             Key("ns", "key2") to ConstKeyHandler("value2"),
             Key("bucket", "key") to BucketKeyKeyHandler(),
-            Key("field", "*") to FieldKeyHandler()))
+            Key("field", "*") to FieldKeyHandler()
+        )
+    )
 
     private val pipeResolver = BasicPipeTransformResolver()
-            .delegate(Numbers.pipes)
-            .delegate(Strings.pipes)
-            .delegate(Arrays.pipes)
+        .delegate(Numbers.pipes)
+        .delegate(Strings.pipes)
+        .delegate(Arrays.pipes)
+        .delegate(StandardModule().pipeResolver)
 
     private val request = SearchRequest()
 
@@ -50,11 +52,15 @@ class FieldExprTest : Assert() {
         val fields = FieldKeyHandler.fields(expr)
         assertEquals(listOf("fieldName"), fields)
         assertNotNull(expr)
-        val result = expr.call(RowContext(
+        val result = expr.call(
+            RowContext(
                 mapOf(
-                        "fieldValues" to mapOf("fieldName" to "fieldValue"),
-                        "request" to request,
-                        "scope" to emptyMap<String, Any?>())).toMap())
+                    "fieldValues" to mapOf("fieldName" to "fieldValue"),
+                    "request" to request,
+                    "scope" to emptyMap<String, Any?>()
+                )
+            ).toMap()
+        )
         assertNotNull(result)
         assertEquals("Label: FieldValue", result)
     }
@@ -84,16 +90,28 @@ class FieldExprTest : Assert() {
 
     @Test
     fun testMultipleFields() {
+        val ifExpr = parser.parse("\${userAgent | join}")
+        val objectExpr = ObjectExpr(listOf(FieldExpr("@if", NotConditionExpr(listOf(ValueConditionExpr(ifExpr))))))
+        val fields = FieldKeyHandler.fields(objectExpr)
+        assertEquals(listOf("userAgent"), fields)
+    }
+
+    @Test
+    fun testAtIfFields() {
         val exprStr = "\${field:key1,key2 | notNull | join:, }"
         val expr = parser.parse(exprStr)
         val fields = FieldKeyHandler.fields(expr)
         assertEquals(listOf("key1", "key2"), fields)
         assertNotNull(expr)
-        val result = expr.call(RowContext(
+        val result = expr.call(
+            RowContext(
                 mapOf(
-                        "fieldValues" to mapOf("key1" to "value1", "key2" to "value2"),
-                        "request" to request,
-                        "scope" to emptyMap<String, Any?>())).toMap())
+                    "fieldValues" to mapOf("key1" to "value1", "key2" to "value2"),
+                    "request" to request,
+                    "scope" to emptyMap<String, Any?>()
+                )
+            ).toMap()
+        )
         assertNotNull(result)
         assertEquals("value1, value2", result)
     }

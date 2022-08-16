@@ -21,6 +21,7 @@ import com.mongodb.ReadPreference
 import com.mongodb.bulk.BulkWriteResult
 import com.mongodb.client.MongoCollection
 import com.mongodb.client.model.Aggregates
+import com.mongodb.client.model.Collation
 import com.mongodb.client.model.Filters
 import com.mongodb.client.model.ReplaceOneModel
 import com.mongodb.client.model.UpdateOptions
@@ -32,7 +33,6 @@ import org.bson.Document
 import org.bson.conversions.Bson
 import java.util.concurrent.ForkJoinPool
 import java.util.stream.Collectors
-import com.mongodb.client.model.Collation
 
 
 class MongoSyncDao<T>(

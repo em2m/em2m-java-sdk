@@ -7,7 +7,7 @@ import java.util.regex.Matcher
 
 class BasicPolicyEngine(policySource: PolicySource, val simplex: Simplex = Simplex()) : PolicyEngine {
 
-    private var LOG = LoggerFactory.getLogger(javaClass)
+    private var logger = LoggerFactory.getLogger(javaClass)
     private val roles = policySource.roles.associateBy { it.id }
     private val policies = policySource.policies.associateBy { it.id }
 
@@ -38,7 +38,7 @@ class BasicPolicyEngine(policySource: PolicySource, val simplex: Simplex = Simpl
         val nAllow = matches.count { it.effect == Effect.Allow }
         val rewrites = matches.flatMap { it.scope }
         val allowed = if (nDeny > 0) {
-            LOG.warn("User attempted to execute an explicitly denied action: Account ID = ${context.claims.sub}, Action = $actionName")
+            logger.warn("User attempted to execute an explicitly denied action: Account ID = ${context.claims.sub}, Action = $actionName")
             false
         } else nAllow > 0
         return ActionCheck(allowed, statements.size, nAllow, nDeny, rewrites)
@@ -56,7 +56,7 @@ class BasicPolicyEngine(policySource: PolicySource, val simplex: Simplex = Simpl
         val resources = statement.resource
         val contextResource = context.resource
 
-        if (contextResource == null || contextResource.isNullOrBlank()) return resources.isEmpty() || resources.contains(
+        if (contextResource == null || contextResource.isBlank()) return resources.isEmpty() || resources.contains(
             "*"
         )
 
@@ -88,7 +88,7 @@ class BasicPolicyEngine(policySource: PolicySource, val simplex: Simplex = Simpl
     }
 
     private fun policiesForRole(role: String): List<Policy> {
-        return roles[role]?.policies?.map { policyId -> policies[policyId] }?.filterNotNull() ?: emptyList()
+        return roles[role]?.policies?.mapNotNull { policyId -> policies[policyId] } ?: emptyList()
     }
 
     private fun parseWildcard(text: String): Regex {
