@@ -197,6 +197,9 @@ class EsAggs {
         if (missing != null) {
             body.putPOJO("missing", missing)
         }
+        if (include != null) {
+            body.put("include", include)
+        }
         return body
     }
 
