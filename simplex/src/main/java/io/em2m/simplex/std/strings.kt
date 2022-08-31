@@ -20,6 +20,16 @@ class UpperCasePipe : PipeTransform {
     }
 }
 
+class LowerCasePipe : PipeTransform {
+    override fun transform(value: Any?, context: ExprContext): Any? {
+        return when (value) {
+            is List<*> -> value.map { it?.toString()?.lowercase(Locale.getDefault()) }
+            is Array<*> -> value.map { it?.toString()?.lowercase(Locale.getDefault()) }
+            is ArrayNode -> value.map { it?.toString()?.lowercase(Locale.getDefault()) }
+            else -> value?.toString()?.lowercase(Locale.getDefault())
+        }
+    }
+}
 
 class CapitalizePipe : PipeTransform {
     override fun transform(value: Any?, context: ExprContext): Any? {
@@ -346,6 +356,7 @@ object Strings {
 
     val pipes = BasicPipeTransformResolver()
             .transform("upperCase") { UpperCasePipe() }
+            .transform("lowerCase") { LowerCasePipe() }
             .transform("capitalize") { CapitalizePipe() }
             .transform("trim") { TrimPipe() }
             .transform("append") { AppendPipe() }
