@@ -43,13 +43,14 @@ class StringTest : Assert() {
 
     @Test
     fun testContextKey() {
-        val exprStr = "\${ns:key1 | upperCase}/\${ns:key2 | capitalize}"
+        val exprStr = "\${ns:key1 | upperCase}/\${ns:key2 | capitalize}/\${ns:key3 | lowerCase}"
         val expr = requireNotNull(simplex.parser.parse(exprStr))
         val keys = BasicKeyResolver(mapOf(
                 Key("ns", "key1") to ConstKeyHandler("alt1"),
-                Key("ns", "key2") to ConstKeyHandler("alt2")))
+                Key("ns", "key2") to ConstKeyHandler("alt2"),
+                Key("ns", "key3") to ConstKeyHandler("ALt3")))
         val result = expr.call(mapOf("keys" to keys))
-        assertEquals("ALT1/Alt2", result)
+        assertEquals("ALT1/Alt2/alt3", result)
     }
 
     @Test
