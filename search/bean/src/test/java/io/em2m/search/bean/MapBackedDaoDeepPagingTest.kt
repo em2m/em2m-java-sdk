@@ -30,7 +30,7 @@ class MapBackedDaoDeepPagingTest {
 
     @Test
     fun `deep paging iterator returns all results`() {
-        val moviesCount = deepPagingItemIterable.iterator().asSequence().count()
+        val moviesCount = deepPagingItemIterable.count()
         assertEquals(5000, moviesCount)
     }
 
