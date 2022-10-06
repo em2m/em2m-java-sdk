@@ -69,10 +69,4 @@ class DeepPagingItemIterable<T>(
         }
 
     }
-
-//    fun test() {
-//        DeepPagingItemIterable<Any>().forEach() {
-//        }
-//    }
-
 }
