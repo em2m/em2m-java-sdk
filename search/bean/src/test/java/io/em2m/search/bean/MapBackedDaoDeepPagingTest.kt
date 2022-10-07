@@ -20,16 +20,14 @@ class MapBackedDaoDeepPagingTest {
         dao = MapBackedSyncDao(MovieMapper(), movies)
         deepPagingItemIterable = DeepPagingItemIterable(
             searchable = dao,
-            query = MatchAllQuery(),
-            params = emptyMap(),
             sorts = listOf(DocSort("id", Direction.Descending)),
-            aggs = emptyList(),
-            idField = "id"
+            idField = "id",
+            chunkSize = 1000
         )
     }
 
     @Test
-    fun `deep paging iterator returns all results`() {
+    fun `count function returns correct size`() {
         val moviesCount = deepPagingItemIterable.count()
         assertEquals(5000, moviesCount)
     }
