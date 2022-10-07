@@ -6,15 +6,30 @@ import io.em2m.utils.coerce
 
 class DeepPagingItemIterable<T>(
     val searchable: Searchable<T>,
-    val query: Query,
-    var params: Map<String, Any>,
-    val sorts: List<DocSort>,
-    val aggs: List<Agg>,
-    val idField: String,
+    val chunkSize: Long,
+    val idField: String = "_id",
+    val query: Query = MatchAllQuery(),
+    val sorts: List<DocSort> = emptyList(),
+    var params: Map<String, Any> = emptyMap(),
 ) : Iterable<T> {
+    private val totalItems = fetchTotalItems()
+
+    fun count(): Long {
+        return totalItems
+    }
 
     override fun iterator(): Iterator<T> {
         return DpItemIterator()
+    }
+
+    private fun fetchTotalItems(): Long {
+        val totalItemsRequest = SearchRequest(
+            offset = 0,
+            limit = 0,
+            query = query,
+            sorts = sorts
+        )
+        return searchable.search(totalItemsRequest).totalItems
     }
 
     inner class DpItemIterator : Iterator<T> {
@@ -43,10 +58,9 @@ class DeepPagingItemIterable<T>(
         private fun fetchMore() {
             val initialRequest = SearchRequest(
                 offset = 0,
-                limit = 1000,
+                limit = chunkSize,
                 query = query,
                 sorts = sorts,
-                aggs = aggs,
             )
 
             val transformedParams = if (lastKey.isNotEmpty()) {
