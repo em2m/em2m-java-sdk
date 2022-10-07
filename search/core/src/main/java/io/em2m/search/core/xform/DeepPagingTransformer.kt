@@ -51,13 +51,17 @@ class DeepPagingTransformer<T>(private val idField: String) : Transformer<T> {
     }
 
     private fun transformFields(fields: List<Field>): List<Field> {
-        // todo - check and see if fields already contains id field
-        return fields.plus(Field(name = idField))
+        return if (fields.map { it.name }.contains(idField))
+            fields
+        else
+            fields.plus(Field(name = idField))
     }
 
     private fun transformSorts(sorts: List<DocSort>): List<DocSort> {
-        // TODO - check and see if the sort already contains ID field
-        return sorts.plus(DocSort(idField))
+        return if (sorts.map { it.field }.contains(idField))
+            sorts
+        else
+            sorts.plus(DocSort(idField))
     }
 
     override fun transformResult(
