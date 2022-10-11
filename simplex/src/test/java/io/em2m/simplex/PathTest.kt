@@ -1,5 +1,6 @@
 package io.em2m.simplex
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.em2m.simplex.model.BasicKeyResolver
 import io.em2m.simplex.model.Key
@@ -20,6 +21,24 @@ class PathTest {
     val bean = Bean(A(B(c = "value")))
 
     val json = jacksonObjectMapper().readTree(
+        """
+        {
+          "a": {
+            "b": {
+              "c": "value",
+              "d": ["0", "1", "2"]
+            }
+          },
+          "d": "dval",
+          "e": "eval",
+          "f": ["a", "b", "c"],
+          "g": [ { "x" : 1}, { "x": 2} ],
+          "h": null
+        }
+    """
+    )
+
+    val node = ObjectMapper().readTree(
         """
         {
           "a": {
@@ -60,6 +79,17 @@ class PathTest {
 
         expr.setValue(json, "value2")
         assertEquals("value2", expr.call(json))
+    }
+
+    @Test
+    fun testNode() {
+        val expr = PathExpr(path)
+        val value = expr.call(node)
+        assertEquals("value", value)
+
+        val expr1 = PathExpr("a.b.d")
+        val value1 = expr1.call(node)
+        assertEquals(listOf("0", "1", "2"), value1)
     }
 
     @Test
