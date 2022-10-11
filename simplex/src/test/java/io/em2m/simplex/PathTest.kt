@@ -174,7 +174,6 @@ class PathTest {
         assertEquals("value", simplex.getPath(path, bean))
         assertEquals("value", simplex.getPath(path, map))
         assertEquals("value", simplex.getPath(path, json))
-        assertEquals("value", simplex.getPath(path, json))
     }
 
     @Test
