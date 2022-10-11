@@ -1,13 +1,11 @@
 package io.em2m.simplex
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.databind.node.ObjectNode
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.em2m.simplex.model.BasicKeyResolver
 import io.em2m.simplex.model.Key
 import io.em2m.simplex.model.PathExpr
 import io.em2m.simplex.model.PathKeyHandler
-import io.em2m.utils.coerce
 import io.em2m.utils.coerceNonNull
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
