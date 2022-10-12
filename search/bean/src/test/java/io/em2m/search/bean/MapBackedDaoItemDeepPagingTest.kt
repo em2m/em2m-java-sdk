@@ -10,19 +10,20 @@ import kotlin.properties.Delegates
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-class MapBackedDaoDeepPagingTest {
+class MapBackedDaoItemDeepPagingTest {
     private var dao: MapBackedSyncDao<Movie> by Delegates.notNull()
     private var deepPagingMovieIterable: DeepPagingItemIterable<Movie> by Delegates.notNull()
     private var sortedMovieIterable: DeepPagingItemIterable<Movie> by Delegates.notNull()
     private var emptyDeepPagingItemIterable: DeepPagingItemIterable<Any> by Delegates.notNull()
 
     companion object {
-        private var movies = Movie.load()
+        private var movieMap = Movie.load()
+        private val movies = movieMap.values
     }
 
     @Before
     fun setup() {
-        dao = MapBackedSyncDao(MovieMapper(), movies)
+        dao = MapBackedSyncDao(MovieMapper(), movieMap)
         deepPagingMovieIterable = DeepPagingItemIterable(
             searchable = dao,
             idField = "id",
@@ -94,7 +95,9 @@ class MapBackedDaoDeepPagingTest {
     @Test
     fun `iterates through all results`() {
         val idsList = deepPagingMovieIterable.map { it.id }
-        assertEquals(5000, idsList.size)
+        val expectedMovieIds = movies.map { it.id }
+        assertTrue { expectedMovieIds.containsAll(idsList) }
+        assertTrue { idsList.containsAll(expectedMovieIds) }
     }
 
     class MovieMapper : IdMapper<Movie> {
