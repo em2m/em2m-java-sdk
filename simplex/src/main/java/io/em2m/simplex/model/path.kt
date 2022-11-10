@@ -121,9 +121,7 @@ class PropertyPathPart(val property: String) : PathPart {
                 }
             }
         }
-        return if (result is JsonNode) {
-            unwrapNode(result)
-        } else result
+        return result
     }
 
     override fun put(obj: Any?, value: Any?) {

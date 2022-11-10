@@ -86,7 +86,7 @@ class EsSearchDaoAggTest : FeatureTestBase() {
         val missing = result.aggs["magnitude"] ?: error("agg should not be null")
         val buckets = missing.buckets ?: error("buckets should not be null")
         assertEquals(4, buckets.size)
-        assertEquals(46, buckets.map { it.count }.sum())
+        assertEquals(46, buckets.sumOf { it.count })
     }
 
     @Test
@@ -107,7 +107,7 @@ class EsSearchDaoAggTest : FeatureTestBase() {
         val agg = result.aggs["magnitude"] ?: error("agg should not be null")
         val buckets = agg.buckets ?: error("buckets should not be null")
         assertEquals(2, buckets.size)
-        assertEquals(46, buckets.map { it.count }.sum())
+        assertEquals(46, buckets.sumOf { it.count })
         assertEquals("4+", buckets[0].key)
         assertEquals(4.0, buckets[0].from)
     }
@@ -131,7 +131,7 @@ class EsSearchDaoAggTest : FeatureTestBase() {
         val agg = result.aggs["magnitude"] ?: error("agg should not be null")
         val buckets = agg.buckets ?: error("buckets should not be null")
         assertEquals(1, buckets.size)
-        assertEquals(21, buckets.map { it.count }.sum())
+        assertEquals(21, buckets.sumOf { it.count })
     }
 
     @Test
@@ -142,7 +142,7 @@ class EsSearchDaoAggTest : FeatureTestBase() {
         val agg = result.aggs["magnitude"] ?: error("agg should not be null")
         val buckets = agg.buckets ?: error("buckets should not be null")
         assertEquals(1, buckets.size)
-        assertEquals(21, buckets.map { it.count }.sum())
+        assertEquals(21, buckets.sumOf { it.count })
     }
 
     @Test
@@ -152,7 +152,7 @@ class EsSearchDaoAggTest : FeatureTestBase() {
         val agg = result.aggs["time"] ?: error("agg should not be null")
         val buckets = agg.buckets ?: error("buckets should not be null")
         assertEquals(23, buckets.size)
-        assertEquals(46, buckets.map { it.count }.sum())
+        assertEquals(46, buckets.sumOf { it.count })
     }
 
     @Test
@@ -163,7 +163,7 @@ class EsSearchDaoAggTest : FeatureTestBase() {
         val agg = result.aggs["test"] ?: error("agg should not be null")
         val buckets = agg.buckets ?: error("buckets should not be null")
         assertEquals(2, buckets.size)
-        assertEquals(46, buckets.map { it.count }.sum())
+        assertEquals(46, buckets.sumOf { it.count })
         assertEquals("<1000miles", buckets[0].key)
     }
 
@@ -174,7 +174,7 @@ class EsSearchDaoAggTest : FeatureTestBase() {
         val agg = result.aggs["geohash"] ?: error("agg should not be null")
         val buckets = agg.buckets ?: error("buckets should not be null")
         assertEquals(11, buckets.size)
-        assertEquals(46, buckets.map { it.count }.sum())
+        assertEquals(46, buckets.sumOf { it.count })
     }
 
     @Test
@@ -201,7 +201,7 @@ class EsSearchDaoAggTest : FeatureTestBase() {
         val agg = result.aggs["geohash"] ?: error("agg should not be null")
         val buckets = agg.buckets ?: error("buckets should not be null")
         assertEquals(11, buckets.size)
-        assertEquals(46, buckets.map { it.count }.sum())
+        assertEquals(46, buckets.sumOf { it.count })
     }
 
     @Test

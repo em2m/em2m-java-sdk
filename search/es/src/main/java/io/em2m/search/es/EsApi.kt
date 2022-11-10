@@ -332,6 +332,10 @@ class EsShards(val total: Int, val successful: Int, val failed: Int)
 
 class EsHits(val total: Long, val max_score: Double, val hits: List<EsHit>)
 
+class EsVersion(val number: String)
+
+class EsStatus(val version: EsVersion)
+
 class EsHit(
         @JsonProperty("_index") val index: String,
         @JsonProperty("_type") val type: String,
@@ -438,6 +442,9 @@ interface EsApi {
 
     @RequestLine("GET /_cluster/state/metadata")
     fun getMetadata(): ObjectNode
+
+    @RequestLine("GET /")
+    fun getStatus(): EsStatus
 
     @RequestLine("POST /_aliases")
     fun putAliases(request: EsAliasRequest)
