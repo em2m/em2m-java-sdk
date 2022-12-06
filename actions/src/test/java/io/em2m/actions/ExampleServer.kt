@@ -3,13 +3,11 @@ package io.em2m.actions
 import com.google.inject.Binder
 import com.google.inject.Module
 import com.google.inject.name.Names
-import io.em2m.actions.model.ActionContext
-import io.em2m.actions.model.ActionFlow
-import io.em2m.actions.model.ActionProcessorBuilder
+import io.em2m.actions.model.*
 import io.em2m.actions.model.Priorities.Companion.MAIN
-import io.em2m.actions.model.TypedActionFlow
 import io.em2m.actions.servlet.ActionServlet
 import io.em2m.actions.servlet.ServletRuntime
+import io.em2m.actions.xforms.AuditingTransformer
 import io.em2m.actions.xforms.JacksonRequestTransformer
 import io.em2m.actions.xforms.JacksonResponseTransformer
 import io.em2m.actions.xforms.LoggingTransformer
@@ -81,6 +79,20 @@ class ExampleServer {
         }
     }
 
+    @Audit()
+    class AuditAction : TypedActionFlow<Any, Any>(Any::class.java, Any::class.java) {
+        override fun main(context: ActionContext, req: Any): Any? {
+            return context.request
+        }
+    }
+
+    class LoggingAuditTransformer: AuditingTransformer() {
+        override val defaultAuditPaths = setOf("requestId", "request")
+        override fun saveAudit(auditValues: Map<String, Any?>) {
+            println(auditValues.toString())
+        }
+    }
+
     class TestActionServlet : ActionServlet() {
 
         private val processor = ActionProcessorBuilder()
@@ -88,10 +100,12 @@ class ExampleServer {
             .flow(Log::class)
             .flow(Echo::class)
             .flow(Upload::class)
+            .flow(AuditAction::class)
             .flow("demo:stream", StreamingActionFlow::class)
             .module(TestModule())
             .transformer(JacksonRequestTransformer())
             .transformer(JacksonResponseTransformer())
+            .transformer(LoggingAuditTransformer())
             .build()
 
         override val runtime = ServletRuntime("demo", processor)
