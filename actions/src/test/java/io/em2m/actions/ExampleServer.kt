@@ -3,11 +3,8 @@ package io.em2m.actions
 import com.google.inject.Binder
 import com.google.inject.Module
 import com.google.inject.name.Names
-import io.em2m.actions.model.ActionContext
-import io.em2m.actions.model.ActionFlow
-import io.em2m.actions.model.ActionProcessorBuilder
+import io.em2m.actions.model.*
 import io.em2m.actions.model.Priorities.Companion.MAIN
-import io.em2m.actions.model.TypedActionFlow
 import io.em2m.actions.servlet.ActionServlet
 import io.em2m.actions.servlet.ServletRuntime
 import io.em2m.actions.xforms.JacksonRequestTransformer
@@ -72,6 +69,21 @@ class ExampleServer {
         }
     }
 
+    @TransformerOptIn(AuditRequestTransformer::class)
+    class Trace : TypedActionFlow<Any, Any>(Any::class.java, Any::class.java) {
+        override fun main(context: ActionContext, req: Any): Any? {
+            return context.request
+        }
+    }
+
+    class AuditRequestTransformer: ActionTransformer {
+        override val priority = Priorities.AUDIT
+
+        override fun doOnNext(ctx: ActionContext) {
+            println(ctx.requestId)
+        }
+    }
+
     data class UploadRequest(val foo: String, val hasHeaders: Boolean)
 
     class Upload : TypedActionFlow<Any, Any>(UploadRequest::class.java, Any::class.java) {
@@ -88,10 +100,12 @@ class ExampleServer {
             .flow(Log::class)
             .flow(Echo::class)
             .flow(Upload::class)
+            .flow(Trace::class)
             .flow("demo:stream", StreamingActionFlow::class)
             .module(TestModule())
             .transformer(JacksonRequestTransformer())
             .transformer(JacksonResponseTransformer())
+            .transformer(OptionalActionTransformer(AuditRequestTransformer()))
             .build()
 
         override val runtime = ServletRuntime("demo", processor)
