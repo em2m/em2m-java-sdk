@@ -1,7 +1,6 @@
 package io.em2m.actions.model
 
-class OptionalActionTransformer(private val transformer: ActionTransformer) : ActionTransformer {
-    override val priority: Int = transformer.priority
+class OptionalActionTransformer(private val transformer: ActionTransformer) : ActionTransformer by transformer {
     override fun doOnNext(ctx: ActionContext) {
         val flow = ctx.flow
         val flowOptIns = flow?.getTransformerOptIns() ?: emptyList()
