@@ -3,6 +3,7 @@ package io.em2m.search.core.model
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import org.junit.Assert
 import org.junit.Test
+import kotlin.test.assertEquals
 
 class QuerySimplifyTest {
 
@@ -21,5 +22,4 @@ class QuerySimplifyTest {
         val q2 = q1.simplify()
         Assert.assertEquals(tq, q2)
     }
-
 }

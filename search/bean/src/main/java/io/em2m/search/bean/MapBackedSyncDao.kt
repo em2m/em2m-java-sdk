@@ -20,7 +20,7 @@ package io.em2m.search.bean
 import io.em2m.search.core.daos.AbstractSyncDao
 import io.em2m.search.core.model.*
 
-class MapBackedSyncDao<T>(idMapper: IdMapper<T>, val items: MutableMap<String, T> = HashMap()) : AbstractSyncDao<T>(idMapper), StreamableDao<T> {
+class MapBackedSyncDao<T>(idMapper: IdMapper<T>, private val items: MutableMap<String, T> = HashMap()) : AbstractSyncDao<T>(idMapper), StreamableDao<T> {
 
     override fun create(entity: T): T? {
         throw NotImplementedError()
@@ -60,7 +60,7 @@ class MapBackedSyncDao<T>(idMapper: IdMapper<T>, val items: MutableMap<String, T
     }
 
     override fun save(id: String, entity: T): T? {
-        items.put(id, entity)
+        items[id] = entity
         // TODO: Need a function for setting the ID on the entity
         return entity
     }
@@ -70,7 +70,7 @@ class MapBackedSyncDao<T>(idMapper: IdMapper<T>, val items: MutableMap<String, T
         return items.values.filter { predicate.invoke(it as Any) }
     }
 
-    fun buildRows(matches: List<T>, fields: List<Field>): List<List<Any?>> {
+    private fun buildRows(matches: List<T>, fields: List<Field>): List<List<Any?>> {
         val getters: List<(Any) -> Any?> = fields
                 .map { it.name }
                 .map { name ->
@@ -120,9 +120,9 @@ class MapBackedSyncDao<T>(idMapper: IdMapper<T>, val items: MutableMap<String, T
         }
     }
 
-    class SortComparator<T>(val sort: DocSort) : Comparator<T> {
+    class SortComparator<T>(sort: DocSort) : Comparator<T> {
 
-        val expr = Functions.fieldValue(sort.field)
+        private val expr = Functions.fieldValue(sort.field)
 
         override fun compare(o1: T, o2: T): Int {
             val v1 = if (o1 != null) expr.invoke(o1 as Any) else null
