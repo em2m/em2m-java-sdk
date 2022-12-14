@@ -6,7 +6,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode
 import java.io.Closeable
 import java.util.*
 
-interface Searchable<T> {
+fun interface Searchable<T> {
     fun search(request: SearchRequest): SearchResult<T>
 }
 

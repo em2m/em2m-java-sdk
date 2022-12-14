@@ -22,7 +22,6 @@ class EsSearchDaoTest : FeatureTestBase() {
         val f = Feature()
         val name = "TEST_CREATE_FEATURE"
         f.properties["name"] = name
-
         val created = searchDao.create(f)
         assertNotNull("Id should not be null", created?.id)
         esClient.flush()

@@ -27,6 +27,7 @@ abstract class FeatureTestBase : Assert() {
         try {
             esClient.deleteIndex("features")
         } catch (e: Exception) {
+            // e.printStackTrace()
         }
         flush()
         esClient.createIndex("features")
@@ -47,8 +48,8 @@ abstract class FeatureTestBase : Assert() {
     companion object {
 
         private var mapper: ObjectMapper = jacksonObjectMapper().registerModule(GeoJsonModule())
-                .enable(SerializationFeature.INDENT_OUTPUT)
-                .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+            .enable(SerializationFeature.INDENT_OUTPUT)
+            .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
 
         val idMapper = FnIdMapper<Feature>("id", { it.id!! }, { f, id -> f.id = id; f })
 
@@ -62,7 +63,15 @@ abstract class FeatureTestBase : Assert() {
             return result
         }
 
-        const val es6 = false
+        val esClient: EsApi = Feign.builder()
+            .encoder(TextPlainEncoder(JacksonEncoder(mapper)))
+            .decoder(JacksonDecoder(mapper))
+            .logger(Slf4jLogger())
+            .logLevel(feign.Logger.Level.FULL)
+            .target(EsApi::class.java, "http://localhost:9200")
+
+
+        val es6 = esClient.getStatus().version.number.startsWith("6")
         private val mappingPath = if (es6) {
             "src/test/resources/mapping_es6.json"
         } else {
@@ -73,13 +82,6 @@ abstract class FeatureTestBase : Assert() {
         const val index = "features"
 
         val mapping = mapper.readTree(File(mappingPath)) as ObjectNode
-
-        val esClient: EsApi = Feign.builder()
-                .encoder(TextPlainEncoder(JacksonEncoder(mapper)))
-                .decoder(JacksonDecoder(mapper))
-                .logger(Slf4jLogger())
-                .logLevel(feign.Logger.Level.FULL)
-                .target(EsApi::class.java, "http://localhost:9200")
 
     }
 

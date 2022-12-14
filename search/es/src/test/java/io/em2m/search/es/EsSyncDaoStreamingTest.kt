@@ -7,7 +7,6 @@ import io.em2m.search.core.model.SearchRequest
 import io.em2m.search.core.model.StreamableDao
 import io.em2m.search.core.xform.DeepPagingTransformer
 import io.em2m.search.core.xform.TransformingDao
-import io.em2m.utils.coerce
 import org.junit.Before
 import org.junit.Test
 import kotlin.properties.Delegates

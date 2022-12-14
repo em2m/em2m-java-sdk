@@ -121,9 +121,7 @@ class PropertyPathPart(val property: String) : PathPart {
                 }
             }
         }
-        return if (result is JsonNode) {
-            unwrapNode(result)
-        } else result
+        return result
     }
 
     override fun put(obj: Any?, value: Any?) {
@@ -160,14 +158,15 @@ class PropertyPathPart(val property: String) : PathPart {
 
     private fun unwrapNode(node: JsonNode): Any? {
         return when (node) {
-            is BinaryNode -> node.binaryValue()
+            is TextNode -> node.textValue()
+            is ArrayNode -> node.map { unwrapNode(it) }
+            is ObjectNode -> node.fields().asSequence().map { it.key to unwrapNode(it.value) }.toMap()
             is BooleanNode -> node.booleanValue()
-            is MissingNode -> null
+            is NumericNode -> node.numberValue()
             is NullNode -> null
             is POJONode -> node.pojo
-            is TextNode -> node.textValue()
-            is NumericNode -> node.numberValue()
-            // TODO - Unwrap arrays
+            is BinaryNode -> node.binaryValue()
+            is MissingNode -> null
             else -> node
         }
     }
