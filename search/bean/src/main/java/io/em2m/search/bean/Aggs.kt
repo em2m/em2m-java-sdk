@@ -10,14 +10,15 @@ import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
+import kotlin.math.floor
 
 class Aggs {
 
     companion object {
 
-        val parsers = ConcurrentHashMap<String, DateMathParser>()
+        private val parsers = ConcurrentHashMap<String, DateMathParser>()
         val dateFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withZone(ZoneId.of("UTC"))
-        val objectMapper = jacksonObjectMapper()
+        private val objectMapper = jacksonObjectMapper()
 
         fun <T> processAggs(aggs: List<Agg>, matches: List<T>): Map<String, AggResult> {
             return aggs.map { agg ->
@@ -203,13 +204,13 @@ class Aggs {
             val offset = agg.offset ?: 0.0
             val interval = agg.interval
             matches.forEach { match ->
-                val fieldValues = fieldGetter.invoke(match as Any).filter { it is Number }
+                val fieldValues = fieldGetter.invoke(match as Any).filterIsInstance<Number>()
                 if (fieldValues.isEmpty()) {
                     ++missingCount
                 }
                 // only count each match once for each value
                 fieldValues.distinct().mapNotNull { value -> (value as? Number)?.toDouble() }.forEach { value ->
-                    val key = Math.floor((value - offset) / interval) * interval + offset
+                    val key = floor((value - offset) / interval) * interval + offset
                     // Add support for Missing
                     var count = countMap[key] ?: 0
                     count += 1
@@ -237,10 +238,10 @@ class Aggs {
             val fieldGetter = Functions.field(agg.field)
 
             matches.forEach { match ->
-                val fieldValues = fieldGetter.invoke(match as Any).filter { it is Number }
+                val fieldValues = fieldGetter.invoke(match as Any).filterIsInstance<Number>()
                 fieldValues.forEach { value ->
                     try {
-                        val d: Double = (value as Number).toDouble()
+                        val d: Double = value.toDouble()
                         sum += d
                         count++
                         min = Math.min(min, d)
