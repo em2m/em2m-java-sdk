@@ -58,7 +58,7 @@ class Functions {
                     } else if (value != null) {
                         value.toString() == term.toString()
                     } else {
-                        (term == value)
+                        (term == null)
                     }
                     if (result) break
                 }
@@ -79,7 +79,7 @@ class Functions {
                         } else if (value != null) {
                             value.toString() == term.toString()
                         } else {
-                            (term == value)
+                            (term == null)
                         }
                         if (result) break
                     }
@@ -148,6 +148,7 @@ class Functions {
                     }
                     result
                 }
+
                 else -> listOf(obj)
             }
         }
@@ -223,14 +224,20 @@ class Functions {
         }
 
         private fun toPredicate(expr: WildcardQuery): (Any) -> Boolean {
+            val reg = Regex("(?<=[*?])|(?=[*?])")
+
             val field = expr.field
             return when (expr.value) {
                 "*" -> not(term(field, null))
                 else -> {
-                    var value = expr.value.replace("?", "_QUESTION_MARK_").replace("*", "_STAR_")
-                    value = Matcher.quoteReplacement(value)
-                    value = value.replace("_QUESTION_MARK_", ".?").replace("_STAR_", ".*")
-                    val pattern = Pattern.compile(".*" + Matcher.quoteReplacement(value) + ".*", Pattern.CASE_INSENSITIVE)
+                    val value = expr.value.split(reg).filter { it.isNotEmpty() }.joinToString("") { part ->
+                        when (part) {
+                            "?" -> "."
+                            "*" -> ".*"
+                            else -> Regex.escape(part)
+                        }
+                    }
+                    val pattern = Pattern.compile(".*$value.*", Pattern.CASE_INSENSITIVE)
                     matches(field, pattern)
                 }
             }
@@ -295,42 +302,55 @@ class Functions {
                 is AndQuery -> {
                     all(toPredicate(query.of))
                 }
+
                 is OrQuery -> {
                     any(toPredicate(query.of))
                 }
+
                 is NotQuery -> {
                     not(any(toPredicate(query.of)))
                 }
+
                 is PhraseQuery -> {
                     toPredicate(query)
                 }
+
                 is RegexQuery -> {
                     toPredicate(query)
                 }
+
                 is PrefixQuery -> {
                     toPredicate(query)
                 }
+
                 is WildcardQuery -> {
                     toPredicate(query)
                 }
+
                 is RangeQuery -> {
                     toPredicate(query)
                 }
+
                 is DateRangeQuery -> {
                     toPredicate(query)
                 }
+
                 is TermQuery -> {
                     toPredicate(query)
                 }
+
                 is TermsQuery -> {
                     toPredicate(query)
                 }
+
                 is MatchAllQuery -> {
                     toPredicate(query)
                 }
+
                 is ExistsQuery -> {
                     toPredicate(query)
                 }
+
                 else -> {
                     throw IllegalArgumentException("Unsupported expression type")
                 }
@@ -339,23 +359,28 @@ class Functions {
 
         fun compareTo(first: Any, second: Any): Int {
             return (first as? String)?.compareTo(second.toString())
-                    ?: (first as? Int)?.compareTo(second.coerce() ?: 0)
-                    ?: (first as? Long)?.compareTo(second.coerce() ?: 0.toLong())
-                    ?: (first as? Float)?.compareTo(second.coerce() ?: 0.toFloat())
-                    ?: (first as? Double)?.compareTo(second.coerce() ?: 0.toDouble())
-                    ?: first.toString().compareTo(second.toString())
+                ?: (first as? Int)?.compareTo(second.coerce() ?: 0)
+                ?: (first as? Long)?.compareTo(second.coerce() ?: 0.toLong())
+                ?: (first as? Float)?.compareTo(second.coerce() ?: 0.toFloat())
+                ?: (first as? Double)?.compareTo(second.coerce() ?: 0.toDouble())
+                ?: first.toString().compareTo(second.toString())
         }
 
         private fun parseDate(value: Any?, now: Long, timeZone: String?, roundUp: Boolean): Long? {
             return when {
                 value is String -> {
                     try {
-                        Date(dateParser.parse(value, now, roundUp, DateTimeZone.forID(timeZone)
-                                ?: DateTimeZone.UTC)).time
+                        Date(
+                            dateParser.parse(
+                                value, now, roundUp, DateTimeZone.forID(timeZone)
+                                    ?: DateTimeZone.UTC
+                            )
+                        ).time
                     } catch (ex: Exception) {
                         objectMapper.convertValue<Date>(value).time
                     }
                 }
+
                 value != null -> objectMapper.convertValue<Date>(value).time
                 else -> null
             }
