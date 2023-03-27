@@ -34,7 +34,6 @@ class JacksonRequestTransformer(
         if (contentType.contains("xml")) return
 
         try {
-            println("Hello From Req Transform!")
             if (contentType.contains("json") || contentType.contains("text")) {
                 val inputStream = when (ctx.environment["ContentEncoding"] as? String) {
                     "gzip" -> GZIPInputStream(ctx.inputStream)
