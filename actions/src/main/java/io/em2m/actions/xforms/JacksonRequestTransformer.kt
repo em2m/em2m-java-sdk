@@ -71,7 +71,7 @@ class JacksonRequestTransformer(
                 val paramMap: Map<String, List<Any>>? = ctx.environment["Parameters"]?.coerce()
                 val body = paramMap
                     ?.mapNotNull { it.key to it.value.first() }
-                    ?.associate { it.first to it.second }
+                    ?.toMap()
                 ctx.request = objectMapper.convertValue(body, type)
             }
         } catch (jsonEx: JsonProcessingException) {
