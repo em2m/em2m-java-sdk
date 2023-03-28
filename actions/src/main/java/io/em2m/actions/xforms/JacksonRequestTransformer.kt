@@ -69,10 +69,9 @@ class JacksonRequestTransformer(
                 }
             } else if (contentType.contains("application/x-www-form-urlencoded")) {
                 val paramMap: Map<String, List<Any>>? = ctx.environment["Parameters"]?.coerce()
-                val body: MutableMap<String, Any?> = mutableMapOf()
-                paramMap?.keys?.forEach {
-                    body[it] = paramMap[it]?.first()
-                }
+                val body = paramMap
+                    ?.mapNotNull { it.key to it.value.first() }
+                    ?.associate { it.first to it.second }
                 ctx.request = objectMapper.convertValue(body, type)
             }
         } catch (jsonEx: JsonProcessingException) {
