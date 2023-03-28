@@ -70,7 +70,7 @@ class JacksonRequestTransformer(
             } else if (contentType.contains("application/x-www-form-urlencoded")) {
                 val paramMap: Map<String, List<Any>>? = ctx.environment["Parameters"]?.coerce()
                 val body = paramMap
-                    ?.mapNotNull { it.key to it.value.first() }
+                    ?.mapNotNull { it.key to it.value.firstOrNull() }
                     ?.toMap()
                 ctx.request = objectMapper.convertValue(body, type)
             }
