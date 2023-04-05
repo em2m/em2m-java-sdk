@@ -81,6 +81,14 @@ class ExampleServer {
         }
     }
 
+    data class TestXWwwFormUrlEncodedRequest(val foo: String, val bar: Boolean)
+    class TestXWwwFormUrlEncoded : TypedActionFlow<Any, Any>(TestXWwwFormUrlEncodedRequest::class.java, Any::class.java) {
+        override fun main(context: ActionContext, req: Any) {
+            println(req)
+        }
+    }
+
+
     class TestActionServlet : ActionServlet() {
 
         private val processor = ActionProcessorBuilder()
@@ -88,6 +96,7 @@ class ExampleServer {
             .flow(Log::class)
             .flow(Echo::class)
             .flow(Upload::class)
+            .flow(TestXWwwFormUrlEncoded::class)
             .flow("demo:stream", StreamingActionFlow::class)
             .module(TestModule())
             .transformer(JacksonRequestTransformer())
