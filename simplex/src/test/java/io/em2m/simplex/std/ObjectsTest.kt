@@ -143,7 +143,6 @@ class ObjectsTest {
     }
 
     @Test
-    @Ignore
     fun testPair() {
         val exec: Expr = jacksonObjectMapper().registerModule(SimplexModule(simplex)).readValue(
             """
