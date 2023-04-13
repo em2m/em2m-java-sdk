@@ -1,6 +1,7 @@
 package io.em2m.simplex.model
 
 import io.em2m.utils.coerce
+import io.em2m.utils.convertValue
 import kotlin.coroutines.coroutineContext
 
 interface TreeExpr : Expr
@@ -125,11 +126,9 @@ class ObjectExpr(val fields: List<FieldExpr>) : TreeExpr {
         } else emptyList()
     }
 
-    private fun processContainerArray(expr: ArrayExpr, context: ExprContext): Map<String, Any?> {
-        return expr.values.flatMap {
-            val value = (it as? ObjectExpr)?.call(context) as? Map<String, Any?>
-            value?.toList() ?: emptyList()
-        }.associate { it }
+    private fun processContainerArray(value: Any?): Map<String, Any?> {
+        val values: List<Map<String, Any?>> = value.coerce() ?: emptyList()
+        return values.flatMap { it.toList() }.toMap()
     }
 
     // TODO - Support alternate non-object values (literals, arrays) for @when statements
@@ -159,7 +158,7 @@ class ObjectExpr(val fields: List<FieldExpr>) : TreeExpr {
                 val map: Map<String, Any?> = value.coerce() ?: emptyMap()
                 map.toList()
             } else if (field.value is ArrayExpr && field.field.startsWith("@container")) {
-                processContainerArray(field.value, context).toList()
+                processContainerArray(value).toList()
             } else {
                 listOf(key to value)
             }

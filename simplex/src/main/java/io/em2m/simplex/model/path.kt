@@ -102,9 +102,11 @@ class PropertyPathPart(val property: String) : PathPart {
                     obj.set(property, JsonNodeFactory.instance.objectNode())
                 } else result
             }
+
             is MutableMap<*, *> -> {
                 (obj as MutableMap<String, Any?>).computeIfAbsent(property, fn)
             }
+
             else -> {
                 if (obj is List<*> && index != null) {
                     obj[index]
@@ -202,13 +204,22 @@ class PathExpr(val path: String) {
             next.getOrPut(acc) { HashMap<String, Any?>() }
         }
         when (val currentValue = parts.last().get(parent)) {
+
             null -> setValue(context, value)
+
+            is MutableMap<*, *> -> {
+                when (value) {
+                    is Map<*, *> -> setValue(context, currentValue + value)
+                }
+            }
+
             is Collection<*> -> {
                 when (value) {
                     is Collection<*> -> setValue(context, currentValue + value)
                     else -> setValue(context, currentValue + value)
                 }
             }
+
             else -> {}
         }
     }
@@ -241,9 +252,11 @@ class PathKeyHandler(private val prefix: String? = null, private val addSeparato
             prefix == null -> {
                 Simplex.simplex.getPath(name, context)
             }
+
             addSeparator -> {
                 Simplex.simplex.getPath("$prefix.$name", context)
             }
+
             else -> {
                 Simplex.simplex.getPath(prefix + name, context)
             }

@@ -11,16 +11,12 @@ import java.net.HttpURLConnection
 import java.net.URL
 import kotlin.test.assertTrue
 
-
 class ExecTest {
 
     private val simplex = Simplex()
 
     init {
-        simplex.execs(BasicExecResolver()
-                .handler("log") { LogHandler() }
-                .handler("http:get") { HttpHandler() }
-        )
+        simplex.execs(BasicExecResolver().handler("log") { LogHandler() }.handler("http:get") { HttpHandler() })
         simplex.keys(BasicKeyResolver().key(Key("field", "*"), PathKeyHandler()))
     }
 
@@ -30,12 +26,13 @@ class ExecTest {
     fun testLog() {
 
         val exec: Expr = mapper.readValue(
-                """
+            """
                     {
                      "@exec": "log",
                      "value": "value"
                     }
-                    """)
+                    """
+        )
         val context = HashMap<String, Any?>()
         exec.call(context)
     }
@@ -44,13 +41,14 @@ class ExecTest {
     @Ignore
     fun testHttp() {
         val exec: Expr = mapper.readValue(
-                """
+            """
                  {
                    "@exec": "http:get",
                    "url": "https://jsonplaceholder.typicode.com/posts/1",
                    "@value": "#{result.body}"
                  }
-                """.replace("#", "$"))
+                """.replace("#", "$")
+        )
         val result = exec.call(emptyMap())
         assertTrue(result is String)
         assertTrue(result.startsWith("quia"))
