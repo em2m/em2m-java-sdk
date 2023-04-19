@@ -9,6 +9,8 @@ import io.em2m.actions.model.ActionTransformer
 import io.em2m.actions.model.Priorities
 import io.em2m.actions.model.TypedActionFlow
 import io.em2m.problem.Problem
+import io.em2m.simplex.evalPath
+import io.em2m.utils.coerce
 import org.xerial.snappy.SnappyInputStream
 import java.io.IOException
 import java.util.*
@@ -65,6 +67,12 @@ class JacksonRequestTransformer(
                         ctx.response.headers.set("Content-Disposition", "attachment;filename=$filename")
                     }
                 }
+            } else if (contentType.contains("application/x-www-form-urlencoded")) {
+                val paramMap: Map<String, List<Any>>? = ctx.environment["Parameters"]?.coerce()
+                val body = paramMap
+                    ?.mapNotNull { it.key to it.value.firstOrNull() }
+                    ?.toMap()
+                ctx.request = objectMapper.convertValue(body, type)
             }
         } catch (jsonEx: JsonProcessingException) {
             Problem(

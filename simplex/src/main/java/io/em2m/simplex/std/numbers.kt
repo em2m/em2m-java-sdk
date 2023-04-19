@@ -21,9 +21,14 @@ class NumberPipe : PipeTransform {
 
     override fun transform(value: Any?, context: ExprContext): Any? {
         return if (value != null) {
-            if (value is Number) {
-                format.format(value)
-            } else ""
+            when (value) {
+                is Number -> format.format(value)
+                is String -> {
+                    val numberValue = value.toBigDecimalOrNull()
+                    numberValue?.let { format.format(numberValue) }
+                }
+                else -> ""
+            }
         } else null
     }
 
