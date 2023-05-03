@@ -31,5 +31,6 @@ class StandardModule : BasicSimplexModule() {
         conditions(Dates.conditions)
 
         execs(Debug.execs)
+        execs(Objects.execs)
     }
 }

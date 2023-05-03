@@ -2,9 +2,7 @@ package io.em2m.simplex.std
 
 import com.fasterxml.jackson.databind.node.ArrayNode
 import io.em2m.simplex.evalPath
-import io.em2m.simplex.model.BasicPipeTransformResolver
-import io.em2m.simplex.model.ExprContext
-import io.em2m.simplex.model.PipeTransform
+import io.em2m.simplex.model.*
 import io.em2m.utils.coerce
 
 class PathPipe() : PipeTransform {
@@ -90,9 +88,21 @@ class EntriesPipe : PipeTransform {
 
 }
 
+class PairHandler : ExecHandler {
+
+    override fun call(context: ExprContext, op: String, params: Map<String, Any?>): Any? {
+        val key = params["key"]
+        val value = params["value"]
+        return mapOf(key to value)
+    }
+}
+
 object Objects {
     val pipes = BasicPipeTransformResolver()
         .transform("path") { PathPipe() }
         .transform("pathBy") { PathByPipe() }
         .transform("entries", EntriesPipe())
+    val execs = BasicExecResolver()
+        .handler("object:pair") { PairHandler() }
+
 }

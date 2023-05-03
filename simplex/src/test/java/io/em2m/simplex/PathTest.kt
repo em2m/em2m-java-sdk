@@ -137,6 +137,14 @@ class PathTest {
     }
 
     @Test
+    fun testObjectAdd() {
+        val expr = PathExpr("a.b")
+        expr.addValue(map, mapOf("e" to "E"))
+
+        assertEquals("E",map.evalPath("a.b.e"))
+    }
+
+    @Test
     fun testAddToNull() {
         val expr = PathExpr("h")
         expr.addValue(map, listOf("addedValue", "anotherAddedValue"))

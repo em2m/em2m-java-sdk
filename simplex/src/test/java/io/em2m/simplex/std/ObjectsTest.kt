@@ -1,18 +1,25 @@
 package io.em2m.simplex.std
 
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
 import io.em2m.simplex.Simplex
-import io.em2m.simplex.model.BasicKeyResolver
-import io.em2m.simplex.model.Key
-import io.em2m.simplex.model.KeyHandler
-import io.em2m.simplex.model.PathKeyHandler
+import io.em2m.simplex.model.*
+import io.em2m.simplex.parser.SimplexModule
 import io.em2m.utils.coerce
+import org.junit.Assert
+import org.junit.Ignore
 import org.junit.Test
 import kotlin.test.assertEquals
 
 class ObjectsTest {
 
     val simplex = Simplex()
-    val keys = BasicKeyResolver(mapOf(Key("f", "*") to (PathKeyHandler("fieldValues") as KeyHandler)))
+    val keys = BasicKeyResolver(
+        mapOf(
+            Key("f", "*") to (PathKeyHandler("fieldValues") as KeyHandler),
+            Key("field", "*") to (PathKeyHandler("fieldValues") as KeyHandler)
+        )
+    )
 
     init {
         simplex.keys(keys)
@@ -133,6 +140,32 @@ class ObjectsTest {
         val context = mapOf("fieldValues" to mapOf("data" to data))
         val result = simplex.eval("\${f:data | entries | path:key | join}", context).toString()
         assertEquals("foo, foo2", result)
+    }
+
+    @Test
+    fun testPair() {
+        val exec: Expr = jacksonObjectMapper().registerModule(SimplexModule(simplex)).readValue(
+            """
+                  {
+                    "@container": [
+                      {
+                         "@exec": "object:pair",
+                         "key": "1_#{key}",
+                         "value": "#{value}"
+                       },
+                      {
+                         "@exec": "object:pair",
+                         "key": "2_#{key}",
+                         "value": "#{value}"
+                      }
+                    ]
+                  }
+                """.replace("#", "$")
+        )
+        val data = mapOf("key" to "x", "value" to "y")
+        val context = mapOf("fieldValues" to data)
+        val result = exec.call(context)
+        Assert.assertEquals(mapOf("1_x" to "y", "2_x" to "y"), result)
     }
 
 }
