@@ -40,7 +40,7 @@ class DeepPagingItemIterable<T>(
         private var lastKey: Map<String, Any?> = emptyMap()
 
         override fun hasNext(): Boolean {
-            return !done
+            return !done && totalItems > 0
         }
 
         override fun next(): T {
