@@ -115,6 +115,7 @@ class TakePipe : PipeTransform {
     }
 
     override fun transform(value: Any?, context: ExprContext): Any? {
+        println(n)
         return when (value) {
             is List<*> -> value.take(n)
             is Array<*> -> value.take(n)
@@ -228,11 +229,11 @@ object Arrays {
             "firstNotBlank" to FirstNotBlankPipe(),
             "last" to LastPipe(),
             "lastNotBlank" to LastNotBlankPipe(),
-            "size" to SizePipe(),
-            "slice" to SlicePipe(),
-            "take" to TakePipe(),
-            "takeLast" to TakeLastPipe()
+            "size" to SizePipe()
         )
     )
         .transform("associateBy") { AssociateByPipe() }
+        .transform("take") { TakePipe() }
+        .transform("slice") { SlicePipe() }
+        .transform("takeLast") { TakeLastPipe() }
 }
