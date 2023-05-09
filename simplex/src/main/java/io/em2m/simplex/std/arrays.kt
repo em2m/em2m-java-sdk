@@ -115,7 +115,6 @@ class TakePipe : PipeTransform {
     }
 
     override fun transform(value: Any?, context: ExprContext): Any? {
-        println(n)
         return when (value) {
             is List<*> -> value.take(n)
             is Array<*> -> value.take(n)
