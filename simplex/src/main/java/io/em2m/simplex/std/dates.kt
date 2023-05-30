@@ -327,7 +327,7 @@ class DatePlusPipe : PipeTransform {
             }
         }
         if (args.size > 1) {
-            units = args[1]
+            units = args[1].trim()
         }
         if (args.size > 2) {
             if (args[2].startsWith("$")) {
