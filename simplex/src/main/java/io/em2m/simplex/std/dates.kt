@@ -15,14 +15,14 @@ import java.util.*
 
 private  val USformatter = DateTimeFormatter.ofPattern(
     ""
-    + "[yyyy-MM-dd'T'HH:mm-ss]"
-    + "[yyyy-MM-dd'T'HH:mm:ssZ]"
-    + "[yyMMddHHmmssZ]"
-    + "[yyyy-MM-dd]"
-    + "[dd-MM-yyyy]"
-    + "[yyyyMMdd]"
-    + "[dd/MM/yyyy]"
-    + "[yyyy/MM/dd]"
+        + "[yyyy-MM-dd'T'HH:mm-ss]"
+        + "[yyyy-MM-dd'T'HH:mm:ssZ]"
+        + "[yyMMddHHmmssZ]"
+        + "[yyyy-MM-dd]"
+        + "[dd-MM-yyyy]"
+        + "[yyyyMMdd]"
+        + "[dd/MM/yyyy]"
+        + "[yyyy/MM/dd]"
 )
 
 private val EuropeanFormatter = DateTimeFormatter.ofPattern(
@@ -98,7 +98,7 @@ class ParseDatePipe : PipeTransform {
         return if (value != null) {
             try {
                 if (returnMliseconds) {
-                        value.toDate(zoneId)?.time
+                    value.toDate(zoneId)?.time
                 } else{
                     val sdf = SimpleDateFormat(pattern)
 
@@ -327,7 +327,7 @@ class DatePlusPipe : PipeTransform {
             }
         }
         if (args.size > 1) {
-            units = args[1]
+            units = args[1].trim()
         }
         if (args.size > 2) {
             if (args[2].startsWith("$")) {
@@ -366,10 +366,13 @@ class DatePlusPipe : PipeTransform {
             c.timeZone = timeZone
             c.time = dateInput
             when (units) {
+                "s" -> c.add(Calendar.SECOND, amount)
+                "m" -> c.add(Calendar.MINUTE, amount)
+                "h" -> c.add(Calendar.HOUR, amount)
                 "d" -> c.add(Calendar.DATE, amount)
                 "w" -> c.add(Calendar.WEEK_OF_MONTH, amount)
-                "y" -> c.add(Calendar.HOUR, amount)
-                "m" -> c.add(Calendar.MONTH, amount)
+                "M" -> c.add(Calendar.MONTH, amount)
+                "y" -> c.add(Calendar.YEAR, amount)
                 else -> {
                 }
             }

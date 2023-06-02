@@ -65,9 +65,17 @@ class MapBackedDaoItemDeepPagingTest {
         }
     }
 
-    @Test(expected = NoSuchElementException::class)
-    fun `throws exception for searchable with no results`() {
-        emptyDeepPagingItemIterable.iterator().next()
+    @Test
+    fun `gracefully handles searchable with no results`() {
+        try {
+            emptyDeepPagingItemIterable.iterator().forEach {
+                it
+            }
+            assertTrue { true }
+        } catch (e: Exception) {
+            // Fail the test if iterable throws exception on empty search result
+            assertTrue { false }
+        }
     }
 
     @Test(expected = NoSuchElementException::class)

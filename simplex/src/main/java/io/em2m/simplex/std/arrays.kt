@@ -228,11 +228,11 @@ object Arrays {
             "firstNotBlank" to FirstNotBlankPipe(),
             "last" to LastPipe(),
             "lastNotBlank" to LastNotBlankPipe(),
-            "size" to SizePipe(),
-            "slice" to SlicePipe(),
-            "take" to TakePipe(),
-            "takeLast" to TakeLastPipe()
+            "size" to SizePipe()
         )
     )
         .transform("associateBy") { AssociateByPipe() }
+        .transform("take") { TakePipe() }
+        .transform("slice") { SlicePipe() }
+        .transform("takeLast") { TakeLastPipe() }
 }
