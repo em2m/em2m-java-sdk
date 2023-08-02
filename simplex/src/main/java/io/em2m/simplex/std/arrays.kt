@@ -12,6 +12,7 @@ class NotNullPipe : PipeTransform {
             is List<*> -> value.filterNotNull()
             is Array<*> -> value.filterNotNull()
             is ArrayNode -> value.firstOrNull()
+            is Set<*> -> value.filterNotNull()
             else -> value
         }
     }
@@ -24,6 +25,7 @@ class ReversedPipe : PipeTransform {
             is List<*> -> value.reversed()
             is Array<*> -> value.reversed()
             is ArrayNode -> value.firstOrNull()
+            is Set<*> -> value.reversed()
             else -> value
         }
     }
@@ -35,6 +37,7 @@ class FilterNotNullPipe : PipeTransform {
             is List<*> -> value.filterNotNull()
             is Array<*> -> value.filterNotNull()
             is ArrayNode -> value.firstOrNull()
+            is Set<*> -> value.filterNotNull()
             else -> value
         }
     }
@@ -46,6 +49,7 @@ class FilterNotBlankPipe : PipeTransform {
             is List<*> -> value.filterNot { it?.toString().isNullOrBlank() }
             is Array<*> -> value.filterNot { it?.toString().isNullOrBlank() }
             is ArrayNode -> value.firstOrNull()
+            is Set<*> -> value.filterNot { it?.toString().isNullOrBlank() }
             else -> value
         }
     }
@@ -57,6 +61,7 @@ class FirstPipe : PipeTransform {
             is List<*> -> value.firstOrNull()
             is Array<*> -> value.firstOrNull()
             is ArrayNode -> value.firstOrNull()
+            is Set<*> -> value.firstOrNull()
             else -> value
         }
     }
@@ -68,6 +73,7 @@ class FirstNotBlankPipe : PipeTransform {
             is List<*> -> value.find { !it?.toString().isNullOrBlank() }
             is Array<*> -> value.find { !it?.toString().isNullOrBlank() }
             is ArrayNode -> value.firstOrNull()
+            is Set<*> -> value.find { !it?.toString().isNullOrBlank() }
             else -> value
         }
     }
@@ -79,6 +85,7 @@ class LastPipe : PipeTransform {
             is List<*> -> value.lastOrNull()
             is Array<*> -> value.lastOrNull()
             is ArrayNode -> value.firstOrNull()
+            is Set<*> -> value.lastOrNull()
             else -> value
         }
     }
@@ -90,6 +97,7 @@ class LastNotBlankPipe : PipeTransform {
             is List<*> -> value.findLast { !it?.toString().isNullOrBlank() }
             is Array<*> -> value.findLast { !it?.toString().isNullOrBlank() }
             is ArrayNode -> value.firstOrNull()
+            is Set<*> -> value.findLast { !it?.toString().isNullOrBlank() }
             else -> value
         }
     }
@@ -102,6 +110,7 @@ class SizePipe : PipeTransform {
             is Array<*> -> value.size
             is ArrayNode -> value.size()
             is String -> value.length
+            is Set<*> -> value.size
             else -> null
         }
     }
@@ -120,6 +129,7 @@ class TakePipe : PipeTransform {
             is Array<*> -> value.take(n)
             is ArrayNode -> value.take(n)
             is String -> value.take(n)
+            is Set<*> -> value.take(n)
             else -> null
         }
     }
@@ -138,6 +148,7 @@ class TakeLastPipe : PipeTransform {
             is Array<*> -> value.takeLast(n)
             is ArrayNode -> convertToList(value)?.takeLast(n)
             is String -> value.takeLast(n)
+            is Set<*> -> value.toList().takeLast(n)
             else -> null
         }
     }
@@ -181,6 +192,7 @@ class SlicePipe : PipeTransform {
             is Array<*> -> value.slice(range)
             is ArrayNode -> value.firstOrNull()
             is String -> value.slice(range)
+            is Set<*> -> value.toList().slice(range)
             else -> null
         }
     }
@@ -202,6 +214,7 @@ class AssociateByPipe() : PipeTransform {
             (value is List<*>) -> transformList(value)
             (value is Array<*>) -> transformList(value)
             (value is ArrayNode) -> transformList(value)
+            (value is Set<*>) -> transformList(value)
             else -> mapOf(value.evalPath(path!!) to value)
         }
     }
