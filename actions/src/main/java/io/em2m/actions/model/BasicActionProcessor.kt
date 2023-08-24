@@ -8,7 +8,7 @@ open class BasicActionProcessor(
 ) : ActionProcessor {
 
     override fun process(context: ActionContext) {
-        val flow = flowResolver.findFlow(context) ?: notFound({ "Flow not found: ${context.actionName}" })
+        val flow = flowResolver.findFlow(context) ?: notFound({ "Flow not found" })
         context.flow = flow
         val transformers = flow.transformers
             .plus(standardXforms)
