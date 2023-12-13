@@ -23,14 +23,14 @@ import io.em2m.search.core.model.*
 class MapBackedSyncDao<T>(idMapper: IdMapper<T>, private val items: MutableMap<String, T> = HashMap()) : AbstractSyncDao<T>(idMapper), StreamableDao<T> {
 
     override fun create(entity: T): T? {
-        throw NotImplementedError()
+        return save(idMapper.getId(entity), entity)
     }
 
     override fun deleteById(id: String): Boolean {
         return if (items.containsKey(id)) {
-            throw NotFoundException()
-        } else {
             items.remove(id) != null
+        } else {
+            throw NotFoundException()
         }
     }
 
