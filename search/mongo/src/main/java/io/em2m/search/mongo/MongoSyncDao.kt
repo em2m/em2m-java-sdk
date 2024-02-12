@@ -39,8 +39,7 @@ class MongoSyncDao<T>(
     idMapper: IdMapper<T>,
     private val documentMapper: DocumentMapper<T>,
     val collection: MongoCollection<Document>,
-    schemaMapper: SchemaMapper = SimpleSchemaMapper("")
-) :
+    schemaMapper: SchemaMapper = SimpleSchemaMapper("")) :
     AbstractSyncDao<T>(idMapper), StreamableDao<T> {
 
     private val queryConverter = RequestConverter(schemaMapper)
@@ -90,9 +89,12 @@ class MongoSyncDao<T>(
 
     private fun doAggs(request: SearchRequest, mongoQuery: Bson, mongoAggs: Bson): List<Document> {
         return if (request.aggs.isNotEmpty()) {
+            val allowDiskUse = request.aggs.firstOrNull { it.extensions["slow"] == true } != null
             collection
                 .withReadPreference(ReadPreference.secondary())
-                .aggregate(listOf(Aggregates.match(mongoQuery), mongoAggs)).toList()
+                .aggregate(listOf(Aggregates.match(mongoQuery), mongoAggs))
+                .allowDiskUse(allowDiskUse)
+                .toList()
         } else {
             emptyList()
         }
