@@ -62,7 +62,7 @@ class FilterPipe : PipeTransform {
     override fun args(args: List<String>) {
         if (args.isNotEmpty()) {
             path = args[0]
-            targetVal = args[1]
+            targetVal = args[1].trim()
         }
     }
 

@@ -109,10 +109,10 @@ class ArrayTest {
 
     @Test
     fun testFilter() {
-        val listResult1 = simplex.eval("\${ns:listOfMaps | filter:id:1}", emptyMap())
-        val listResult2 = simplex.eval("\${ns:listOfMaps | filter:id:4}", emptyMap())
-        val setResult1 = simplex.eval("\${ns:setOfMaps | filter:id:1}", emptyMap())
-        val setResult2 = simplex.eval("\${ns:setOfMaps | filter:id:4}", emptyMap())
+        val listResult1 = simplex.eval("\${ ns:listOfMaps | filter:id:1 }", emptyMap())
+        val listResult2 = simplex.eval("\${ ns:listOfMaps | filter:id:4 }", emptyMap())
+        val setResult1 = simplex.eval("\${ ns:setOfMaps | filter:id:1 }", emptyMap())
+        val setResult2 = simplex.eval("\${ ns:setOfMaps | filter:id:4 }", emptyMap())
         assertEquals(listOf(mapOf("id" to "1", "value" to "one")), listResult1)
         assertEquals(emptyList<Any>(), listResult2)
         assertEquals(listOf(mapOf("id" to "1", "value" to "one")), setResult1)
