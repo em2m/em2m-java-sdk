@@ -16,14 +16,25 @@ class ArrayTest {
     private val test = mapper.createArrayNode().add("A").add("B").add("C")
 
     private val keyResolver = BasicKeyResolver(mapOf(
-            Key("ns", "key1") to ConstKeyHandler(listOf("A", "B", "C")),
-            Key("ns", "key2") to ConstKeyHandler("value2"),
-            Key("ns", "pie") to ConstKeyHandler(3.14),
-            Key("ns", "duration") to ConstKeyHandler(210_000),
-            Key("ns", "five") to ConstKeyHandler(5),
-            Key("ns", "arrayNode") to ConstKeyHandler(test),
-            Key("ns", "set") to ConstKeyHandler(setOf("D", "E", "F"))))
-            .delegate(Numbers.keys)
+        Key("ns", "key1") to ConstKeyHandler(listOf("A", "B", "C")),
+        Key("ns", "key2") to ConstKeyHandler("value2"),
+        Key("ns", "pie") to ConstKeyHandler(3.14),
+        Key("ns", "duration") to ConstKeyHandler(210_000),
+        Key("ns", "five") to ConstKeyHandler(5),
+        Key("ns", "arrayNode") to ConstKeyHandler(test),
+        Key("ns", "set") to ConstKeyHandler(setOf("D", "E", "F")),
+        Key("ns", "listOfMaps") to ConstKeyHandler(listOf(
+            mapOf("id" to "1", "value" to "one"),
+            mapOf("id" to "2", "value" to "two"),
+            mapOf("id" to "3", "value" to "three")
+        )),
+        Key("ns", "setOfMaps") to ConstKeyHandler(setOf(
+            mapOf("id" to "1", "value" to "one"),
+            mapOf("id" to "2", "value" to "two"),
+            mapOf("id" to "3", "value" to "three")
+        ))
+    ))
+        .delegate(Numbers.keys)
 
 
     val simplex = Simplex().keys(keyResolver)
@@ -94,6 +105,18 @@ class ArrayTest {
         assertEquals("ue2", result2)
         assertEquals(listOf("B", "C"), result3)
         assertEquals(listOf("E", "F"), result4)
+    }
+
+    @Test
+    fun testFilter() {
+        val listResult1 = simplex.eval("\${ns:listOfMaps | filter:id:1}", emptyMap())
+        val listResult2 = simplex.eval("\${ns:listOfMaps | filter:id:4}", emptyMap())
+        val setResult1 = simplex.eval("\${ns:setOfMaps | filter:id:1}", emptyMap())
+        val setResult2 = simplex.eval("\${ns:setOfMaps | filter:id:4}", emptyMap())
+        assertEquals(listOf(mapOf("id" to "1", "value" to "one")), listResult1)
+        assertEquals(emptyList<Any>(), listResult2)
+        assertEquals(listOf(mapOf("id" to "1", "value" to "one")), setResult1)
+        assertEquals(emptyList<Any>(), setResult2)
     }
 
 }

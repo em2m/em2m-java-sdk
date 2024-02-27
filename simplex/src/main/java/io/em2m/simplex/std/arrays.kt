@@ -55,6 +55,23 @@ class FilterNotBlankPipe : PipeTransform {
     }
 }
 
+class FilterPipe : PipeTransform {
+    private var path: String = ""
+    private var targetVal: String? = null
+
+    override fun args(args: List<String>) {
+        if (args.isNotEmpty()) {
+            path = args[0]
+            targetVal = args[1]
+        }
+    }
+
+    override fun transform(value: Any?, context: ExprContext): List<Any> {
+        val convertedList: List<Any> = value?.coerce() ?: emptyList()
+        return convertedList.filter { targetVal == it.evalPath(path) }
+    }
+}
+
 class FirstPipe : PipeTransform {
     override fun transform(value: Any?, context: ExprContext): Any? {
         return when (value) {
@@ -235,6 +252,7 @@ object Arrays {
         mapOf(
             "notNull" to NotNullPipe(),
             "reversed" to ReversedPipe(),
+            "filter" to FilterPipe(),
             "filterNotNull" to FilterNotNullPipe(),
             "filterNotBlank" to FilterNotBlankPipe(),
             "first" to FirstPipe(),
