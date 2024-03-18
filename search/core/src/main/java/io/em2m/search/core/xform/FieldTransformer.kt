@@ -109,7 +109,11 @@ class FieldTransformer<T>(val simplex: Simplex, fields: List<FieldModel> = empty
                     val buckets = aggResult.buckets
                         ?.filter { bucket ->
                             val bucketContext = context.toMutableMap() + BucketContext(req, scope, bucket).toMap()
-                            bucketFilter.call(bucketContext)
+                            try {
+                                bucketFilter.call(bucketContext)
+                            } catch (e: Exception) {
+                                true
+                            }
                         }?.map { transformBucket(it) }
                     return if (agg is Fielded) {
                         aggResult.copy(field = agg.field, buckets = buckets)
