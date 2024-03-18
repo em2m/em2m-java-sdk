@@ -1,13 +1,19 @@
 package io.em2m.search.core.xform
 
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.em2m.search.core.expr.FieldKeyHandler
 import io.em2m.search.core.model.*
 import io.em2m.simplex.Simplex
+import io.em2m.simplex.model.ConditionExpr
+import io.em2m.simplex.model.ConstConditionExpr
 import io.em2m.simplex.model.Expr
 import io.em2m.simplex.model.ExprContext
+import io.em2m.simplex.parser.SimplexModule
+import io.em2m.utils.coerce
 
 class FieldTransformer<T>(val simplex: Simplex, fields: List<FieldModel> = emptyList()) : Transformer<T> {
 
+    private val objectMapper = jacksonObjectMapper().registerModule(SimplexModule(simplex))
     private val fieldModels = fields.associateBy { it.name }
     private val queryXform = FieldQueryTransformer(fieldModels)
     private val aggsXform = FieldAggTransformer(fieldModels)
@@ -25,7 +31,7 @@ class FieldTransformer<T>(val simplex: Simplex, fields: List<FieldModel> = empty
         result: SearchResult<T>,
         context: ExprContext
     ): SearchResult<T> {
-        val aggResults = transformAggResults(request, result.aggs)
+        val aggResults = transformAggResults(request, result.aggs, context)
         val models = reqModels(request.fields)
         val rows = transformRows(request, result, models, context)
         return result.copy(aggs = aggResults, rows = rows, fields = request.fields)
@@ -80,7 +86,7 @@ class FieldTransformer<T>(val simplex: Simplex, fields: List<FieldModel> = empty
         }
     }
 
-    private fun transformAggResults(req: SearchRequest, aggs: Map<String, AggResult>): Map<String, AggResult> {
+    private fun transformAggResults(req: SearchRequest, aggs: Map<String, AggResult>, context: ExprContext): Map<String, AggResult> {
         val reqAggs = req.aggs.associateBy { it.key }
         return aggs.mapValues { (key, aggResult) ->
             val agg = reqAggs[key]
@@ -98,7 +104,13 @@ class FieldTransformer<T>(val simplex: Simplex, fields: List<FieldModel> = empty
                 }
 
                 override fun transform(aggResult: AggResult): AggResult {
-                    val buckets = aggResult.buckets?.map { transformBucket(it) }
+                    val bucketFilter: ConditionExpr = scope["filterBuckets"]?.coerce(objectMapper = objectMapper)
+                        ?: ConstConditionExpr(value = true)
+                    val buckets = aggResult.buckets
+                        ?.filter { bucket ->
+                            val bucketContext = context.toMutableMap() + BucketContext(req, scope, bucket).toMap()
+                            bucketFilter.call(bucketContext)
+                        }?.map { transformBucket(it) }
                     return if (agg is Fielded) {
                         aggResult.copy(field = agg.field, buckets = buckets)
                     } else aggResult.copy(buckets = buckets)
