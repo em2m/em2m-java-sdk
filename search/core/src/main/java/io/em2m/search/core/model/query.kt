@@ -125,14 +125,15 @@ class NotQuery(
     }
 }
 
-class NativeQuery(var value: Any? = null) : Query()
-class NamedQuery(var name: String, var value: Any? = null) : Query()
+class NativeQuery(var value: Any? = null, val label: Any? = null) : Query()
+class NamedQuery(var name: String, var value: Any? = null, val label: Any? = null) : Query()
 
-class TermQuery(field: String, val value: Any?) : FieldedQuery(field)
+class TermQuery(field: String, val value: Any?, val label: Any? = null) : FieldedQuery(field)
 class TermsQuery(
     field: String,
     @JsonFormat(with = [JsonFormat.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY])
-    val value: List<Any?>
+    val value: List<Any?>,
+    val label: Any? = null
 ) : FieldedQuery(field) {
 
     override fun simplify(): Query {
@@ -141,9 +142,9 @@ class TermsQuery(
 
 }
 
-class MatchQuery(field: String, val value: String, val operator: String? = null) : FieldedQuery(field)
+class MatchQuery(field: String, val value: String, val operator: String? = null, val label: Any? = null) : FieldedQuery(field)
 
-class WildcardQuery(field: String, val value: String) : FieldedQuery(field) {
+class WildcardQuery(field: String, val value: String, val label: Any? = null) : FieldedQuery(field) {
 
     fun toPattern(): String {
         val result = StringBuilder()
@@ -164,12 +165,13 @@ class WildcardQuery(field: String, val value: String) : FieldedQuery(field) {
 class PhraseQuery(
     field: String,
     @JsonFormat(with = [JsonFormat.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY])
-    val value: List<String>
+    val value: List<String>,
+    val label: Any? = null
 ) : FieldedQuery(field)
 
-class PrefixQuery(field: String, val value: String) : FieldedQuery(field)
+class PrefixQuery(field: String, val value: String, val label: Any? = null) : FieldedQuery(field)
 
-class RegexQuery(field: String, val value: String) : FieldedQuery(field)
+class RegexQuery(field: String, val value: String, val label: Any? = null) : FieldedQuery(field)
 
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 class RangeQuery(
@@ -178,7 +180,8 @@ class RangeQuery(
     val lte: Any? = null,
     val gt: Any? = null,
     val gte: Any? = null,
-    val timeZone: String? = null
+    val timeZone: String? = null,
+    val label: Any? = null
 ) : FieldedQuery(field)
 
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
@@ -188,12 +191,13 @@ class DateRangeQuery(
     val lte: Any? = null,
     val gt: Any? = null,
     val gte: Any? = null,
-    val timeZone: String? = null
+    val timeZone: String? = null,
+    val label: Any? = null
 ) : FieldedQuery(field)
 
 class BboxQuery(field: String, val value: Envelope) : FieldedQuery(field)
 
-class LuceneQuery(val query: String, val defaultField: String? = null) : Query()
+class LuceneQuery(val query: String, val defaultField: String? = null, val label: Any? = null) : Query()
 
-class ExistsQuery(field: String, val value: Boolean = true) : FieldedQuery(field)
+class ExistsQuery(field: String, val value: Boolean = true, val label: Any? = null) : FieldedQuery(field)
 
