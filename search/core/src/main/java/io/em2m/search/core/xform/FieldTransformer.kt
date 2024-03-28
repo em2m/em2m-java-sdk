@@ -97,8 +97,8 @@ class FieldTransformer<T>(val simplex: Simplex, fields: List<FieldModel> = empty
 
                 override fun transformBucket(bucket: Bucket): Bucket {
                     return if (key != missing && expr != null) {
-                        val context = BucketContext(req, scope, bucket)
-                        val label = simplex.eval(expr, context.toMap().plus(scope)).toString()
+                        val bucketContext = BucketContext(req, scope, bucket)
+                        val label = simplex.eval(expr, bucketContext.toMap().plus(scope)).toString()
                         bucket.copy(label = label)
                     } else bucket
                 }
