@@ -21,7 +21,7 @@ class FieldKeyHandler : KeyHandler, Fielded {
 
     override fun call(key: Key, context: ExprContext): Any? {
         val rowContext = RowContext(context)
-        val values = if (rowContext.fieldValues != null) {
+        var values = if (rowContext.fieldValues != null) {
             fields(key).map { field ->
                 rowContext.fieldValues[field]
             }
@@ -30,6 +30,13 @@ class FieldKeyHandler : KeyHandler, Fielded {
                 rowContext.evalPath(field)
             }
         }
+
+        if (values.filterNotNull().isEmpty()) {
+            values = fields(key).map { field ->
+                context.evalPath(field)
+            }
+        }
+
         return if (values.size == 1) {
             values.first()
         } else values
