@@ -13,6 +13,18 @@ class ProblemTest {
         assertEquals("title", title)
     }
 
+    @Test
+    fun filteredCharactersCheck() {
+        val convertedProblem = Problem.convert(IllegalStateException("Could not resolve type id '<script>nefariousFunction()</script>'"))
+        assertEquals("Could not resolve type id 'scriptnefariousFunction()script'", convertedProblem.detail)
+    }
+
+    @Test
+    fun ignoredCharactersCheck() {
+        val convertedProblem = Problem.convert(IllegalStateException("These characters should be preserved:!@#$%^&*()[]{}\\|'\",.?"))
+        assertEquals("These characters should be preserved:!@#$%^&*()[]{}\\|'\",.?", convertedProblem.detail)
+    }
+
     // todo - implement and check exception filtering
 
 }

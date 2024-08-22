@@ -36,25 +36,29 @@ class Problem(val type: String? = null,
     }
 
     companion object {
+        private fun sanitize(inputString: String?): String? {
+            val regex = Regex("[<>/]")
+            return inputString?.replace(regex, "") ?: inputString
+        }
 
         fun notAuthorized(title: () -> Any? = { "Not Authorized" }, detail: () -> Any? = {null}, ext: Map<String, Any?> = emptyMap()): Nothing {
-            Problem(title = title().toString(), status = Status.NOT_AUTHORIZED, detail = detail()?.toString(), ext = ext).throwException()
+            Problem(title = title().toString(), status = Status.NOT_AUTHORIZED, detail = sanitize(detail()?.toString()), ext = ext).throwException()
         }
 
         fun badRequest(title: () -> Any? = { "Bad Request" }, detail: () -> Any? = {null}, ext: Map<String, Any?> = emptyMap()): Nothing {
-            Problem(title = title().toString(), status = Status.BAD_REQUEST, detail = detail()?.toString(), ext = ext).throwException()
+            Problem(title = title().toString(), status = Status.BAD_REQUEST, detail = sanitize(detail()?.toString()), ext = ext).throwException()
         }
 
         fun notFound(title: () -> Any? = { "Not Found" }, detail: () -> Any? = {null}, ext: Map<String, Any?> = emptyMap()): Nothing {
-            Problem(title = title().toString(), status = Status.NOT_FOUND, detail = detail()?.toString(), ext = ext).throwException()
+            Problem(title = title().toString(), status = Status.NOT_FOUND, detail = sanitize(detail()?.toString()), ext = ext).throwException()
         }
 
         fun conflict(title: () -> Any? = { "Conflict" }, detail: () -> Any? = {null}, ext: Map<String, Any?> = emptyMap()): Nothing {
-            Problem(title = title().toString(), status = Status.CONFLICT, detail = detail()?.toString(), ext = ext).throwException()
+            Problem(title = title().toString(), status = Status.CONFLICT, detail = sanitize(detail()?.toString()), ext = ext).throwException()
         }
 
         fun unexpectedError(title: () -> Any? = { "Unexpected Error" }, detail: () -> Any? = {null}, ext: Map<String, Any?> = emptyMap()): Nothing {
-            Problem(title = title().toString(), status = Status.INTERNAL_SERVER_ERROR, detail = detail()?.toString(), ext = ext).throwException()
+            Problem(title = title().toString(), status = Status.INTERNAL_SERVER_ERROR, detail = sanitize(detail()?.toString()), ext = ext).throwException()
         }
 
         fun <T> valueOrNotFound(value: T?, title: () -> Any? = { "Not Found" }, detail: () -> Any? = {null}, ext: Map<String, Any?> = emptyMap()): T {
@@ -68,9 +72,9 @@ class Problem(val type: String? = null,
         fun convert(throwable: Throwable): Problem {
             return when (throwable) {
                 is ProblemException -> throwable.problem
-                is IllegalStateException -> Problem(status = Status.CONFLICT, title = "Conflict", detail = throwable.message)
-                is IllegalArgumentException -> Problem(status = Status.BAD_REQUEST, title = "Bad Request", detail = throwable.message)
-                else -> Problem(status = Status.INTERNAL_SERVER_ERROR, title = "Internal Server Error", detail = throwable.message)
+                is IllegalStateException -> Problem(status = Status.CONFLICT, title = "Conflict", detail = sanitize(throwable.message))
+                is IllegalArgumentException -> Problem(status = Status.BAD_REQUEST, title = "Bad Request", detail = sanitize(throwable.message))
+                else -> Problem(status = Status.INTERNAL_SERVER_ERROR, title = "Internal Server Error", detail = sanitize(throwable.message))
             }
         }
     }
