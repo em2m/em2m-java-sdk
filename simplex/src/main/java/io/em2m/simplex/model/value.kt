@@ -23,6 +23,9 @@ data class KeyOnlyPipePart(override val key: Key, override val handler: KeyHandl
     override fun call(context: ExprContext): Any? {
         val contextKeys: KeyResolver? = context["keys"] as? KeyResolver
         val handler = contextKeys?.find(key) ?: handler
+        if (handler == null) {
+            println("key handler null, context = $context")
+        }
         return requireNotNull(handler) { "Handler not found for $key" }.call(key, context)
     }
 }
@@ -38,6 +41,9 @@ data class SingleTransformPipePart(
     override fun call(context: ExprContext): Any? {
         val contextKeys: KeyResolver? = context["keys"] as? KeyResolver
         val handler = contextKeys?.find(key) ?: handler
+        if (handler == null) {
+            println("key handler null, context = $context")
+        }
         val initial = requireNotNull(handler) { "Handler not found for $key" }.call(key, context)
         return transform.transform(initial, context)
     }
@@ -52,6 +58,9 @@ data class MultiTransformPipePart(
     override fun call(context: ExprContext): Any? {
         val contextKeys: KeyResolver? = context["keys"] as? KeyResolver
         val handler = contextKeys?.find(key) ?: handler
+        if (handler == null) {
+            println("key handler null, context = $context")
+        }
         val initial = requireNotNull(handler) { "Handler not found for $key" }.call(key, context)
         return transforms.fold(initial) { current, pipe -> pipe.transform(current, context) }
     }
