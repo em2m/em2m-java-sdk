@@ -9,7 +9,7 @@ import com.fasterxml.jackson.annotation.JsonInclude
 class Problem(val type: String? = null,
               val title: String,
               val status: Int = 500,
-              val detail: String? = null,
+              var detail: String? = null,
               val instance: String? = null,
               ext: Map<String, Any?> = HashMap()) {
 
@@ -33,6 +33,12 @@ class Problem(val type: String? = null,
 
     init {
         extensions.putAll(ext)
+        detail = sanitize(detail)
+    }
+
+    private fun sanitize(inputString: String?): String? {
+        val regex = Regex("[<>/]")
+        return inputString?.replace(regex, "") ?: inputString
     }
 
     companion object {
