@@ -26,22 +26,23 @@ import org.locationtech.jts.geom.Envelope
     Type(value = NativeQuery::class, name = "native"),
     Type(value = NamedQuery::class, name = "named")
 )
-abstract class Query {
+abstract class Query(val label: String?) {
     open fun simplify() = this
 
     open fun negate(): Query = NotQuery(this)
 }
 
-abstract class FieldedQuery(val field: String) : Query()
+abstract class FieldedQuery(val field: String, label: String?) : Query(label)
 
-abstract class BoolQuery(@JsonProperty("of") val of: List<Query> = emptyList()) : Query()
+abstract class BoolQuery(@JsonProperty("of") val of: List<Query> = emptyList(), label: String?) : Query(label)
 
-class MatchAllQuery : Query()
+class MatchAllQuery(label: String? = null) : Query(label)
 
 class AndQuery(
     @JsonFormat(with = [JsonFormat.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY])
-    of: List<Query>
-) : BoolQuery(of) {
+    of: List<Query>,
+    label: String? = null
+) : BoolQuery(of, label) {
     constructor(vararg of: Query) : this(of.asList())
 
     override fun simplify(): Query {
@@ -73,9 +74,10 @@ class AndQuery(
 
 class OrQuery(
     @JsonFormat(with = [JsonFormat.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY])
-    of: List<Query>
-) : BoolQuery(of) {
-    constructor(vararg of: Query) : this(of.asList())
+    of: List<Query>,
+    label: String? = null
+) : BoolQuery(of, label) {
+    constructor(vararg of: Query, label: String? = null) : this(of.asList(), label)
 
     override fun simplify(): Query {
         val ofx = of
@@ -97,16 +99,17 @@ class OrQuery(
     }
 
     companion object {
-        fun of(vararg query: Query?): Query {
-            return OrQuery(query.filterNotNull()).simplify()
+        fun of(vararg query: Query?, label: String? = null): Query {
+            return OrQuery(query.filterNotNull(), label).simplify()
         }
     }
 }
 
 class NotQuery(
     @JsonFormat(with = [JsonFormat.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY])
-    of: List<Query>
-) : BoolQuery(of) {
+    of: List<Query>,
+    label: String? = null
+) : BoolQuery(of, label) {
     constructor(vararg of: Query) : this(of.asList())
 
     override fun simplify(): Query {
@@ -125,26 +128,27 @@ class NotQuery(
     }
 }
 
-class NativeQuery(var value: Any? = null, val label: Any? = null) : Query()
-class NamedQuery(var name: String, var value: Any? = null, val label: Any? = null) : Query()
+class NativeQuery(var value: Any? = null, label: String? = null) : Query(label)
+class NamedQuery(var name: String, var value: Any? = null, label: String? = null) : Query(label)
 
-class TermQuery(field: String, val value: Any?, val label: Any? = null) : FieldedQuery(field)
+class TermQuery(field: String, val value: Any?, label: String? = null) : FieldedQuery(field, label)
 class TermsQuery(
     field: String,
     @JsonFormat(with = [JsonFormat.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY])
     val value: List<Any?>,
-    val label: Any? = null
-) : FieldedQuery(field) {
+    label: String? = null
+) : FieldedQuery(field, label) {
 
     override fun simplify(): Query {
-        return if (value.size < 2) TermQuery(field, value.firstOrNull()) else this
+        return if (value.size < 2) TermQuery(field, value.firstOrNull(), label) else this
     }
 
 }
 
-class MatchQuery(field: String, val value: String, val operator: String? = null, val label: Any? = null) : FieldedQuery(field)
+class MatchQuery(field: String, val value: String, val operator: String? = null, label: String? = null) :
+    FieldedQuery(field, label)
 
-class WildcardQuery(field: String, val value: String, val label: Any? = null) : FieldedQuery(field) {
+class WildcardQuery(field: String, val value: String, label: String? = null) : FieldedQuery(field, label) {
 
     fun toPattern(): String {
         val result = StringBuilder()
@@ -166,12 +170,12 @@ class PhraseQuery(
     field: String,
     @JsonFormat(with = [JsonFormat.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY])
     val value: List<String>,
-    val label: Any? = null
-) : FieldedQuery(field)
+    label: String? = null
+) : FieldedQuery(field, label)
 
-class PrefixQuery(field: String, val value: String, val label: Any? = null) : FieldedQuery(field)
+class PrefixQuery(field: String, val value: String, label: String? = null) : FieldedQuery(field, label)
 
-class RegexQuery(field: String, val value: String, val label: Any? = null) : FieldedQuery(field)
+class RegexQuery(field: String, val value: String, label: String? = null) : FieldedQuery(field, label)
 
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 class RangeQuery(
@@ -181,8 +185,8 @@ class RangeQuery(
     val gt: Any? = null,
     val gte: Any? = null,
     val timeZone: String? = null,
-    val label: Any? = null
-) : FieldedQuery(field)
+    label: String? = null
+) : FieldedQuery(field, label)
 
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 class DateRangeQuery(
@@ -192,12 +196,12 @@ class DateRangeQuery(
     val gt: Any? = null,
     val gte: Any? = null,
     val timeZone: String? = null,
-    val label: Any? = null
-) : FieldedQuery(field)
+    label: String? = null
+) : FieldedQuery(field, label)
 
-class BboxQuery(field: String, val value: Envelope) : FieldedQuery(field)
+class BboxQuery(field: String, val value: Envelope, label: String? = null) : FieldedQuery(field, label)
 
-class LuceneQuery(val query: String, val defaultField: String? = null, val label: Any? = null) : Query()
+class LuceneQuery(val query: String, val defaultField: String? = null, label: String? = null) : Query(label)
 
-class ExistsQuery(field: String, val value: Boolean = true, val label: Any? = null) : FieldedQuery(field)
+class ExistsQuery(field: String, val value: Boolean = true, label: String? = null) : FieldedQuery(field, label)
 
