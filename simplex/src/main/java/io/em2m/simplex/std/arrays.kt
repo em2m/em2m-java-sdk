@@ -244,6 +244,32 @@ class AssociateByPipe() : PipeTransform {
 }
 
 
+class MapPipe() : PipeTransform {
+    private var path: String? = null
+
+    override fun args(args: List<String>) {
+        if (args.isNotEmpty()) {
+            path = args[0].trim()
+        }
+    }
+
+    override fun transform(value: Any?, context: ExprContext): Any? {
+        return when {
+            path.isNullOrEmpty() -> null
+            (value is List<*>) -> transformList(value)
+            (value is Array<*>) -> transformList(value)
+            (value is ArrayNode) -> transformList(value)
+            (value is Set<*>) -> transformList(value)
+            else -> listOf(value.evalPath(path!!))
+        }
+    }
+
+    private fun transformList(values: Any?): Any {
+        val items: List<Any?> = values.coerce() ?: emptyList()
+        return items.map { it.evalPath(path!!) }
+    }
+}
+
 val StandardArrayConditions = emptyMap<String, ConditionHandler>()
 
 object Arrays {
@@ -266,4 +292,5 @@ object Arrays {
         .transform("take") { TakePipe() }
         .transform("slice") { SlicePipe() }
         .transform("takeLast") { TakeLastPipe() }
+        .transform("map") { MapPipe() }
 }
