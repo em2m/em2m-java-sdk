@@ -4,6 +4,8 @@ import com.fasterxml.jackson.databind.node.ArrayNode
 import io.em2m.simplex.evalPath
 import io.em2m.simplex.model.*
 import io.em2m.utils.coerce
+import java.math.BigDecimal
+import java.math.RoundingMode
 
 class NotNullPipe : PipeTransform {
 
@@ -133,6 +135,33 @@ class SizePipe : PipeTransform {
     }
 }
 
+class MaxNumPipe : PipeTransform {
+
+    private var precision: Int = 1
+    override fun args(args: List<String>) {
+        if (args.isNotEmpty()) {
+            precision = Integer.parseInt(args[0].trim())
+        }
+    }
+    override fun transform(value: Any?, context: ExprContext): Any? {
+        val convertedList: Array<Number>? = when (value) {
+            is List<*> -> value.coerce()
+            is Array<*> -> value.coerce()
+            is ArrayNode -> value.coerce()
+            is String -> value.toString().split(",").coerce()
+            is Set<*> -> value.coerce()
+            else -> null
+        }
+        val values: MutableList<BigDecimal> = mutableListOf()
+        convertedList?.forEach {
+            values.add(BigDecimal(it.toDouble()).setScale(precision, RoundingMode.HALF_UP))
+        }
+        return if (values.isNotEmpty()) {
+            values.maxOrNull()?.toDouble()
+        } else null
+    }
+}
+
 class TakePipe : PipeTransform {
     var n = 0
 
@@ -259,7 +288,8 @@ object Arrays {
             "firstNotBlank" to FirstNotBlankPipe(),
             "last" to LastPipe(),
             "lastNotBlank" to LastNotBlankPipe(),
-            "size" to SizePipe()
+            "size" to SizePipe(),
+            "maxNum" to MaxNumPipe()
         )
     )
         .transform("associateBy") { AssociateByPipe() }
