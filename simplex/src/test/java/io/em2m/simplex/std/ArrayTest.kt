@@ -6,6 +6,7 @@ import io.em2m.simplex.Simplex
 import io.em2m.simplex.model.BasicKeyResolver
 import io.em2m.simplex.model.ConstKeyHandler
 import io.em2m.simplex.model.Key
+import org.junit.Assert
 import io.em2m.utils.coerce
 import org.junit.Test
 import kotlin.test.assertEquals
@@ -38,8 +39,9 @@ class ArrayTest {
             mapOf("id" to "1", "value" to true),
             mapOf("id" to "2", "value" to false),
             mapOf("id" to "3", "value" to "true")
-        ))
-    ))
+        )),
+        Key("ns", "maxNum") to ConstKeyHandler("15.12,115.76,006,704,646.897654"),
+        Key("ns", "maxNum2") to ConstKeyHandler(listOf("234", 678, "nhy"))))
         .delegate(Numbers.keys)
 
 
@@ -123,6 +125,22 @@ class ArrayTest {
         assertEquals(emptyList<Any>(), listResult2)
         assertEquals(listOf(mapOf("id" to "1", "value" to "one")), setResult1)
         assertEquals(emptyList<Any>(), setResult2)
+    }
+
+    @Test
+    fun testToNumMaxPiper() {
+        val expected1 = 704.0
+        val expected2 = null
+
+        val exprString = "\${ns:maxNum | maxNum:3}"
+        val expr = requireNotNull(simplex.parser.parse(exprString))
+        val actual = expr.call(emptyMap())
+
+        val exprString2 = "\${ns:maxNum2 | maxNum:1}"
+        val expr2 = requireNotNull(simplex.parser.parse(exprString2))
+        val actual2 = expr2.call(emptyMap())
+        Assert.assertEquals(expected1, actual)
+        Assert.assertEquals(expected2, actual2)
     }
 
     @Test
