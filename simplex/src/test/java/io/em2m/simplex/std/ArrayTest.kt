@@ -6,6 +6,7 @@ import io.em2m.simplex.Simplex
 import io.em2m.simplex.model.BasicKeyResolver
 import io.em2m.simplex.model.ConstKeyHandler
 import io.em2m.simplex.model.Key
+import io.em2m.utils.coerce
 import org.junit.Test
 import kotlin.test.assertEquals
 
@@ -32,6 +33,11 @@ class ArrayTest {
             mapOf("id" to "1", "value" to "one"),
             mapOf("id" to "2", "value" to "two"),
             mapOf("id" to "3", "value" to "three")
+        )),
+        Key("ns", "boolMaps") to ConstKeyHandler(setOf(
+            mapOf("id" to "1", "value" to true),
+            mapOf("id" to "2", "value" to false),
+            mapOf("id" to "3", "value" to "true")
         ))
     ))
         .delegate(Numbers.keys)
@@ -117,6 +123,23 @@ class ArrayTest {
         assertEquals(emptyList<Any>(), listResult2)
         assertEquals(listOf(mapOf("id" to "1", "value" to "one")), setResult1)
         assertEquals(emptyList<Any>(), setResult2)
+    }
+
+    @Test
+    fun testFilter2() {
+        val setResult = simplex.eval("\${ns:boolMaps | filter:value:true }", emptyMap()).coerce<List<Any?>>() ?: listOf()
+        assertEquals(setResult.size, 2)
+    }
+
+    @Test
+    fun testMap() {
+        val listResult = simplex.eval("\${ns:boolMaps | map:value}", emptyMap()).coerce<List<Any?>>() ?: listOf()
+        val trueCounts = listResult.count { it.toString() == "true" }
+        val falseCounts = listResult.count { it.toString() == "false" }
+        val booleanCounts = listResult.count { it is Boolean }
+        assertEquals(trueCounts, 2)
+        assertEquals(falseCounts, 1)
+        assertEquals(booleanCounts, 2)
     }
 
 }

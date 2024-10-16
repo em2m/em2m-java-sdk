@@ -68,7 +68,10 @@ class FilterPipe : PipeTransform {
 
     override fun transform(value: Any?, context: ExprContext): List<Any> {
         val convertedList: List<Any> = value?.coerce() ?: emptyList()
-        return convertedList.filter { targetVal == it.evalPath(path) }
+        return convertedList.filter {
+            val evaluated = it.evalPath(path)
+            targetVal == evaluated || targetVal == evaluated.toString()
+        }
     }
 }
 
