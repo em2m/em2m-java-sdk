@@ -4,6 +4,8 @@ import com.fasterxml.jackson.databind.node.ArrayNode
 import io.em2m.simplex.evalPath
 import io.em2m.simplex.model.*
 import io.em2m.utils.coerce
+import java.math.BigDecimal
+import java.math.RoundingMode
 
 class NotNullPipe : PipeTransform {
 
@@ -68,7 +70,10 @@ class FilterPipe : PipeTransform {
 
     override fun transform(value: Any?, context: ExprContext): List<Any> {
         val convertedList: List<Any> = value?.coerce() ?: emptyList()
-        return convertedList.filter { targetVal == it.evalPath(path) }
+        return convertedList.filter {
+            val evaluated = it.evalPath(path)
+            targetVal == evaluated || targetVal == evaluated.toString()
+        }
     }
 }
 
@@ -130,6 +135,35 @@ class SizePipe : PipeTransform {
             is Set<*> -> value.size
             else -> null
         }
+    }
+}
+
+class MaxNumPipe : PipeTransform {
+
+    private var precision: Int = 1
+    override fun args(args: List<String>) {
+        if (args.isNotEmpty()) {
+            precision = Integer.parseInt(args[0].trim())
+        }
+    }
+    override fun transform(value: Any?, context: ExprContext): Any? {
+        val convertedList: Array<Number>? = when (value) {
+            is List<*> -> value.coerce()
+            is Array<*> -> value.coerce()
+            is ArrayNode -> value.coerce()
+            is String -> value.toString().split(",").coerce()
+            is Set<*> -> value.coerce()
+            else -> null
+        }
+        val values: MutableList<BigDecimal> = mutableListOf()
+        convertedList?.toSet()?.forEach {
+            if (it != null) {
+                values.add(BigDecimal(it.toDouble()).setScale(precision, RoundingMode.HALF_UP))
+            }
+        }
+        return if (values.isNotEmpty()) {
+            values.maxOrNull()?.toDouble()
+        } else null
     }
 }
 
@@ -244,6 +278,32 @@ class AssociateByPipe() : PipeTransform {
 }
 
 
+class MapPipe() : PipeTransform {
+    private var path: String? = null
+
+    override fun args(args: List<String>) {
+        if (args.isNotEmpty()) {
+            path = args[0].trim()
+        }
+    }
+
+    override fun transform(value: Any?, context: ExprContext): Any? {
+        return when {
+            path.isNullOrEmpty() -> null
+            (value is List<*>) -> transformList(value)
+            (value is Array<*>) -> transformList(value)
+            (value is ArrayNode) -> transformList(value)
+            (value is Set<*>) -> transformList(value)
+            else -> listOf(value.evalPath(path!!))
+        }
+    }
+
+    private fun transformList(values: Any?): Any {
+        val items: List<Any?> = values.coerce() ?: emptyList()
+        return items.map { it.evalPath(path!!) }
+    }
+}
+
 val StandardArrayConditions = emptyMap<String, ConditionHandler>()
 
 object Arrays {
@@ -259,11 +319,13 @@ object Arrays {
             "firstNotBlank" to FirstNotBlankPipe(),
             "last" to LastPipe(),
             "lastNotBlank" to LastNotBlankPipe(),
-            "size" to SizePipe()
+            "size" to SizePipe(),
+            "maxNum" to MaxNumPipe()
         )
     )
         .transform("associateBy") { AssociateByPipe() }
         .transform("take") { TakePipe() }
         .transform("slice") { SlicePipe() }
         .transform("takeLast") { TakeLastPipe() }
+        .transform("map") { MapPipe() }
 }
