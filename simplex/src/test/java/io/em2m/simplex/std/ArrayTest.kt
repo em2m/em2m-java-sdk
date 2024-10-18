@@ -41,7 +41,7 @@ class ArrayTest {
             mapOf("id" to "3", "value" to "true")
         )),
         Key("ns", "maxNum") to ConstKeyHandler("15.12,115.76,006,704,646.897654"),
-        Key("ns", "maxNum2") to ConstKeyHandler(listOf("234", 678, "nhy"))))
+        Key("ns", "maxNum2") to ConstKeyHandler(listOf(null, null, null))))
         .delegate(Numbers.keys)
 
 

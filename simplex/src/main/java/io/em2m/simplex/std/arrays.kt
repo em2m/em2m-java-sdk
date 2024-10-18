@@ -156,8 +156,10 @@ class MaxNumPipe : PipeTransform {
             else -> null
         }
         val values: MutableList<BigDecimal> = mutableListOf()
-        convertedList?.forEach {
-            values.add(BigDecimal(it.toDouble()).setScale(precision, RoundingMode.HALF_UP))
+        convertedList?.toSet()?.forEach {
+            if (it != null) {
+                values.add(BigDecimal(it.toDouble()).setScale(precision, RoundingMode.HALF_UP))
+            }
         }
         return if (values.isNotEmpty()) {
             values.maxOrNull()?.toDouble()
