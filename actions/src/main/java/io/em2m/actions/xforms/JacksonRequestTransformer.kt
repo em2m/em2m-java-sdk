@@ -104,7 +104,7 @@ class JacksonRequestTransformer(
                 var bytesRead: Int
                 while (input.read(buffer).also { bytesRead = it } != -1) {
                     val sanitizedChunk = String(buffer, 0, bytesRead)
-                        .replace(Regex("[<>/]"), "")  // Sanitize the chunk
+                        .replace(Regex("[<>]"), "")  // Sanitize the chunk
                     output.write(sanitizedChunk.toByteArray())
                 }
             }
