@@ -46,8 +46,8 @@ class JacksonRequestTransformerTest {
         )
 
         testTransform.doOnNext(testContext)
-        val targetScriptVal01 = "scriptdoMaliciousThings()script.script"
-        val targetScriptVal02 = "scrscriptiptdoMaliciousThings()scrscriptipt"
+        val targetScriptVal01 = "scriptdoMaliciousThings()script/./script"
+        val targetScriptVal02 = "scrscriptiptdoMaliciousThings()/scr/scriptipt"
         assertEquals(targetScriptVal01, testContext.request.evalPath("maliciousScript01"))
         assertEquals(targetScriptVal02, testContext.request.evalPath("maliciousScript02"))
     }
