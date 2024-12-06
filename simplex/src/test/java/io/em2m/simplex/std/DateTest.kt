@@ -266,5 +266,12 @@ class DateTest {
         assertEquals(expected3, actual3)
     }
 
-
+    @Test
+    fun testWeekEnding() {
+        val expected = "25-Apr"
+        val exprString = "\${ns:dateKey | weekEnding:\$timeZone}"
+        val expr = requireNotNull(simplex.parser.parse(exprString))
+        val actual = expr.call(mapOf("timeZone" to "America/Los_Angeles"))
+        assertEquals(expected, actual)
+    }
 }
