@@ -17,25 +17,25 @@ import kotlin.test.assertTrue
 class DateTest {
 
     private val keyResolver = BasicKeyResolver(mapOf(
-            Key("ns", "dateKey") to ConstKeyHandler("2015-04-21T17:31:06-07"),
-            Key("ns", "dateKey2") to ConstKeyHandler("04/21/2015"),
-            Key("ns", "dateKey3") to ConstKeyHandler("03/03/2020"),
-            Key("ns", "YearDayMonth") to ConstKeyHandler("2018/15/10"),
-            Key("ns", "YearMonthDay") to ConstKeyHandler("2018/11/18"),
-            Key("ns", "DayMonthYear") to ConstKeyHandler("18/11/2018"),
-            Key("ns", "DayMonthYearSlashes") to ConstKeyHandler("18-11-2018"),
-            Key("ns", "YearMonthDayNoSeparations") to ConstKeyHandler("20181118"),
+        Key("ns", "dateKey") to ConstKeyHandler("2015-04-21T17:31:06-07"),
+        Key("ns", "dateKey2") to ConstKeyHandler("04/21/2015"),
+        Key("ns", "dateKey3") to ConstKeyHandler("03/03/2020"),
+        Key("ns", "YearDayMonth") to ConstKeyHandler("2018/15/10"),
+        Key("ns", "YearMonthDay") to ConstKeyHandler("2018/11/18"),
+        Key("ns", "DayMonthYear") to ConstKeyHandler("18/11/2018"),
+        Key("ns", "DayMonthYearSlashes") to ConstKeyHandler("18-11-2018"),
+        Key("ns", "YearMonthDayNoSeparations") to ConstKeyHandler("20181118"),
 
 
         //Key("ns", "dateKey") to ConstKeyHandler(1429641066000),
-            Key("ns", "duration") to ConstKeyHandler(210_000)))
-            .delegate(Numbers.keys)
+        Key("ns", "duration") to ConstKeyHandler(210_000)))
+        .delegate(Numbers.keys)
 
     private val dateKeyResolver = Dates.keys
 
     val simplex = Simplex()
-            .keys(keyResolver)
-            .keys(dateKeyResolver)
+        .keys(keyResolver)
+        .keys(dateKeyResolver)
 
     @Test
     fun testArgs() {
@@ -266,5 +266,12 @@ class DateTest {
         assertEquals(expected3, actual3)
     }
 
-
+    @Test
+    fun testWeekEnding() {
+        val expected = "25-Apr"
+        val exprString = "\${ns:dateKey | weekEnding:\$timeZone}"
+        val expr = requireNotNull(simplex.parser.parse(exprString))
+        val actual = expr.call(mapOf("timeZone" to "America/Los_Angeles"))
+        assertEquals(expected, actual)
+    }
 }

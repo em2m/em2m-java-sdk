@@ -309,6 +309,47 @@ class NextBusinessDayPipe : PipeTransform {
     }
 }
 
+class WeekEndingPipe : PipeTransform {
+
+    private var zonePath: String? = null
+    private var zone: TimeZone = TimeZone.getTimeZone("America/Los_Angeles")
+    private var pattern: DateTimeFormatter = DateTimeFormatter.ofPattern("dd-MMM")
+        .withZone(zone.toZoneId())
+
+    override fun args(args: List<String>) {
+        if (args.isNotEmpty()) {
+            if (args[0].startsWith("$")) {
+                zonePath = args[0].removePrefix("$").trim()
+            } else {
+                try {
+                    zone = TimeZone.getTimeZone(args[0])
+                } catch (ex: Exception) {
+                }
+            }
+        }
+    }
+
+    override fun transform(value: Any?, context: ExprContext): Any? {
+        val dateInput: Date? = value.toDate()
+        return if (dateInput != null) {
+            var timeZone: TimeZone = zone
+            if (zonePath != null) {
+                val zoneId = context.evalPath(zonePath!!)?.toString()
+                try {
+                    timeZone = TimeZone.getTimeZone(zoneId)
+                } catch (ex: Exception) {
+                }
+            }
+
+            var weekEnd = dateInput.toInstant().atZone(timeZone.toZoneId()).toLocalDate()
+            while (weekEnd.dayOfWeek != DayOfWeek.SATURDAY) {
+                weekEnd = weekEnd.plusDays(1);
+            }
+            pattern.format(weekEnd)
+        } else null
+    }
+}
+
 class DatePlusPipe : PipeTransform {
 
     var units: String = "d"
@@ -382,7 +423,6 @@ class DatePlusPipe : PipeTransform {
 }
 
 
-
 class DateNowHandler : KeyHandler {
 
     override fun call(key: Key, context: ExprContext): Any? {
@@ -441,6 +481,7 @@ object Dates {
         .transform("fromNowUnits") { FromNowUnitsPipe() }
         .transform("nextWeekDay", NextBusinessDayPipe())
         .transform("datePlus") { DatePlusPipe() }
+        .transform("weekEnding") { WeekEndingPipe() }
 
     val keys = BasicKeyResolver()
         .key(Key("Date", "now")) { DateNowHandler() }
