@@ -12,7 +12,9 @@ import io.em2m.problem.Problem
 import io.em2m.simplex.evalPath
 import io.em2m.utils.coerce
 import org.xerial.snappy.SnappyInputStream
+import java.io.ByteArrayOutputStream
 import java.io.IOException
+import java.io.InputStream
 import java.util.*
 import java.util.zip.DeflaterInputStream
 import java.util.zip.GZIPInputStream
@@ -41,7 +43,8 @@ class JacksonRequestTransformer(
                     "snappy" -> SnappyInputStream(ctx.inputStream)
                     else -> ctx.inputStream
                 }
-                val obj = objectMapper.readValue(inputStream, type)
+                val sanitizedInputStream = sanitizeInputStream(inputStream)
+                val obj = objectMapper.readValue(sanitizedInputStream, type)
                 ctx.request = obj
             } else if (contentType.contains("multipart")) {
                 val form = ctx.multipart?.form
@@ -86,5 +89,27 @@ class JacksonRequestTransformer(
                 detail = ioEx.message
             ).throwException()
         }
+    }
+
+    private fun sanitizeInputStream(inputStream: InputStream?): InputStream? {
+        if (inputStream == null) {
+            return null
+        }
+
+        val buffer = ByteArray(8192)
+        val outputStream = ByteArrayOutputStream()
+
+        inputStream.buffered().use { input ->
+            outputStream.use { output ->
+                var bytesRead: Int
+                while (input.read(buffer).also { bytesRead = it } != -1) {
+                    val sanitizedChunk = String(buffer, 0, bytesRead)
+                        .replace(Regex("[<>]"), "")  // Sanitize the chunk
+                    output.write(sanitizedChunk.toByteArray())
+                }
+            }
+        }
+
+        return outputStream.toByteArray().inputStream()
     }
 }
