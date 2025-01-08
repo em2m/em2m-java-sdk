@@ -43,8 +43,9 @@ class JacksonRequestTransformer(
                     "snappy" -> SnappyInputStream(ctx.inputStream)
                     else -> ctx.inputStream
                 }
-                val sanitizedInputStream = sanitizeInputStream(inputStream)
-                val obj = objectMapper.readValue(sanitizedInputStream, type)
+//                val sanitizedInputStream = sanitizeInputStream(inputStream)
+//                val obj = objectMapper.readValue(sanitizedInputStream, type)
+                val obj = objectMapper.readValue(inputStream, type)
                 ctx.request = obj
             } else if (contentType.contains("multipart")) {
                 val form = ctx.multipart?.form
