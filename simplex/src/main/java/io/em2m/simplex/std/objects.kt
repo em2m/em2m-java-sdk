@@ -88,6 +88,16 @@ class EntriesPipe : PipeTransform {
 
 }
 
+class EvalAsPath() : PipeTransform {
+
+    override fun transform(value: Any?, context: ExprContext): Any? {
+
+        val pathExpr = value?.toString() ?: return null
+        return context.evalPath(pathExpr)?.toString()
+    }
+
+}
+
 class PairHandler : ExecHandler {
 
     override fun call(context: ExprContext, op: String, params: Map<String, Any?>): Any? {
@@ -102,6 +112,7 @@ object Objects {
         .transform("path") { PathPipe() }
         .transform("pathBy") { PathByPipe() }
         .transform("entries", EntriesPipe())
+        .transform("evalAsPath") { EvalAsPath() }
     val execs = BasicExecResolver()
         .handler("object:pair") { PairHandler() }
 
