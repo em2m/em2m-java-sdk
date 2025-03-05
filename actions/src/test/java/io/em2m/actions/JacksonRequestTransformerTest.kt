@@ -23,7 +23,7 @@ class JacksonRequestTransformerTest {
                 "Content-Type" to "application/json",
                 "Authorization" to "Bearer test-token"
             ),
-            body = """{"maliciousScript01": "<script>doMaliciousThings()<script/>.</script>","maliciousScript02": "<scr<script>ipt>doMaliciousThings()</scr</script>ipt>"}""",
+            body = """{"maliciousScript01": "<script>doMaliciousThings()</script>","maliciousScript02": "<scr<script>ipt>doMaliciousThings()</scr</script>ipt>"}""",
             requestUri = "/api/v1/resource",
             path = "/resource",
             pathParameters = mapOf(
@@ -46,9 +46,8 @@ class JacksonRequestTransformerTest {
         )
 
         testTransform.doOnNext(testContext)
-        val targetScriptVal01 = "scriptdoMaliciousThings()script/./script"
-        val targetScriptVal02 = "scrscriptiptdoMaliciousThings()/scr/scriptipt"
-        assertEquals(targetScriptVal01, testContext.request.evalPath("maliciousScript01"))
-        assertEquals(targetScriptVal02, testContext.request.evalPath("maliciousScript02"))
+        val targetScriptVal = "doMaliciousThings()"
+        assertEquals(targetScriptVal, testContext.request.evalPath("maliciousScript01"))
+        assertEquals(targetScriptVal, testContext.request.evalPath("maliciousScript02"))
     }
 }

@@ -43,9 +43,9 @@ class JacksonRequestTransformer(
                     "snappy" -> SnappyInputStream(ctx.inputStream)
                     else -> ctx.inputStream
                 }
-//                val sanitizedInputStream = sanitizeInputStream(inputStream)
-//                val obj = objectMapper.readValue(sanitizedInputStream, type)
-                val obj = objectMapper.readValue(inputStream, type)
+                val sanitizedInputStream = sanitizeInputStream(inputStream)
+                val obj = objectMapper.readValue(sanitizedInputStream, type)
+//                val obj = objectMapper.readValue(inputStream, type)
                 ctx.request = obj
             } else if (contentType.contains("multipart")) {
                 val form = ctx.multipart?.form
@@ -104,13 +104,26 @@ class JacksonRequestTransformer(
             outputStream.use { output ->
                 var bytesRead: Int
                 while (input.read(buffer).also { bytesRead = it } != -1) {
-                    val sanitizedChunk = String(buffer, 0, bytesRead)
-                        .replace(Regex("[<>]"), "")  // Sanitize the chunk
+                    val sanitizedChunk = removeScriptTags(String(buffer, 0, bytesRead))
                     output.write(sanitizedChunk.toByteArray())
                 }
             }
         }
 
         return outputStream.toByteArray().inputStream()
+    }
+
+    private fun removeScriptTags(input: String): String {
+        val stringHasBeenUpdated = input.contains("<script>") || input.contains("</script>")
+
+        val modifiedInput: String = input
+            .replace("<script>", "")
+            .replace("</script>", "")
+
+        if (stringHasBeenUpdated) {
+            return removeScriptTags(modifiedInput)
+        }
+
+        return modifiedInput
     }
 }
