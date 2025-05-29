@@ -3,6 +3,7 @@ package io.em2m.policy.model
 import com.fasterxml.jackson.annotation.JsonFormat
 import io.em2m.simplex.model.ConditionExpr
 import io.em2m.simplex.model.ConstConditionExpr
+import io.em2m.simplex.model.ConstValueExpr
 import io.em2m.simplex.model.Expr
 
 enum class Effect { Allow, Deny }
@@ -26,8 +27,8 @@ data class Statement(
 
 data class Role(
     val id: String,
-    val label: String = id,
-    val summary: String? = null,
+    var label: Expr? = ConstValueExpr(id.capitalize()),
+    val summary: Expr? = null,
     val policies: List<String> = emptyList(),
     val inherits: List<String> = emptyList(),
     val statements: List<Statement> = emptyList(),
