@@ -98,7 +98,7 @@ class FieldTransformer<T>(val simplex: Simplex, fields: List<FieldModel> = empty
                 override fun transformBucket(bucket: Bucket): Bucket {
                     return if (key != missing && expr != null) {
                         val bucketContext = BucketContext(req, scope, bucket)
-                        val label = simplex.eval(expr, bucketContext.toMap().plus(scope)).toString()
+                        val label = simplex.eval(expr, bucketContext.toMap().plus(context).plus(scope)).toString()
                         bucket.copy(label = label)
                     } else bucket
                 }
@@ -158,17 +158,23 @@ class FieldTransformer<T>(val simplex: Simplex, fields: List<FieldModel> = empty
             val modelValues = HashMap<String, Any?>()
             models.forEach { model ->
                 val exprContext = RowContext(req, context, values)
+                    .toMap()
+                    .plus(model.settings)
+                    .plus(context)
                 modelValues[model.name] = when {
-                    model.expr != null -> model.expr.call(exprContext.toMap().plus(model.settings))
+                    model.expr != null -> model.expr.call(exprContext)
                     model.delegateField != null -> values[model.delegateField]
                     model.delegateExpr != null -> values[model.delegateExpr]
                     else -> null
                 }
             }
             req.fields.map { field ->
-                val exprContext = RowContext(req, emptyMap(), modelValues)
                 if (field.expr != null) {
-                    simplex.eval(field.expr, exprContext.toMap().plus(field.settings))
+                    val exprContext = RowContext(req, emptyMap(), modelValues)
+                        .toMap()
+                        .plus(field.settings)
+                        .plus(context)
+                    simplex.eval(field.expr, exprContext)
                 } else {
                     modelValues[field.name]
                 }
