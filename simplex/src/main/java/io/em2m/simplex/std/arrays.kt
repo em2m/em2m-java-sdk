@@ -312,7 +312,6 @@ object Arrays {
         mapOf(
             "notNull" to NotNullPipe(),
             "reversed" to ReversedPipe(),
-            "filter" to FilterPipe(),
             "filterNotNull" to FilterNotNullPipe(),
             "filterNotBlank" to FilterNotBlankPipe(),
             "first" to FirstPipe(),
@@ -323,6 +322,7 @@ object Arrays {
             "maxNum" to MaxNumPipe()
         )
     )
+        .transform("filter") { FilterPipe() }
         .transform("associateBy") { AssociateByPipe() }
         .transform("take") { TakePipe() }
         .transform("slice") { SlicePipe() }
