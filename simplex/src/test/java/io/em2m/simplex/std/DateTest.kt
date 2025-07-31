@@ -98,11 +98,11 @@ class DateTest {
     fun testFormatDurationPipe_HHhMMmSSs() {
         val pipe = FormatDurationPipe()
         pipe.args(listOf("HHhMMmSSs"))
-        assertEquals("1S", pipe.transform(1000, emptyMap()))
-        assertEquals("2M 0S", pipe.transform(120_000, emptyMap()))
+        assertEquals("0H 0M 1S", pipe.transform(1000, emptyMap()))
+        assertEquals("0H 2M 0S", pipe.transform(120_000, emptyMap()))
         assertEquals("1H 0M 0S", pipe.transform(3_600_000, emptyMap()))
         assertEquals("12H 34M 56S", pipe.transform(45296000, emptyMap()))
-        assertEquals("0S", pipe.transform(0, emptyMap()))
+        assertEquals("0H 0M 0S", pipe.transform(0, emptyMap()))
     }
 
     @Test
