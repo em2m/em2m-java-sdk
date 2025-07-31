@@ -182,6 +182,16 @@ class FormatDurationPipe : PipeTransform {
                 "hours" -> duration.toHours()
                 "minutes" -> duration.toMinutes()
                 "seconds" -> duration.toMillis() / 1000
+                "HHhMMmSSs" -> {
+                    val hours = duration.toHours()
+                    val minutes = (duration.toMinutes() % 60)
+                    val seconds = (duration.seconds % 60)
+                    when {
+                        hours > 0 -> "${hours}H ${minutes}M ${seconds}S"
+                        minutes > 0 -> "${minutes}M ${seconds}S"
+                        else -> "${seconds}S"
+                    }
+                }
                 else -> duration.fromNow(true)
             }
         } else value
