@@ -13,11 +13,19 @@ class BasicPolicyEngine(policySource: PolicySource, val simplex: Simplex = Simpl
 
     override fun findAllowedActions(context: PolicyContext): List<String> {
         val roles = context.claims.roles.plus("anonymous").distinct()
-        val statements = statementsForRoles(roles)
+        var statements = statementsForRoles(roles)
             .filter { testResource(it, context) }
             .filter { it.condition.call(context.map) }
             .filter { it.effect == Effect.Allow }
-        return statements.flatMap { it.actions }.distinct()
+        val allowed = statements.flatMap { it.actions }.distinct()
+
+        statements = statementsForRoles(roles)
+            .filter { testResource(it, context) }
+            .filter { it.condition.call(context.map) }
+            .filter { it.effect == Effect.Deny }
+        val denied = statements.flatMap { it.actions }.distinct()
+
+        return allowed.filter { action -> action !in denied }
     }
 
     override fun isActionAllowed(actionName: String, context: PolicyContext): Boolean {
