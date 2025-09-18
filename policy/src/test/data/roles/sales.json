@@ -10,6 +10,13 @@
         "feature:SalesRoleFeature"
       ],
       "resource": "em2m:ident:account:*"
+    },
+    {
+      "effect": "Deny",
+      "actions": [
+        "ident:ChangeMyPassword"
+      ],
+      "resource": "*"
     }
   ]
 }

@@ -95,9 +95,13 @@ class PolicyEngineTest : Assert() {
     }
 
     @Test
-    @Ignore
     fun testDeny() {
-        error("Not implemented")
+        val claims = Claims(mapOf("sub" to "1234", "roles" to listOf("sales"), "exp" to Date()))
+        val environment = Environment(emptyMap())
+        val resource = "em2m:ident:account:1234"
+        val context = PolicyContext(claims, environment, resource)
+        val allowed = policyEngine.isActionAllowed("ident:ChangeMyPassword", context)
+        assertFalse(allowed)
     }
 
     class ReportTypeKey : KeyHandlerSupport() {
