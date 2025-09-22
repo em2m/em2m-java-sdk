@@ -104,6 +104,16 @@ class PolicyEngineTest : Assert() {
         assertFalse(allowed)
     }
 
+    @Test
+    fun testAllowedActionsFiltering() {
+        val claims = Claims(mapOf("sub" to "1234", "roles" to listOf("sales"), "exp" to Date()))
+        val environment = Environment(emptyMap())
+        val resource = "em2m:ident:account:1234"
+        val context = PolicyContext(claims, environment, resource)
+        val allowedActions = policyEngine.findAllowedActions(context)
+        assertFalse("ident:ChangeMyPassword" in allowedActions)
+    }
+
     class ReportTypeKey : KeyHandlerSupport() {
 
         override fun call(key: Key, context: ExprContext): Any {
