@@ -7,6 +7,7 @@ import io.em2m.actions.model.ActionProcessor
 import io.em2m.actions.model.MultipartData
 import io.em2m.problem.Problem
 import io.em2m.policy.model.Claims
+import io.em2m.utils.parseCharset
 import java.util.*
 
 open class LambdaRuntime(
@@ -22,10 +23,13 @@ open class LambdaRuntime(
         // TODO: Detect and pars MultiPart
         val multipart: MultipartData? = null
 
+        val contentType = request.contentType
+        val charset = parseCharset(contentType)
+
         val context = ActionContext(
                 actionName = "$actionPrefix:$actionName",
                 claims = Claims(),
-                inputStream = request.body?.toByteArray()?.inputStream() ?: byteArrayOf().inputStream(),
+                inputStream = request.body?.toByteArray(charset)?.inputStream() ?: byteArrayOf().inputStream(),
                 environment = env.toMutableMap(),
                 multipart = multipart,
                 response = response)
