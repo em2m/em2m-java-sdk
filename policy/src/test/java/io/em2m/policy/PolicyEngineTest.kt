@@ -38,6 +38,16 @@ class PolicyEngineTest : Assert() {
     }
 
     @Test
+    fun testIsActionAllowedFalse() {
+        val claims = Claims(mapOf("sub" to "userid", "roles" to listOf("admin"), "exp" to Date(),
+            "features" to listOf("maintenance")))
+        val environment = Environment(emptyMap())
+        val resource = "em2m:ident:account:1234"
+        val isActionAllowed = policyEngine.isActionAllowed("ident:DeleteAccount", PolicyContext(claims, environment, resource))
+        assertFalse(isActionAllowed)
+    }
+
+    @Test
     @Ignore
     fun testAllowIfFeature() {
         val claimsWithout = Claims(mapOf("sub" to "userid", "roles" to listOf("admin"), "exp" to Date()))
@@ -85,9 +95,23 @@ class PolicyEngineTest : Assert() {
     }
 
     @Test
-    @Ignore
     fun testDeny() {
-        error("Not implemented")
+        val claims = Claims(mapOf("sub" to "1234", "roles" to listOf("sales"), "exp" to Date()))
+        val environment = Environment(emptyMap())
+        val resource = "em2m:ident:account:1234"
+        val context = PolicyContext(claims, environment, resource)
+        val allowed = policyEngine.isActionAllowed("ident:ChangeMyPassword", context)
+        assertFalse(allowed)
+    }
+
+    @Test
+    fun testAllowedActionsFiltering() {
+        val claims = Claims(mapOf("sub" to "1234", "roles" to listOf("sales"), "exp" to Date()))
+        val environment = Environment(emptyMap())
+        val resource = "em2m:ident:account:1234"
+        val context = PolicyContext(claims, environment, resource)
+        val allowedActions = policyEngine.findAllowedActions(context)
+        assertFalse("ident:ChangeMyPassword" in allowedActions)
     }
 
     class ReportTypeKey : KeyHandlerSupport() {
