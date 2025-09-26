@@ -11,10 +11,12 @@ import io.em2m.actions.model.TypedActionFlow
 import io.em2m.problem.Problem
 import io.em2m.simplex.evalPath
 import io.em2m.utils.coerce
+import io.em2m.utils.parseCharset
 import org.xerial.snappy.SnappyInputStream
 import java.io.ByteArrayOutputStream
 import java.io.IOException
 import java.io.InputStream
+import java.nio.charset.Charset
 import java.util.*
 import java.util.zip.DeflaterInputStream
 import java.util.zip.GZIPInputStream
@@ -33,6 +35,8 @@ class JacksonRequestTransformer(
 
         val contentType = (ctx.environment["ContentType"] as? String ?: "").lowercase(Locale.getDefault())
 
+        val charset = parseCharset(contentType)
+
         if (contentType.contains("xml")) return
 
         try {
@@ -43,7 +47,7 @@ class JacksonRequestTransformer(
                     "snappy" -> SnappyInputStream(ctx.inputStream)
                     else -> ctx.inputStream
                 }
-                val sanitizedInputStream = sanitizeInputStream(inputStream)
+                val sanitizedInputStream = sanitizeInputStream(inputStream, charset)
                 val obj = objectMapper.readValue(sanitizedInputStream, type)
 //                val obj = objectMapper.readValue(inputStream, type)
                 ctx.request = obj
@@ -92,25 +96,14 @@ class JacksonRequestTransformer(
         }
     }
 
-    private fun sanitizeInputStream(inputStream: InputStream?): InputStream? {
+    private fun sanitizeInputStream(inputStream: InputStream?, charset: Charset = Charsets.UTF_8): InputStream? {
         if (inputStream == null) {
             return null
         }
 
-        val buffer = ByteArray(8192)
-        val outputStream = ByteArrayOutputStream()
-
-        inputStream.buffered().use { input ->
-            outputStream.use { output ->
-                var bytesRead: Int
-                while (input.read(buffer).also { bytesRead = it } != -1) {
-                    val sanitizedChunk = removeScriptTags(String(buffer, 0, bytesRead))
-                    output.write(sanitizedChunk.toByteArray())
-                }
-            }
-        }
-
-        return outputStream.toByteArray().inputStream()
+        val request = inputStream.reader(charset).use { it.readText() }
+        val sanitized = removeScriptTags(request)
+        return sanitized.byteInputStream(charset)
     }
 
     private fun removeScriptTags(input: String): String {

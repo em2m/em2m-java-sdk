@@ -35,10 +35,12 @@ class JacksonRequestTransformerTest {
             )
         )
 
+        val charset = Charsets.UTF_8
+
         val testContext = ActionContext(
             actionName = "TestService:TestAction",
             claims = Claims(),
-            inputStream = testRequest.body?.toByteArray()?.inputStream() ?: byteArrayOf().inputStream(),
+            inputStream = testRequest.body?.toByteArray(charset)?.inputStream() ?: byteArrayOf().inputStream(),
             response = LambdaResponse(),
             environment = mutableMapOf(
                 "ContentType" to "application/json"
