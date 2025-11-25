@@ -17,8 +17,10 @@
  */
 package io.em2m.search.bean
 
+import io.em2m.obj.OperationType
 import io.em2m.search.core.daos.AbstractSyncDao
 import io.em2m.search.core.model.*
+import kotlin.reflect.KClass
 
 class MapBackedSyncDao<T>(idMapper: IdMapper<T>, private val items: MutableMap<String, T> = HashMap()) : AbstractSyncDao<T>(idMapper), StreamableDao<T> {
 
@@ -63,6 +65,14 @@ class MapBackedSyncDao<T>(idMapper: IdMapper<T>, private val items: MutableMap<S
         items[id] = entity
         // TODO: Need a function for setting the ID on the entity
         return entity
+    }
+
+    override fun upsert(id: String, entity: T): T? {
+        return this.items.putIfAbsent(id, entity)
+    }
+
+    override fun upsertBatch(entities: List<T>): List<T> {
+        return entities.mapNotNull { this.items.putIfAbsent(idMapper(it), it) }
     }
 
     private fun findMatches(query: Query?): List<T> {
@@ -147,6 +157,29 @@ class MapBackedSyncDao<T>(idMapper: IdMapper<T>, private val items: MutableMap<S
                 else -> n1.toDouble().compareTo(n2.toDouble())
             }
         }
+    }
+
+    override fun getOperationPriority(operationType: OperationType): Int {
+        // if caching in a map, creates and deletes should be done last compared to actual values
+        return when (operationType) {
+            OperationType.CREATE -> OperationType.LOW_PRIORITY
+            OperationType.READ ->   OperationType.MEDIUM_PRIORITY
+            OperationType.SEARCH -> OperationType.MEDIUM_PRIORITY
+            OperationType.UPDATE -> OperationType.LOW_PRIORITY
+            OperationType.DELETE -> OperationType.LOW_PRIORITY
+            else -> super.getOperationPriority(operationType)
+        }
+    }
+
+    override fun toString(): String {
+        val maybeT: T? = items.values.firstOrNull() as? T
+        var clazz: KClass<Any>? = null
+        if (maybeT != null) {
+            val t: T = maybeT
+            clazz = t!!::class as? KClass<Any>
+        }
+        val classString = if (clazz == null) { "" } else { "class=${clazz.simpleName} "}
+        return "${javaClass.name} { size = ${items.size} $classString }"
     }
 
 }
