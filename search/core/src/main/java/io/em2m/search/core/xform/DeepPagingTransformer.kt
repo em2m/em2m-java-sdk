@@ -33,17 +33,25 @@ class DeepPagingTransformer<T>(private val idField: String) : Transformer<T> {
          */
         // todo - validate last contains correct keys
 
-        val remainingSorts = sorts.reversed().toMutableList()
+        val availableSorts = sorts.filter { last.containsKey(it.field) && last[it.field] != null }
+
+        if (availableSorts.isEmpty()) {
+            return query
+        }
+
+        val remainingSorts = availableSorts.asReversed().toMutableList()
         val queries = ArrayList<Query>()
         while (remainingSorts.isNotEmpty()) {
-            val head = remainingSorts.removeFirst()
+            val head = remainingSorts.removeAt(0)
+            val lastValue = last[head.field]!!
+
             queries.add(
                 AndQuery(
                     if (head.direction == Descending) RangeQuery(
                         field = head.field,
-                        lt = last[head.field]
-                    ) else RangeQuery(field = head.field, gt = last[head.field]),
-                    AndQuery(remainingSorts.map { TermQuery(field = it.field, value = last[it.field]) })
+                        lt = lastValue
+                    ) else RangeQuery(field = head.field, gt = lastValue),
+                    AndQuery(remainingSorts.map { TermQuery(field = it.field, value = last[it.field]!!) })
                 )
             )
         }
