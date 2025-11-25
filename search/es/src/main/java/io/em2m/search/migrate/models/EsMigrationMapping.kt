@@ -9,8 +9,7 @@ import io.em2m.search.es.EsApi
 import io.em2m.utils.FallbackPair
 
 data class EsMigrationItem(val primary: Class<*> = EsApi::class.java,
-                           val fallbacks: List<Class<*>> = emptyList(),
-                           val undoOnFailure: Boolean = false) {
+                           val fallbacks: List<Class<*>> = emptyList()) {
 
     fun <T, F> toFallback(primary: T, fallbacks: List<F>): FallbackPair<T, F> {
         if (primary?.javaClass != this.primary.javaClass) throw IllegalArgumentException()
@@ -57,8 +56,7 @@ fun interface EsMigrationProvider {
 
 // per-index mappings of when specific data should be cut over
 data class EsMigrationMappingItem(val primary: EsVersion = EsVersion.DEFAULT,
-                                  val fallbacks: List<EsVersion> = emptyList(),
-                                  val undoOnFailure: Boolean = false)
+                                  val fallbacks: List<EsVersion> = emptyList())
 
 data class EsMigrationMappingObject(
     val indices: Map<String, EsMigrationMappingItem>,
@@ -66,10 +64,10 @@ data class EsMigrationMappingObject(
 
     override operator fun get(term: String): EsMigrationItem? {
         val mappingItem = indices[term] ?: aliases[term] ?: return null
-        val (primaryVersion, fallbackVersions, undoOnFailure) = mappingItem
+        val (primaryVersion, fallbackVersions) = mappingItem
         val primaryClass = primaryVersion.getApi()
         val fallbackClasses = fallbackVersions.map(EsVersion::getApi)
-        return EsMigrationItem(primaryClass, fallbackClasses, undoOnFailure)
+        return EsMigrationItem(primaryClass, fallbackClasses)
     }
 
 }

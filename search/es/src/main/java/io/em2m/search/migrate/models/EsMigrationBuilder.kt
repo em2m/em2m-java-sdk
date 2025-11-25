@@ -57,7 +57,7 @@ class EsMigrationBuilder(val esMigrationMapping: EsMigrationProvider,
                 esMigrationItem = esMigrationMapping[indexId]
             }
         }
-        val (primary, fallbacks, undoOnFailure) = esMigrationItem ?: EsMigrationItem.DEFAULT
+        val (primary, fallbacks) = esMigrationItem ?: EsMigrationItem.DEFAULT
 
         fun buildFrom(clazz: Class<*>): EsSyncDao<T> {
             val allDelegates: List<Any> = mutableListOf<Any>(this.primary).apply { fallback?.let { add(fallback) } }
@@ -79,7 +79,6 @@ class EsMigrationBuilder(val esMigrationMapping: EsMigrationProvider,
                 .idMapper(idMapper)
                 .docMapper(docMapper)
                 .objectMapper(objectMapper)
-                .undoOnFailure(undoOnFailure)
                 .build()
         }
 

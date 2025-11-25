@@ -23,16 +23,15 @@ class EsSyncDao<T> : MultiCatchingStreamableSyncDao<T, EsSyncDaoUnionType<T>> {
         idMapper: IdMapper<T>,
         docMapper: DocMapper<T>? = null,
         objectMapper: ObjectMapper = jacksonObjectMapper().registerModule(GeoJsonModule()),
-        fallbackDao: EsSyncDaoUnionType<T>? = null,
-        undoOnFailure: Boolean = true
+        fallbackDao: EsSyncDaoUnionType<T>? = null
     ): super(Es2SyncDao(esApi, index, type, tClass, idMapper, docMapper, objectMapper),
         fallbackDao)
 
     @Deprecated("Use EsSyncDao.Builder<T>() instead.")
-    constructor(es2Dao: Es2SyncDao<T>, es8Api: Es8Api, undoOnFailure: Boolean = true):
+    constructor(es2Dao: Es2SyncDao<T>, es8Api: Es8Api):
         super(es2Dao, es2Dao.toEs8SyncDao(es8Api))
 
-    private constructor(vararg delegates: EsSyncDaoUnionType<T>, undoOnFailure: Boolean = true):
+    private constructor(vararg delegates: EsSyncDaoUnionType<T>):
         super(delegates= delegates)
 
     init {
@@ -77,9 +76,6 @@ class EsSyncDao<T> : MultiCatchingStreamableSyncDao<T, EsSyncDaoUnionType<T>> {
 
         private var objectMapper: ObjectMapper = jacksonObjectMapper().registerModule(GeoJsonModule())
         fun objectMapper(objectMapper: ObjectMapper): Builder<T> = this.apply { this.objectMapper = objectMapper }
-
-        private var undoOnFailure: Boolean = false
-        fun undoOnFailure(undoOnFailure: Boolean): Builder<T> = this.apply { this.undoOnFailure = undoOnFailure }
 
         private var fallbacks: MutableSet<EsSyncDaoUnionType<T>> = mutableSetOf()
         fun fallback(fallback: EsSyncDaoUnionType<T>): Builder<T> = this.apply { this.fallbacks.add(fallback) }
