@@ -43,7 +43,7 @@ class DeepPagingTransformer<T>(private val idField: String) : Transformer<T> {
         val queries = ArrayList<Query>()
         while (remainingSorts.isNotEmpty()) {
             val head = remainingSorts.removeAt(0)
-            val lastValue = last[head.field]!!
+            val lastValue = last[head.field] ?: continue
 
             queries.add(
                 AndQuery(
@@ -51,7 +51,9 @@ class DeepPagingTransformer<T>(private val idField: String) : Transformer<T> {
                         field = head.field,
                         lt = lastValue
                     ) else RangeQuery(field = head.field, gt = lastValue),
-                    AndQuery(remainingSorts.map { TermQuery(field = it.field, value = last[it.field]!!) })
+                    AndQuery(remainingSorts.mapNotNull { sort ->
+                        last[sort.field]?.let { value -> TermQuery(field = sort.field, value = value) }
+                    })
                 )
             )
         }
