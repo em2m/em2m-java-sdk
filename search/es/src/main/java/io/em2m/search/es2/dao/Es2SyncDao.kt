@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.em2m.geo.geojson.GeoJsonModule
-import io.em2m.obj.OperationType
+import io.em2m.transactions.OperationType
 import io.em2m.search.core.model.*
 import io.em2m.search.es.EsApi
 import io.em2m.search.es.EsSyncDaoUnionType

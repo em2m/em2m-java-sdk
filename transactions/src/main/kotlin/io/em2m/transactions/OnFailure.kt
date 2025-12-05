@@ -1,4 +1,6 @@
-package io.em2m.obj
+package io.em2m.transactions
+
+import io.em2m.utils.retry
 
 class OnFailure<ELEM, IN> (private val undoAction: UndoOnFailureAction<ELEM, IN>? = null,
                            val undoStrategy: UndoStrategy = UndoStrategy.DEFAULT,

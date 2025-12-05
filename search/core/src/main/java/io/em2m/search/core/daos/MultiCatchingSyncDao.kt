@@ -1,10 +1,10 @@
 package io.em2m.search.core.daos
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import io.em2m.obj.MultiCatchingFunction
-import io.em2m.obj.OnFailure
-import io.em2m.obj.OperationPrecedence
-import io.em2m.obj.OperationType
+import io.em2m.transactions.MultiCatchingFunction
+import io.em2m.transactions.OnFailure
+import io.em2m.transactions.OperationPrecedence
+import io.em2m.transactions.OperationType
 import io.em2m.search.core.model.Query
 import io.em2m.search.core.model.SearchRequest
 import io.em2m.search.core.model.SearchResult

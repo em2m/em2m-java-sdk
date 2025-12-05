@@ -9,7 +9,7 @@
         <version>3.0.0-SNAPSHOT</version>
     </parent>
 
-    <artifactId>em2m-java-sdk-obj</artifactId>
+    <artifactId>em2m-java-sdk-transactions</artifactId>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

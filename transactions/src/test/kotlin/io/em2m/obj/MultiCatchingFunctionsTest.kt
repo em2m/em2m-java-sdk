@@ -1,4 +1,4 @@
-package io.em2m.obj
+package io.em2m.transactions
 
 import io.em2m.utils.MultiException
 import org.junit.jupiter.api.assertThrows

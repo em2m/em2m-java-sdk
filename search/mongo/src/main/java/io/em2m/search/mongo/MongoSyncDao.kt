@@ -25,7 +25,7 @@ import com.mongodb.client.model.Collation
 import com.mongodb.client.model.Filters
 import com.mongodb.client.model.ReplaceOneModel
 import com.mongodb.client.model.UpdateOptions
-import io.em2m.obj.OperationType
+import io.em2m.transactions.OperationType
 import io.em2m.search.core.daos.AbstractSyncDao
 import io.em2m.search.core.model.*
 import io.em2m.search.core.parser.SchemaMapper

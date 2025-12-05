@@ -2,22 +2,18 @@ package io.em2m.search.migrate.models
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import feign.ReflectiveFeign
-import feign.Target
 import io.em2m.geo.geojson.GeoJsonModule
-import io.em2m.obj.MultiCatchingFunctions
+import io.em2m.transactions.MultiCatchingFunctions
 import io.em2m.search.core.model.DocMapper
 import io.em2m.search.core.model.IdMapper
 import io.em2m.search.es.EsApi
 import io.em2m.search.es.EsSyncDao
 import io.em2m.search.es8.Es8Api
-import io.em2m.utils.Fallback
 import io.em2m.utils.FallbackPair
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.lang.reflect.Proxy
 import kotlin.collections.component1
-import kotlin.text.get
 
 // have esapi and es8api be parameters which get injected
 // couldn't test this here since we don't have guice

@@ -34,9 +34,9 @@
         <module>ext</module>
         <module>geo</module>
         <module>actions</module>
+        <module>transactions</module>
         <module>simplex</module>
         <module>policy</module>
-        <module>obj</module>
         <module>search</module>
     </modules>
 

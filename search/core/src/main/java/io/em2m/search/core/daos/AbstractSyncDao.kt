@@ -1,6 +1,6 @@
 package io.em2m.search.core.daos
 
-import io.em2m.obj.OperationType
+import io.em2m.transactions.OperationType
 import io.em2m.search.core.model.*
 
 abstract class AbstractSyncDao<T>(open val idMapper: IdMapper<T>) : SyncDao<T> {

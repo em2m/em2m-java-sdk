@@ -4,8 +4,8 @@ import com.fasterxml.jackson.core.JsonParser
 import com.fasterxml.jackson.databind.DeserializationContext
 import com.fasterxml.jackson.databind.JsonDeserializer
 import com.fasterxml.jackson.databind.JsonNode
-import io.em2m.obj.jackson.getOrNull
-import io.em2m.obj.jackson.getStringOrNull
+import io.em2m.transactions.jackson.getOrNull
+import io.em2m.transactions.jackson.getStringOrNull
 import io.em2m.search.es2.models.Es2MappingProperty
 
 // JSON --> Es2MappingProperty

@@ -17,7 +17,7 @@
  */
 package io.em2m.search.bean
 
-import io.em2m.obj.OperationType
+import io.em2m.transactions.OperationType
 import io.em2m.search.core.daos.AbstractSyncDao
 import io.em2m.search.core.model.*
 import kotlin.reflect.KClass

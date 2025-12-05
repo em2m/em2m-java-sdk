@@ -1,4 +1,4 @@
-package io.em2m.obj
+package io.em2m.transactions
 
 enum class OperationType(val mutation: Boolean = true) {
     CREATE, READ(false), SEARCH(false), UPDATE, DELETE, IO;

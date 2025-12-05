@@ -1,4 +1,4 @@
-package io.em2m.obj
+package io.em2m.transactions
 
 enum class UndoStrategy {
     SUCCESS, FAILURE, ALL;

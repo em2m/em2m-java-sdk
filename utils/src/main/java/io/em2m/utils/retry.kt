@@ -1,4 +1,4 @@
-package io.em2m.obj
+package io.em2m.utils
 
 fun <OUT> retry(limit: Int, fn: () -> OUT): OUT {
     var throwable: Throwable = RuntimeException("Could not retry.")

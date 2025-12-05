@@ -3,9 +3,9 @@ package io.em2m.search.migrate.models
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ObjectNode
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import io.em2m.obj.OnFailure
-import io.em2m.obj.OperationPrecedence
-import io.em2m.obj.OperationType
+import io.em2m.transactions.OnFailure
+import io.em2m.transactions.OperationPrecedence
+import io.em2m.transactions.OperationType
 import io.em2m.search.es.EsAliasAction
 import io.em2m.search.es.EsAliasRequest
 import io.em2m.search.es2.models.Es2Settings

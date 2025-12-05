@@ -1,8 +1,8 @@
 package io.em2m.search.core.daos
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import io.em2m.obj.OperationPrecedence
-import io.em2m.obj.OperationType
+import io.em2m.transactions.OperationPrecedence
+import io.em2m.transactions.OperationType
 import io.em2m.search.core.model.*
 import io.em2m.utils.Coerce
 

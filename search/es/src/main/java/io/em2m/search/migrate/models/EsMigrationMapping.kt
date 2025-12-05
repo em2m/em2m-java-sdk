@@ -2,8 +2,8 @@ package io.em2m.search.migrate.models
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import io.em2m.obj.MultiCatchingFunctions
-import io.em2m.obj.OperationType
+import io.em2m.transactions.MultiCatchingFunctions
+import io.em2m.transactions.OperationType
 import io.em2m.search.es.models.EsVersion
 import io.em2m.search.es.EsApi
 import io.em2m.utils.FallbackPair

@@ -44,7 +44,7 @@
 
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>em2m-java-sdk-obj</artifactId>
+            <artifactId>em2m-java-sdk-transactions</artifactId>
             <version>${project.version}</version>
         </dependency>
 
