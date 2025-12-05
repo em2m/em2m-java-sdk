@@ -25,6 +25,7 @@ import com.mongodb.client.model.Collation
 import com.mongodb.client.model.Filters
 import com.mongodb.client.model.ReplaceOneModel
 import com.mongodb.client.model.UpdateOptions
+import io.em2m.transactions.OperationType
 import io.em2m.search.core.daos.AbstractSyncDao
 import io.em2m.search.core.model.*
 import io.em2m.search.core.parser.SchemaMapper
@@ -33,7 +34,6 @@ import org.bson.Document
 import org.bson.conversions.Bson
 import java.util.concurrent.ForkJoinPool
 import java.util.stream.Collectors
-
 
 class MongoSyncDao<T>(
     idMapper: IdMapper<T>,
@@ -135,8 +135,7 @@ class MongoSyncDao<T>(
     }
 
     override fun save(id: String, entity: T): T? {
-        collection.replaceOne(Document("_id", id), encode(entity), UpdateOptions().upsert(true))
-        return entity
+        return upsert(id, entity)
     }
 
     fun bulkSave(entities: List<T>): BulkWriteResult {
@@ -246,4 +245,24 @@ class MongoSyncDao<T>(
             }.iterator()
     }
 
+    override fun getOperationPriority(operationType: OperationType): Int {
+        return when (operationType) {
+            OperationType.CREATE -> OperationType.HIGH_PRIORITY
+            OperationType.READ ->   OperationType.HIGH_PRIORITY
+            OperationType.SEARCH -> OperationType.LOW_PRIORITY
+            OperationType.UPDATE -> OperationType.HIGH_PRIORITY
+            OperationType.DELETE -> OperationType.HIGH_PRIORITY
+            else -> super.getOperationPriority(operationType)
+        }
+    }
+
+    override fun upsert(id: String, entity: T): T? {
+        collection.replaceOne(Document("_id", id), encode(entity), UpdateOptions().upsert(true))
+        return entity
+    }
+
+    override fun upsertBatch(entities: List<T>): List<T> {
+        bulkSave(entities)
+        return entities
+    }
 }
