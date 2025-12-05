@@ -1,19 +1,22 @@
 package io.em2m.actions.xforms
 
 import com.fasterxml.jackson.core.JsonProcessingException
+import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ObjectNode
+import com.fasterxml.jackson.databind.node.TextNode
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.em2m.actions.model.ActionContext
 import io.em2m.actions.model.ActionTransformer
 import io.em2m.actions.model.Priorities
 import io.em2m.actions.model.TypedActionFlow
 import io.em2m.problem.Problem
-import io.em2m.simplex.evalPath
 import io.em2m.utils.coerce
 import io.em2m.utils.parseCharset
+import org.jsoup.Jsoup
+import org.jsoup.nodes.Document
+import org.jsoup.safety.Safelist
 import org.xerial.snappy.SnappyInputStream
-import java.io.ByteArrayOutputStream
 import java.io.IOException
 import java.io.InputStream
 import java.nio.charset.Charset
@@ -25,6 +28,8 @@ class JacksonRequestTransformer(
     private val objectMapper: ObjectMapper = jacksonObjectMapper(),
     override val priority: Int = Priorities.PARSE
 ) : ActionTransformer {
+
+    private val sanitizer = HtmlSanitizer(objectMapper)
 
     override fun doOnNext(ctx: ActionContext) {
 
@@ -84,7 +89,9 @@ class JacksonRequestTransformer(
             }
         } catch (jsonEx: JsonProcessingException) {
             Problem(
-                status = Problem.Status.BAD_REQUEST, title = "Error parsing JSON request", detail = jsonEx.message,
+                status = Problem.Status.BAD_REQUEST,
+                title = "Error parsing JSON request",
+                detail = jsonEx.message,
                 ext = mapOf("line" to jsonEx.location.lineNr, "column" to jsonEx.location.columnNr)
             ).throwException()
         } catch (ioEx: IOException) {
@@ -102,21 +109,86 @@ class JacksonRequestTransformer(
         }
 
         val request = inputStream.reader(charset).use { it.readText() }
-        val sanitized = removeScriptTags(request)
+        val sanitized = sanitizer.sanitizePayload(request)
         return sanitized.byteInputStream(charset)
     }
 
-    private fun removeScriptTags(input: String): String {
-        val stringHasBeenUpdated = input.contains("<script>") || input.contains("</script>")
+    internal class HtmlSanitizer(private val objectMapper: ObjectMapper) {
 
-        val modifiedInput: String = input
-            .replace("<script>", "")
-            .replace("</script>", "")
+        private val outputSettings = Document.OutputSettings().prettyPrint(false)
+        private val safelist = createSafelist()
 
-        if (stringHasBeenUpdated) {
-            return removeScriptTags(modifiedInput)
+        fun sanitizePayload(raw: String): String {
+            if (raw.isBlank()) return raw
+
+            return runCatching {
+                val jsonNode = objectMapper.readTree(raw)
+                val sanitized = sanitizeNode(jsonNode)
+                objectMapper.writeValueAsString(sanitized)
+            }.getOrElse {
+                sanitizeText(raw)
+            }
         }
 
-        return modifiedInput
+        private fun sanitizeNode(node: JsonNode?): JsonNode? {
+            return when {
+                node == null -> null
+                node.isObject -> sanitizeObject(node)
+                node.isArray -> sanitizeArray(node)
+                node.isTextual -> TextNode(sanitizeText(node.asText()))
+                else -> node
+            }
+        }
+
+        private fun sanitizeObject(node: JsonNode): JsonNode {
+            val sanitized = objectMapper.createObjectNode()
+            node.fields().forEach { (key, value) ->
+                sanitized.set<JsonNode?>(key, sanitizeNode(value))
+            }
+            return sanitized
+        }
+
+        private fun sanitizeArray(node: JsonNode): JsonNode {
+            val sanitized = objectMapper.createArrayNode()
+            node.forEach { child ->
+                sanitized.add(sanitizeNode(child))
+            }
+            return sanitized
+        }
+
+        private fun sanitizeText(input: String): String {
+            if (input.isBlank()) return ""
+
+            val withoutScripts = SCRIPT_TAG_REGEX.replace(input, "")
+            if (withoutScripts.isBlank()) return ""
+
+            val cleaned = Jsoup.clean(withoutScripts, "", safelist, outputSettings)
+            return cleaned.trim()
+        }
+
+        private fun createSafelist(): Safelist {
+            return Safelist.none()
+                .addTags("a", "b", "br", "div", "font", "i", "img", "li", "p", "span", "style", "sup", "u", "ul")
+                .addAttributes("a", "href", "title", "target")
+                .addAttributes("img", "src", "alt", "title", "width", "height")
+                .addAttributes("font", "size", "color", "face")
+                .addAttributes("div", "style")
+                .addAttributes("span", "style")
+                .addAttributes("p", "style")
+                .addAttributes("sup", "style")
+                .addAttributes("ul", "style")
+                .addAttributes("li", "style")
+                .addAttributes("b", "style")
+                .addAttributes("i", "style")
+                .addAttributes("u", "style")
+                .addAttributes("style", "type")
+                .addProtocols("a", "href", "http", "https", "mailto", "tel")
+                .addProtocols("img", "src", "http", "https")
+                .addEnforcedAttribute("a", "rel", "noopener noreferrer")
+        }
+
+        companion object {
+            private val SCRIPT_TAG_REGEX = Regex("(?is)</?script[^>]*>")
+        }
     }
 }
