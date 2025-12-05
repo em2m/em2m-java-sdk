@@ -12,9 +12,7 @@ data class EsMigrationItem(val primary: Class<*> = EsApi::class.java,
                            val fallbacks: List<Class<*>> = emptyList()) {
 
     fun <T, F> toFallback(primary: T, fallbacks: List<F>): FallbackPair<T, F> {
-        if (primary?.javaClass != this.primary.javaClass) throw IllegalArgumentException()
         if (fallbacks.size != this.fallbacks.size) throw IllegalArgumentException()
-        if (fallbacks.map { it?.javaClass } != this.fallbacks) throw IllegalArgumentException()
         return FallbackPair(primary, fallbacks)
     }
 
@@ -22,16 +20,12 @@ data class EsMigrationItem(val primary: Class<*> = EsApi::class.java,
                                   fallbacks: List<F>,
                                   objectMapper: ObjectMapper = jacksonObjectMapper(),
                                   operatorComparator1: ((T, OperationType) -> Int)? = null,
-                                  operatorComparator2: ((F, OperationType) -> Int)? = null,
-                                  debug: Boolean = false): MultiCatchingFunctions<T, F> {
-        if (primary?.javaClass != this.primary.javaClass) throw IllegalArgumentException()
+                                  operatorComparator2: ((F, OperationType) -> Int)? = null)
+    : MultiCatchingFunctions<T, F> {
         if (fallbacks.size != this.fallbacks.size) throw IllegalArgumentException()
-        if (fallbacks.map { it?.javaClass } != this.fallbacks) throw IllegalArgumentException()
         return MultiCatchingFunctions(
             delegates1 = listOf(primary),
-            delegate1Class = primary::class.java,
             delegates2 = fallbacks,
-            delegate2Class = fallbacks.firstOrNull()?.javaClass,
             objectMapper= objectMapper,
             operatorComparator1 = operatorComparator1,
             operatorComparator2 = operatorComparator2)

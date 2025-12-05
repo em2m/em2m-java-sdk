@@ -8,9 +8,9 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 open class MultiCatchingFunctions<ELEM1, ELEM2>(delegates1: List<ELEM1>,
-                                                delegate1Class: Class<*>? = null,
+                                                delegate1Class: Class<ELEM1>? = null,
                                                 delegates2: List<ELEM2>,
-                                                delegate2Class: Class<*>? = null,
+                                                delegate2Class: Class<ELEM2>? = null,
                                                 val objectMapper: ObjectMapper = jacksonObjectMapper(),
                                                 val operatorComparator1: ((ELEM1, OperationType) -> Int)? = null,
                                                 val operatorComparator2: ((ELEM2, OperationType) -> Int)? = null) {
@@ -25,8 +25,8 @@ open class MultiCatchingFunctions<ELEM1, ELEM2>(delegates1: List<ELEM1>,
     )
 
     protected val logger: Logger = LoggerFactory.getLogger(javaClass)
-    private val delegates1 = delegates1.filterNotNull()
-    private val delegates2 = delegates2.filterNotNull()
+    private val delegates1: List<ELEM1> = delegates1.filterNotNull()
+    private val delegates2: List<ELEM2> = delegates2.filterNotNull()
     private val allDelegates = mutableListOf<Any>().apply {
         addAll(this@MultiCatchingFunctions.delegates1.map { it as Any })
         addAll(this@MultiCatchingFunctions.delegates2.map { it as Any })
@@ -36,8 +36,21 @@ open class MultiCatchingFunctions<ELEM1, ELEM2>(delegates1: List<ELEM1>,
         "No primary delegate declared."
     }
 
-    private val delegate1Class = delegate1Class ?: delegates1.firstOrNull()?.javaClass
-    private val delegate2Class = delegate2Class ?: delegates2.firstOrNull()?.javaClass
+    private val delegate1Class: Class<ELEM1>? = run {
+        if (delegate1Class != null) {
+            return@run delegate1Class
+        }
+        val elem1 = this.delegates1.firstOrNull() ?: return@run null
+        return@run (elem1 as Any).javaClass as? Class<ELEM1>
+    }
+
+    private val delegate2Class: Class<ELEM2>? = run {
+        if (delegate2Class != null) {
+            return@run delegate2Class
+        }
+        val elem2 = this.delegates2.firstOrNull() ?: return@run null
+        return@run (elem2 as Any).javaClass as? Class<ELEM2>
+    }
 
     private val Any?.isDelegate1: Boolean
         get() = run {
@@ -81,8 +94,8 @@ open class MultiCatchingFunctions<ELEM1, ELEM2>(delegates1: List<ELEM1>,
                                    val condition: ((ELEM1, ELEM2, IN) -> Result<Boolean>)? = null,
                                    val tryFn1: (ELEM1, IN) -> Any?,
                                    val tryFn2: (ELEM2, IN) -> Any?,
-                                   val onFailure1: OnFailure<ELEM1, IN> = OnFailure(),
-                                   val onFailure2: OnFailure<ELEM2, IN> = OnFailure(),
+                                   val onFailure1: OnFailure<ELEM1, IN, OUT> = OnFailure(),
+                                   val onFailure2: OnFailure<ELEM2, IN, OUT> = OnFailure(),
                                    val finallyFn1: ((ELEM1, IN) -> Any?)? = null,
                                    val finallyFn2: ((ELEM2, IN) -> Any?)? = null,
                                    val combineFn: ((List<Pair<Any, OUT?>>) -> OUT)? = null,
@@ -151,7 +164,7 @@ open class MultiCatchingFunctions<ELEM1, ELEM2>(delegates1: List<ELEM1>,
             if (condition != null) {
                 val conditionResult = delegates1.all { d1 ->
                     delegates2.all { d2 ->
-                        val r = condition(d1, d2, param)
+                        val r = condition!!.invoke(d1, d2, param)
                         val throwable = r.exceptionOrNull()
                         if (r.isFailure && throwable != null) {
                             logger.error("Condition failed! Not invoking.", throwable)

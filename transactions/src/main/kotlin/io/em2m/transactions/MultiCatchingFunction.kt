@@ -17,7 +17,7 @@ open class MultiCatchingFunction<ELEM>(vararg delegates: ELEM?,
     private val sortedOperations: Map<OperationType, List<ELEM>> = run {
         return@run if (operatorComparator != null) {
             OperationType.entries.associateWith { type ->
-                this.delegates.sortedBy { elem -> operatorComparator(elem, type) }
+                this.delegates.sortedBy { elem -> operatorComparator!!.invoke(elem, type) }
             }
         } else {
             OperationType.entries.associateWith { this.delegates.toList() }
@@ -38,19 +38,19 @@ open class MultiCatchingFunction<ELEM>(vararg delegates: ELEM?,
         } }
         val tryFn = transaction::run
         val undoable = transaction as? Undoable<ELEM, IN, OUT>
-        val undoFn = undoable?.let { undoable::undo }
-        val finallyFn = undoable?.let { undoable::finally }
-        val initialStateFn = undoable?.let { undoable::initialState }
+        val undoFn = undoable?.let { it::undo }
+        val finallyFn = undoable?.let { it::finally }
+        val initialStateFn = undoable?.let { it::initialState }
 
         val retryable = transaction as? Retryable
         val retryAction = retryable?.let { RetryOnFailure<ELEM, IN>(it.limit) }
-        val onFailure = OnFailure<ELEM, IN>(
+        val onFailure = OnFailure<ELEM, IN, OUT>(
             undoAction = undoFn,
             retryAction = retryAction
         )
 
         val combinable = transaction as? Combinable<ELEM,IN>
-        val combineFn = combinable?.let { combinable::combine }
+        val combineFn = combinable?.let { it::combine } as? ((List<Pair<ELEM, OUT?>>) -> OUT)
 
         return this.Operation(type, precedence, condition, tryFn, onFailure, finallyFn, combineFn, initialStateFn) as MultiCatchingFunction<ELEM>.Operation<IN, OUT>
 
@@ -61,7 +61,7 @@ open class MultiCatchingFunction<ELEM>(vararg delegates: ELEM?,
                                    val precedence: OperationPrecedence,
                                    val condition: ((ELEM, IN) -> Result<Boolean>)? = null,
                                    val tryFn: (ELEM, IN) -> Any?,
-                                   val onFailure: OnFailure<ELEM, IN> = OnFailure(),
+                                   val onFailure: OnFailure<ELEM, IN, OUT> = OnFailure(),
                                    val finallyFn: ((ELEM, IN) -> Any?)? = null,
                                    val combineFn: ((List<Pair<ELEM, OUT?>>) -> OUT)? = null,
                                    val initialStateFn: (() -> IN?)? = null) {
@@ -84,7 +84,7 @@ open class MultiCatchingFunction<ELEM>(vararg delegates: ELEM?,
             // cond
             if (condition != null) {
                 val conditionResult = delegates.all { delegate ->
-                    val r = condition(delegate, param)
+                    val r = condition!!.invoke(delegate, param)
                     val throwable = r.exceptionOrNull()
                     if (r.isFailure && throwable != null) {
                         logger.error("Condition failed! Not invoking.", throwable)

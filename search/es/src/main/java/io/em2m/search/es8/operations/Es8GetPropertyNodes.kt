@@ -3,8 +3,8 @@ package io.em2m.search.es8.operations
 import com.fasterxml.jackson.databind.JavaType
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import io.em2m.transactions.jackson.JacksonPropertyNode
-import io.em2m.transactions.jackson.JacksonTraversal
+import io.em2m.utils.jackson.JacksonPropertyNode
+import io.em2m.utils.jackson.JacksonTraversal
 import io.em2m.search.es8.getBoxedEs8Type
 import io.em2m.search.es8.getPrimitiveEs8Type
 import io.em2m.simplex.evalPath

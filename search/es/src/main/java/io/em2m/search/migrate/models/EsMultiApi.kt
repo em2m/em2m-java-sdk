@@ -44,10 +44,12 @@ class EsMultiApi(private val esMigrationBuilder: EsMigrationBuilder) {
                 true
             },
             onFailure1 = OnFailure(undoAction = { es1, input, _ ->
-                 es1.deleteIndex(input)
+                es1.deleteIndex(input)
+                false
             }),
             onFailure2 = OnFailure(undoAction = { es8, input, _ ->
-                 es8.deleteIndex(input)
+                es8.deleteIndex(input)
+                false
             })
         )
         return createIndexOperation(index) ?: false
@@ -84,9 +86,11 @@ class EsMultiApi(private val esMigrationBuilder: EsMigrationBuilder) {
             },
             onFailure1 = OnFailure(undoAction = { es1, (index), _ ->
                 es1.deleteIndex(index)
+                false
             }),
             onFailure2 = OnFailure(undoAction = { es8, (index), _ ->
                 es8.deleteIndex(index)
+                false
             })
         )
         return createIndexOperation(scope) ?: false
@@ -134,9 +138,11 @@ class EsMultiApi(private val esMigrationBuilder: EsMigrationBuilder) {
             },
             onFailure1 = OnFailure(undoAction = { es1, input, _ ->
                 // TODO: figure out how to un-delete?
+                false
             }),
             onFailure2 = OnFailure(undoAction = { es8, input, _ ->
                 // TODO: figure out how to un-delete?
+                false
             }
         ))
         return deleteIndexOperation(index) ?: false
@@ -185,6 +191,7 @@ class EsMultiApi(private val esMigrationBuilder: EsMigrationBuilder) {
                 initialState?.let {
                     es1.putAliases(initialState)
                 }
+                false
             }),
             tryFn2 = { es8, aliasRequest ->
                 es8.putAliases(aliasRequest)
@@ -194,6 +201,7 @@ class EsMultiApi(private val esMigrationBuilder: EsMigrationBuilder) {
                 initialState?.let {
                     es8.putAliases(initialState)
                 }
+                false
             }),
             initialStateFn = {
                 // invert actions

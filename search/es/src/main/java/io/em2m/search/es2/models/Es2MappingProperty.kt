@@ -21,15 +21,15 @@ data class Es2MappingProperty(val type: String? = null,
     val children = properties?.values
 
     override fun toString(): String {
-        return $$"""
-            Es2MappingProperty {
-                $${if (type != null) { "type=$type," } else { "" }}
-                $${if (index != null) { "index=$index," } else { "" }}
-                $${if (format != null) { "format=$format," } else { "" }}
-                $${if (dynamic != null) { "dynamic=$dynamic," } else { "" }}
-                children=$${properties?.keys ?: emptySet()}
-            }
-        """.trimMargin().replace(" ", "").replace("\n", "")
+        return ("""
+                Es2MappingProperty {
+                    """ + if (type != null) { "type=$type," } else { "" } + """
+                    """ + if (index != null) { "index=$index," } else { "" } + """
+                    """ + if (format != null) { "format=$format," } else { "" } + """
+                    """ + if (dynamic != null) { "dynamic=$dynamic," } else { "" } + """
+                    children=""" + (properties?.keys ?: emptySet<Any>()) + """
+                }
+            """).trimMargin().replace(" ", "").replace("\n", "")
     }
 
     override fun equals(other: Any?): Boolean {

@@ -80,14 +80,14 @@ data class Es8MappingProperty(var type: String? = null,
     }
 
     override fun toString(): String {
-        return $$"""
-            Es8MappingProperty {
-                $${if (type != null) { "type=$type," } else {""}}
-                $${if (format != null) { "format=$format," } else {""}}
-                $${if (dynamic != null) { "dynamic=$dynamic," } else {""}}
-                children=$${properties?.keys ?: emptySet()}
-            }
-        """.trimMargin().replace(" ", "").replace("\n", "")
+        return ("""
+                Es8MappingProperty {
+                    """ + if (type != null) { "type=$type," } else {""} + """
+                    """ + if (format != null) { "format=$format," } else {""} + """
+                    """ + if (dynamic != null) { "dynamic=$dynamic," } else {""} + """
+                    children=""" + (properties?.keys ?: emptySet<Any>()) + """
+                }
+            """).trimMargin().replace(" ", "").replace("\n", "")
     }
 
     override fun equals(other: Any?): Boolean {

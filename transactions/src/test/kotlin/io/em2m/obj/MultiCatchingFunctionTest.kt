@@ -43,14 +43,13 @@ class MultiCatchingFunctionTest {
 
         val delegate = Delegate(Input("hello world"))
 
-        val mcf = MultiCatchingFunction<Delegate>(delegate)
-        val operation = mcf.Operation<Input, String>(OperationType.UPDATE,
+        val mcf = MultiCatchingFunction(delegate)
+        val operation = mcf.Operation(OperationType.UPDATE,
             OperationPrecedence.ALL, tryFn = { elem, param: Input ->
                 elem.modifiable = param
                 null!! // throws npe
                 elem.modifiable.value
-            }, onFailure = OnFailure(undoAction = {elem, param, initial ->
-                println("Initial: $initial")
+            }, onFailure = OnFailure(undoAction = { elem, _, initial ->
                 elem.modifiable = initial
             }), initialStateFn = { delegate.modifiable })
         operation(Input("goodbye stranger"))

@@ -46,7 +46,8 @@
         <maven.compiler.target>11</maven.compiler.target>
         <maven-compiler-plugin.version>3.5.1</maven-compiler-plugin.version>
 
-        <kotlin.version>2.2.20</kotlin.version>
+        <kotlin.version>1.9.24</kotlin.version>
+        <kotlin.language.version>1.9</kotlin.language.version>
         <kotlin.code.style>official</kotlin.code.style>
         <kotlin.compiler.jvmTarget>11</kotlin.compiler.jvmTarget>
 
@@ -66,7 +67,7 @@
         <dependency>
             <groupId>org.jetbrains.kotlin</groupId>
             <artifactId>kotlin-test-junit5</artifactId>
-            <version>2.2.20</version>
+            <version>${kotlin.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -311,7 +312,7 @@
             <plugin>
                 <groupId>org.jetbrains.kotlin</groupId>
                 <artifactId>kotlin-maven-plugin</artifactId>
-                <version>2.2.20</version>
+                <version>${kotlin.version}</version>
                 <executions>
                     <execution>
                         <id>compile</id>
@@ -329,8 +330,8 @@
                     </execution>
                 </executions>
                 <configuration>
-                    <languageVersion>2.2</languageVersion>
-                    <apiVersion>2.2</apiVersion>
+                    <languageVersion>${kotlin.language.version}</languageVersion>
+                    <apiVersion>${kotlin.language.version}</apiVersion>
                 </configuration>
             </plugin>
 

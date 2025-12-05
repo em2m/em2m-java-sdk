@@ -69,8 +69,12 @@ class Es8DynamicDeserializer(): JsonDeserializer<Es8Dynamic>() {
                 JsonNodeType.BOOLEAN -> {
                     fromBoolean(root.booleanValue())
                 }
-                JsonNodeType.STRING if(root.isTextual) -> {
-                    fromString(root.textValue())
+                JsonNodeType.STRING -> {
+                    if(root.isTextual) {
+                        fromString(root.textValue())
+                    } else {
+                        FALSE
+                    }
                 }
                 else -> {
                     FALSE

@@ -1,8 +1,8 @@
 package io.em2m.transactions
 
-interface Undoable<DELEGATE, INPUT, OUTPUT> : UndoOnFailureAction<DELEGATE, INPUT> {
+interface Undoable<DELEGATE, INPUT, OUTPUT> : UndoOnFailureAction<DELEGATE, INPUT, OUTPUT> {
 
-    override fun invoke(elem: DELEGATE, param: INPUT, initial: INPUT): Any? {
+    override fun invoke(elem: DELEGATE, param: INPUT, initial: INPUT): OUTPUT {
         return undo(elem, param, initial)
     }
 

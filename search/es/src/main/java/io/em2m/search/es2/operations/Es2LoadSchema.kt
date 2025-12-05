@@ -8,6 +8,7 @@ import io.em2m.search.es2.models.Es2Mapping
 import io.em2m.search.es2.models.Es2Schema
 import io.em2m.utils.coerce
 import java.io.File
+import java.io.FileFilter
 
 // I got a bit carried away playing with tabs / spacing in this
 fun es2LoadSchema(from: File, mapper: ObjectMapper = jacksonObjectMapper()): Es2Schema {
@@ -16,7 +17,7 @@ fun es2LoadSchema(from: File, mapper: ObjectMapper = jacksonObjectMapper()): Es2
     }
 
     val indexDirectories = from.walkBottomUp().filter(File::isDirectory).filter { directory ->
-        val children = directory.listFiles { it.isFile } ?: emptyArray()
+        val children = directory.listFiles { pathname -> pathname?.isFile == true } ?: emptyArray()
         val fileNames = children.map(File::getName)
         ES_SCHEMA_FILE_NAMES.all { it in fileNames }
     }.toSet()

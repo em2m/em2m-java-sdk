@@ -118,8 +118,8 @@
                     </execution>
                 </executions>
                 <configuration>
-                    <languageVersion>2.2</languageVersion>
-                    <apiVersion>2.2</apiVersion>
+                    <languageVersion>${kotlin.language.version}</languageVersion>
+                    <apiVersion>${kotlin.language.version}</apiVersion>
                 </configuration>
             </plugin>
             <plugin>

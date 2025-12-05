@@ -29,6 +29,7 @@ open class MultiCatchingSyncDao<T, DAO>(vararg delegates: DAO?,
             }, OnFailure(undoAction = { delegate, param, _ ->
                 val id = delegate.idMapper(param)
                 delegate.deleteById(id)
+                param
             }))
         return createOperation(entity, debug = debug)
     }
@@ -44,6 +45,7 @@ open class MultiCatchingSyncDao<T, DAO>(vararg delegates: DAO?,
                 delegate.deleteById(id)
             }, OnFailure(undoAction = { delegate, entity, initialState ->
                 delegate.create(entity)
+                true
             }), initialStateFn = { entity })
         return deleteOperation(entity) ?: false
     }
@@ -131,7 +133,7 @@ open class MultiCatchingSyncDao<T, DAO>(vararg delegates: DAO?,
     }
 
     override fun save(id: String, entity: T): T? {
-        val saveOperation = Operation<Pair<String, T>, T>(
+        val saveOperation = Operation<Pair<String, T>, T?>(
             OperationType.UPDATE,
             OperationPrecedence.ALL,
             { _, _ -> Result.success(true) },
@@ -141,10 +143,9 @@ open class MultiCatchingSyncDao<T, DAO>(vararg delegates: DAO?,
             },
             onFailure = OnFailure(undoAction = { delegate, pair, initialState ->
                 val (idParam, _) = pair
-                if (initialState != null) {
-                    val (_, initialEntity) = initialState
-                    delegate.save(idParam, initialEntity)
-                }
+                val (_, initialEntity) = initialState
+                delegate.save(idParam, initialEntity)
+                initialEntity
             }),
             initialStateFn = {
                 findById(id)?.let { entity ->
@@ -186,7 +187,7 @@ open class MultiCatchingSyncDao<T, DAO>(vararg delegates: DAO?,
 
     private fun rollbackBulkUpdate(delegate: AbstractSyncDao<T>,
                                    newEntities: List<T>,
-                                   delegatesToEntitiesCache: List<Pair<AbstractSyncDao<T>, MutableMap<String, T>>>) {
+                                   delegatesToEntitiesCache: List<Pair<AbstractSyncDao<T>, MutableMap<String, T>>>): List<T> {
         // can't assume daos having reliable hash functions, have to resort to good old equals method
         fun List<Pair<AbstractSyncDao<T>, Map<String, T>>>.getEntityCache(template: AbstractSyncDao<T>): Map<String, T>? {
             return this.firstOrNull { (delegate, _) -> delegate == template }?.second
@@ -210,6 +211,7 @@ open class MultiCatchingSyncDao<T, DAO>(vararg delegates: DAO?,
         } else {
             logger.error("Initial entities was null! Not removing previous entities as a safe-guard.")
         }
+        return initialEntities?.values?.toList() ?: emptyList()
     }
 
     override fun saveBatch(entities: List<T>): List<T> {

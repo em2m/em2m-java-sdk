@@ -1,4 +1,4 @@
-package io.em2m.transactions.jackson
+package io.em2m.utils.jackson
 
 import com.fasterxml.jackson.databind.JavaType
 

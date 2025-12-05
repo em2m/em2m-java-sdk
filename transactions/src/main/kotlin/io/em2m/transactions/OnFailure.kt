@@ -2,7 +2,7 @@ package io.em2m.transactions
 
 import io.em2m.utils.retry
 
-class OnFailure<ELEM, IN> (private val undoAction: UndoOnFailureAction<ELEM, IN>? = null,
+class OnFailure<ELEM, IN, OUT> (private val undoAction: UndoOnFailureAction<ELEM, IN, OUT>? = null,
                            val undoStrategy: UndoStrategy = UndoStrategy.DEFAULT,
                            private val retryAction: RetryOnFailure<ELEM, IN>? = null){
 
@@ -27,7 +27,7 @@ class OnFailure<ELEM, IN> (private val undoAction: UndoOnFailureAction<ELEM, IN>
         return if (throwable == null) {
             Result.success(null)
         } else if (retryAction != null) {
-            this.retryAction(elem, param, operation, throwable)
+            this.retryAction!!.invoke(elem, param, operation, throwable)
         } else {
             Result.failure(throwable)
         }
@@ -51,10 +51,10 @@ class RetryOnFailure<ELEM, IN>(val limit: Int) {
 
 }
 
-fun interface UndoOnFailureAction<ELEM, IN> {
+fun interface UndoOnFailureAction<ELEM, IN, OUTPUT> {
     operator fun invoke(
         elem: ELEM,
         param: IN,
         initial: IN
-    ): Any?
+    ): OUTPUT
 }

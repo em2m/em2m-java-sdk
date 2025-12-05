@@ -55,7 +55,7 @@ class MultiCatchingFunctionsTest {
         val d1 = Delegate1("combined.initial")
         val d2 = Delegate2("combined.initial")
 
-        val mcfs = MultiCatchingFunctions<Delegate1, Delegate2>(delegates1 = listOf(d1), delegates2 = listOf(d2))
+        val mcfs = MultiCatchingFunctions(delegates1 = listOf(d1), delegates2 = listOf(d2))
         val op = mcfs.Operation<String?, String>(OperationType.UPDATE, OperationPrecedence.ANY,
             tryFn1 = {delegate1, input ->
                 delegate1.modifiable = input
@@ -65,11 +65,13 @@ class MultiCatchingFunctionsTest {
                 delegate2.modifiable = input
                 input!! // throws NPE
             },
-            onFailure1 = OnFailure(undoAction = {delegate1, param, initial ->
+            onFailure1 = OnFailure(undoAction = { delegate1, _, initial: String? ->
                 delegate1.modifiable = initial
+                initial!!
             }),
-            onFailure2 = OnFailure(undoAction = {delegate2, param, initial ->
+            onFailure2 = OnFailure(undoAction = { delegate2, _, initial ->
                 delegate2.modifiable = initial
+                initial!!
             }),
             initialStateFn = { "combined.initial" }
         )
