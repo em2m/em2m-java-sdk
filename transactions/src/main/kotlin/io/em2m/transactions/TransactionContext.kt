@@ -1,7 +1,7 @@
 package io.em2m.transactions
 
 data class TransactionContext<DELEGATE, INPUT : Any, OUTPUT>(
-    val `class`: Class<*> = Any::class.java,
+    val clazz: Class<*> = Any::class.java,
     val delegates: List<DELEGATE>,
     var errors: MutableSet<Throwable> = mutableSetOf(),
     var inputClass: Class<INPUT>? = null,
@@ -21,7 +21,7 @@ data class TransactionContext<DELEGATE, INPUT : Any, OUTPUT>(
         }
 
     var input: INPUT? = null
-        internal set(value) {
+        set(value) {
             if (value == null && allowNullInput || value != null) {
                 field = value
             } else {

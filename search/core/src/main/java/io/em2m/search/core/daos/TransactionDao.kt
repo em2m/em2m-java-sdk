@@ -30,6 +30,7 @@ open class TransactionDao<T : Any, DAO>(val delegates: List<DAO>): SyncDao<T> wh
     }
     override fun create(entity: T): T? {
         val context = TransactionContext<SyncDao<T>, T, T?>(delegates= delegates)
+        context.input = entity
         context.transaction = createTransaction
         return handler(context).getOrNull()
     }
@@ -50,6 +51,7 @@ open class TransactionDao<T : Any, DAO>(val delegates: List<DAO>): SyncDao<T> wh
 
     override fun deleteById(id: String): Boolean {
         val context = TransactionContext<SyncDao<T>, Pair<String, T?>, Boolean>(delegates= delegates)
+        context.input = id to null
         context.transaction = deleteByIdTransaction
         return handler(context).getOrDefault(false)
     }
@@ -66,6 +68,7 @@ open class TransactionDao<T : Any, DAO>(val delegates: List<DAO>): SyncDao<T> wh
 
     override fun exists(id: String): Boolean {
         val context = TransactionContext<SyncDao<T>, String, Boolean>(delegates=delegates)
+        context.input = id
         context.transaction = existsTransaction
         return handler(context).getOrDefault(false)
     }
@@ -85,6 +88,7 @@ open class TransactionDao<T : Any, DAO>(val delegates: List<DAO>): SyncDao<T> wh
 
     override fun search(request: SearchRequest): SearchResult<T> {
         val context = TransactionContext<SyncDao<T>, SearchRequest, SearchResult<T>>(delegates=delegates)
+        context.input = request
         context.transaction = searchTransaction
         return handler(context).getOrThrow()
     }
@@ -101,6 +105,7 @@ open class TransactionDao<T : Any, DAO>(val delegates: List<DAO>): SyncDao<T> wh
 
     override fun count(query: Query): Long {
         val context = TransactionContext<SyncDao<T>, Query, Long>(delegates= delegates)
+        context.input = query
         context.transaction = countTransaction
         return handler(context).getOrDefault(-1L)
     }
@@ -117,6 +122,7 @@ open class TransactionDao<T : Any, DAO>(val delegates: List<DAO>): SyncDao<T> wh
 
     override fun findById(id: String): T? {
         val context = TransactionContext<SyncDao<T>, String, T?>(delegates= delegates)
+        context.input = id
         context.transaction = findByIdTransaction
         return handler(context).getOrNull()
     }
@@ -156,6 +162,7 @@ open class TransactionDao<T : Any, DAO>(val delegates: List<DAO>): SyncDao<T> wh
 
     override fun save(id: String, entity: T): T? {
         val context = TransactionContext<SyncDao<T>, Pair<String, T?>, T?>(delegates= delegates)
+        context.input = id to entity
         context.transaction = saveTransaction
         return handler(context).getOrNull()
     }
@@ -183,6 +190,7 @@ open class TransactionDao<T : Any, DAO>(val delegates: List<DAO>): SyncDao<T> wh
 
     override fun saveBatch(entities: List<T>): List<T> {
         val context = TransactionContext<SyncDao<T>, List<T>, List<T>>(delegates= delegates)
+        context.input = entities
         context.transaction = saveBatchTransaction
         return handler(context).getOrThrow()
     }
@@ -206,6 +214,7 @@ open class TransactionDao<T : Any, DAO>(val delegates: List<DAO>): SyncDao<T> wh
 
     override fun upsert(id: String, entity: T): T? {
         val context = TransactionContext<SyncDao<T>, Pair<String, T?>, T?>(delegates= delegates)
+        context.input = id to entity
         context.transaction = upsertTransaction
         return handler(context).getOrNull()
     }
@@ -233,6 +242,7 @@ open class TransactionDao<T : Any, DAO>(val delegates: List<DAO>): SyncDao<T> wh
 
     override fun upsertBatch(entities: List<T>): List<T> {
         val context = TransactionContext<SyncDao<T>, List<T>, List<T>>(delegates= delegates)
+        context.input = entities
         context.transaction = upsertBatchTransaction
         return handler(context).getOrThrow()
     }
@@ -251,6 +261,7 @@ open class TransactionDao<T : Any, DAO>(val delegates: List<DAO>): SyncDao<T> wh
 
     override fun close() {
         val context = TransactionContext<SyncDao<T>, Nothing, Unit?>(delegates= delegates)
+        context.input = null
         context.transaction = closeTransaction
         handler(context).getOrNull()
     }

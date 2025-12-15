@@ -68,7 +68,7 @@ open class TransactionHandler {
         } else {
             emptySet()
         }
-        val transactionsForDelegate = forClass(_context.`class`).mapNotNull { transaction ->
+        val transactionsForDelegate = forClass(_context.clazz).mapNotNull { transaction ->
             transaction as? Transaction<DELEGATE, INPUT, OUTPUT>
         }.union(internalTransactions)
 
@@ -82,7 +82,9 @@ open class TransactionHandler {
             updateState(context, transaction, TransactionState.INITIALIZED)
 
             // cond
-            context.condition = context.tryOr(false) { transaction.condition(context) }
+            context.condition = context.tryOr(false) {
+                context.delegates.all { delegate -> transaction.condition(delegate, context) }
+            }
             if (context.condition != true) {
                 return Result.failure(TransactionException("Condition failed", context))
             }
@@ -95,7 +97,7 @@ open class TransactionHandler {
                 val sorted = context.delegates.sortedBy { delegate ->
                     getTransactionPriority(delegate, context)
                 }
-                val results = context.delegates.map { delegate ->
+                val results = sorted.map { delegate ->
                     transaction.run(delegate, context) as OUTPUT
                 }
                 context.transaction.combine(results)

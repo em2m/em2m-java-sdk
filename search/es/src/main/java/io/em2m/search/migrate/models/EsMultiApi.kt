@@ -3,232 +3,233 @@ package io.em2m.search.migrate.models
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ObjectNode
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import io.em2m.transactions.OnFailure
-import io.em2m.transactions.TransactionPrecedence
-import io.em2m.transactions.TransactionType
 import io.em2m.search.es.EsAliasAction
 import io.em2m.search.es.EsAliasRequest
+import io.em2m.search.es.EsApi
 import io.em2m.search.es2.models.Es2Settings
+import io.em2m.search.es8.Es8Api
 import io.em2m.search.es8.models.Es8Settings
 import io.em2m.search.es8.models.auth.CREATE_INDEX_PRIVILEGE
 import io.em2m.search.es8.models.auth.DELETE_INDEX_PRIVILEGE
 import io.em2m.search.es8.models.auth.MANAGE_INDEX_PRIVILEGE
 import io.em2m.search.migrate.toLegacy
 import io.em2m.search.migrate.toModern
+import io.em2m.transactions.Transaction
+import io.em2m.transactions.TransactionPrecedence
+import io.em2m.transactions.TransactionType
 
-class EsMultiApi(private val esMigrationBuilder: EsMigrationBuilder) {
+open class EsMultiApi(private val esMigrationBuilder: EsMigrationBuilder,
+                      private val mapper: ObjectMapper = jacksonObjectMapper()) {
+
+    protected open val createIndexTransaction: Transaction<Any, String, Boolean> by lazy {
+        val transaction = Transaction.Builder<Any, String, Boolean>()
+            .condition { delegate, context ->
+                val index = context.input!!
+                return@condition when (delegate) {
+                    is EsApi -> { !delegate.exists(index) }
+                    is Es8Api -> { !delegate.exists(index) && delegate.hasIndexPrivilege(index, CREATE_INDEX_PRIVILEGE) }
+                    else -> true
+                }
+            }
+            .main { delegate, context ->
+                when (delegate) {
+                    is EsApi -> { delegate.createIndex(context.input!!) }
+                    is Es8Api -> { delegate.createIndex(context.input!!) }
+                    else -> {
+                        TODO("Unsupported class")
+                        false
+                    }
+                }
+                true
+            }
+            .type(TransactionType.CREATE)
+            .precedence(TransactionPrecedence.ALL)
+            .build()
+        transaction
+    }
 
     fun createIndex(index: String): Boolean {
-        val function = esMigrationBuilder[index]
-        val createIndexOperation = function.Operation<String, Boolean>(
-            TransactionType.CREATE,
-            TransactionPrecedence.ALL,
-            condition = { es1, es8, input ->
-                val indexExists = es1.exists(input) || es8.exists(input)
-                val allowed = es8.hasIndexPrivilege(input, CREATE_INDEX_PRIVILEGE)
+        val context = esMigrationBuilder.toTransactionContext<String, Boolean>(index)
+        val handler = esMigrationBuilder.getTransactionHandler()
 
-                if (!allowed) {
-                    return@Operation Result.failure(IllegalStateException("Can't create index: insufficient privilege $CREATE_INDEX_PRIVILEGE"))
-                }
-                if (indexExists) {
-                    return@Operation Result.failure(IllegalStateException("Can't create index: index exists"))
-                }
-                Result.success(true)
-            },
-            tryFn1 = { es1, input ->
-                es1.createIndex(input)
-                true
-            },
-            tryFn2 = { es8, input ->
-                es8.createIndex(input)
-                true
-            },
-            onFailure1 = OnFailure(undoAction = { es1, input, _ ->
-                es1.deleteIndex(input)
-                false
-            }),
-            onFailure2 = OnFailure(undoAction = { es8, input, _ ->
-                es8.deleteIndex(input)
-                false
-            })
-        )
-        return createIndexOperation(index) ?: false
+        context.input = index
+        context.transaction = createIndexTransaction
+
+        return handler(context).getOrThrow()
     }
 
-    fun createIndex(index: String, settings: EsSettings, mapper: ObjectMapper = jacksonObjectMapper()): Boolean {
-        data class CreateIndexScope(val index: String, val settings: EsSettings)
-        val scope = CreateIndexScope(index, settings)
-
-        val function = esMigrationBuilder[index]
-        val createIndexOperation = function.Operation<CreateIndexScope, Boolean>(
-            TransactionType.CREATE,
-            TransactionPrecedence.ALL,
-            condition = { es1, es8, (index) ->
-                val allowed = es8.hasIndexPrivilege(index, CREATE_INDEX_PRIVILEGE)
-
-                if (!allowed) {
-                    return@Operation Result.failure(IllegalStateException("Can't create index: insufficient privilege $CREATE_INDEX_PRIVILEGE"))
+    protected val createIndexWithSettingsTransaction by lazy {
+        val transaction = Transaction.Builder<Any, Pair<String, EsSettings>, Boolean>()
+            .condition { delegate, context ->
+                val (index, _) = context.input!!
+                return@condition when (delegate) {
+                    is EsApi -> { !delegate.exists(index) }
+                    is Es8Api -> { !delegate.exists(index) && delegate.hasIndexPrivilege(index, CREATE_INDEX_PRIVILEGE) }
+                    else -> true
                 }
-
-                val indexExists = es1.exists(index) || es8.exists(index)
-                if (indexExists) {
-                    return@Operation Result.failure(IllegalStateException("Can't create index: index exists"))
+            }
+            .main { delegate, context ->
+                val (index, settings) = context.input!!
+                when (delegate) {
+                    is EsApi -> { delegate.createIndex(index, settings.old.toObjectNode(mapper) )}
+                    is Es8Api -> { delegate.createIndex(index, settings.new.toObjectNode(mapper) )}
+                    else -> {}
                 }
-                Result.success(true)
-            },
-            tryFn1 = { es1, (index, settings) ->
-                es1.createIndex(index, settings.old.toObjectNode(mapper))
                 true
-            },
-            tryFn2 = { es8, (index, settings) ->
-                es8.createIndex(index, settings.new.toObjectNode(mapper))
-                true
-            },
-            onFailure1 = OnFailure(undoAction = { es1, (index), _ ->
-                es1.deleteIndex(index)
-                false
-            }),
-            onFailure2 = OnFailure(undoAction = { es8, (index), _ ->
-                es8.deleteIndex(index)
-                false
-            })
-        )
-        return createIndexOperation(scope) ?: false
+            }
+            .type(TransactionType.CREATE)
+            .precedence(TransactionPrecedence.ALL)
+            .build()
+        transaction
     }
 
-    fun createIndex(index: String, settings: ObjectNode, mapper: ObjectMapper = jacksonObjectMapper()): Boolean {
-        return this.createIndex(index, EsSettings.fromObjectNode(settings, mapper), mapper)
+    fun createIndex(index: String, settings: EsSettings): Boolean {
+        val context = esMigrationBuilder.toTransactionContext<Pair<String, EsSettings>, Boolean>(index)
+        val handler = esMigrationBuilder.getTransactionHandler()
+
+        context.input = index to settings
+        context.transaction = createIndexWithSettingsTransaction
+
+        return handler(context).getOrThrow()
     }
 
-    fun createIndex(index: String, settings: Es8Settings, mapper: ObjectMapper = jacksonObjectMapper()): Boolean {
-        return this.createIndex(index, EsSettings(settings.toLegacy(), settings), mapper)
+    fun createIndex(index: String, settings: ObjectNode): Boolean {
+        return this.createIndex(index, EsSettings.fromObjectNode(settings, mapper))
+    }
+
+    fun createIndex(index: String, settings: Es8Settings): Boolean {
+        return this.createIndex(index, EsSettings(settings.toLegacy(), settings))
     }
 
     @Deprecated("Migrate to Es8Settings")
-    fun createIndex(index: String, settings: Es2Settings, mapper: ObjectMapper = jacksonObjectMapper()): Boolean {
-        return this.createIndex(index, EsSettings(settings, settings.toModern()), mapper)
+    fun createIndex(index: String, settings: Es2Settings): Boolean {
+        return this.createIndex(index, EsSettings(settings, settings.toModern()))
+    }
+
+    protected open val deleteIndexTransaction: Transaction<Any, String, Boolean> by lazy {
+        val transaction = Transaction.Builder<Any, String, Boolean>()
+            .condition { delegate, context ->
+                val index = context.input!!
+                return@condition when (delegate) {
+                    is EsApi -> { delegate.exists(index) }
+                    is Es8Api -> { delegate.exists(index) && delegate.hasIndexPrivilege(index, DELETE_INDEX_PRIVILEGE) }
+                    else -> true
+                }
+            }
+            .main { delegate, context ->
+                when (delegate) {
+                    is EsApi -> { delegate.createIndex(context.input!!) }
+                    is Es8Api -> { delegate.createIndex(context.input!!) }
+                    else -> {
+                        TODO("Unsupported class")
+                        false
+                    }
+                }
+                true
+            }
+            .type(TransactionType.DELETE)
+            .precedence(TransactionPrecedence.ALL)
+            .build()
+        transaction
     }
 
     @Deprecated("Deleting an index is dangerous, please only do this when the data exists somewhere else.")
     fun deleteIndex(index: String): Boolean {
-        val function = esMigrationBuilder[index]
-        val deleteIndexOperation = function.Operation<String, Boolean>(
-            TransactionType.DELETE,
-            TransactionPrecedence.ALL,
-            condition = { es1, es8, input ->
-                val allowed = es8.hasIndexPrivilege(input, DELETE_INDEX_PRIVILEGE)
-                if (!allowed) {
-                    return@Operation Result.failure(IllegalStateException("Can't delete index: insufficient privilege $DELETE_INDEX_PRIVILEGE"))
-                }
+        val context = esMigrationBuilder.toTransactionContext<String, Boolean>(index)
+        val handler = esMigrationBuilder.getTransactionHandler()
 
-                val indexExists = es1.exists(input) || es8.exists(input)
-                if (!indexExists) {
-                    return@Operation Result.failure(IllegalStateException("Can't delete index."))
-                }
+        context.input = index
+        context.transaction = deleteIndexTransaction
 
-                Result.success(true)
-            },
-            tryFn1 = { es1, input ->
-                es1.deleteIndex(input)
-                true
-            },
-            tryFn2 = { es8, input ->
-                es8.deleteIndex(input)
-                true
-            },
-            onFailure1 = OnFailure(undoAction = { es1, input, _ ->
-                // TODO: figure out how to un-delete?
-                false
-            }),
-            onFailure2 = OnFailure(undoAction = { es8, input, _ ->
-                // TODO: figure out how to un-delete?
-                false
+        return handler(context).getOrThrow()
+    }
+
+    protected open val getMetadataTransaction: Transaction<Any, Unit, ObjectNode?> by lazy {
+        val transaction = Transaction.Builder<Any, Unit, ObjectNode?>()
+            .main { delegate, _ ->
+                when(delegate) {
+                    is EsApi -> delegate.getMetadata()
+                    is Es8Api -> delegate.getMetadata()
+                    else -> null
+                }
             }
-        ))
-        return deleteIndexOperation(index) ?: false
+            .type(TransactionType.READ)
+            .precedence(TransactionPrecedence.ANY)
+            .build()
+        transaction
     }
 
     fun getMetadata(): ObjectNode? {
-        val function = esMigrationBuilder.getAny()
-        val operation = function.Operation<Unit, ObjectNode>(
-            TransactionType.READ,
-            TransactionPrecedence.ANY,
-            tryFn1 = { es1, _ ->
-                es1.getMetadata()
-            },
-            tryFn2 = { es8, _ ->
-                es8.getMetadata()
-            }
-        )
-        return operation(Unit)
+        val handler = esMigrationBuilder.getTransactionHandler()
+        val context = esMigrationBuilder.toTransactionContext<Unit, ObjectNode?>()
+        context.input = Unit
+        context.transaction = getMetadataTransaction
+
+        return handler(context).getOrNull()
     }
 
-    fun putAliases(request: EsAliasRequest): Boolean {
-        val indices: Set<String> = request.actions.flatMap { listOfNotNull(it.add?.index, it.remove?.index ) }.toSet()
-        val function = esMigrationBuilder.getAny()
-        val operation = function.Operation<EsAliasRequest, Boolean>(
-            TransactionType.IO,
-            TransactionPrecedence.ALL,
-            condition = {es1, es8, _ ->
-                val indicesExist = indices.all {  es1.exists(it) && es8.exists(it) }
-                if (!indicesExist) {
-                    return@Operation Result.failure(IllegalStateException("Can't put aliases: indices do not exist for all delegates."))
-                }
+    protected open val putAliasesTransaction by lazy {
+        val transaction = Transaction.Builder<Any, EsAliasRequest, Boolean>()
+            .condition { delegate, context ->
+                val request = context.input!!
+                val indices: Set<String> = request.actions.flatMap { listOfNotNull(it.add?.index, it.remove?.index ) }.toSet()
 
-                val allowed = indices.all { index -> es8.hasIndexPrivilege(index, MANAGE_INDEX_PRIVILEGE) }
-
-                if (!allowed) {
-                    return@Operation Result.failure(IllegalStateException("Can't put aliases: insufficient privilege $MANAGE_INDEX_PRIVILEGE"))
+                when (delegate) {
+                    is EsApi -> {
+                        indices.all { index -> delegate.exists(index) }
+                    }
+                    is Es8Api -> {
+                        indices.all { index -> delegate.hasIndexPrivilege(index, MANAGE_INDEX_PRIVILEGE) } &&
+                            indices.all { index -> delegate.exists(index) }
+                    }
+                    else -> true
                 }
-
-                Result.success(true)
-            },
-            tryFn1 = { es1, aliasRequest ->
-                es1.putAliases(aliasRequest)
-                true
-            },
-            onFailure1 = OnFailure(undoAction = { es1, _, initialState ->
-                initialState?.let {
-                    es1.putAliases(initialState)
-                }
-                false
-            }),
-            tryFn2 = { es8, aliasRequest ->
-                es8.putAliases(aliasRequest)
-                true
-            },
-            onFailure2 = OnFailure(undoAction = { es8, _, initialState ->
-                initialState?.let {
-                    es8.putAliases(initialState)
-                }
-                false
-            }),
-            initialStateFn = {
-                // invert actions
+            }
+            .initialValue { context ->
+                val request = context.input!!
                 val newActions = request.actions.map { action ->
                     EsAliasAction(add= action.remove, remove= action.add)
                 }.toMutableList()
                 EsAliasRequest().apply { actions = newActions }
             }
-        )
-        return operation(request) ?: false
+            .main { delegate, context ->
+                val request = context.input!!
+                when (delegate) {
+                    is EsApi -> { delegate.putAliases(request) }
+                    is Es8Api -> { delegate.putAliases(request) }
+                    else -> {
+                        //pass
+                    }
+                }
+                true
+            }
+            .build()
+        transaction
     }
 
-    fun getIndicesToAliases(): Map<String, List<String>> {
-        val function = esMigrationBuilder.getAny()
-        val operation = function.Operation<Unit, Map<String, List<String>>>(
-            TransactionType.READ,
-            TransactionPrecedence.ALL,
-            tryFn1 = { es1, _ ->
-                es1.getIndicesToAliases()
-            },
-            tryFn2 = { es8, _ ->
-                es8.getIndicesToAliases()
-            },
-            combineFn = { delegatesToMaps ->
+    fun putAliases(request: EsAliasRequest): Boolean {
+        val handler = esMigrationBuilder.getTransactionHandler()
+        val context = esMigrationBuilder.toTransactionContext<EsAliasRequest, Boolean>()
+        context.input = request
+        context.transaction = putAliasesTransaction
+        return handler(context).getOrDefault(false)
+    }
+
+    protected val getIndicesToAliasesTransaction: Transaction<Any, Unit, Map<String, List<String>>> by lazy {
+        val transaction= Transaction.Builder<Any, Unit, Map<String, List<String>>>()
+            .main { delegate, _ ->
+                when (delegate) {
+                    is EsApi -> { delegate.getIndicesToAliases() }
+                    is Es8Api -> { delegate.getIndicesToAliases() }
+                    else -> {
+                        mutableMapOf()
+                    }
+                }
+            }
+            .combine { maps ->
                 val retSetMap = mutableMapOf<String, MutableSet<String>>()
-                delegatesToMaps.forEach { (_, map) ->
-                    map?.forEach { (key, value) ->
+                maps.forEach { map ->
+                    map.forEach { (key, value) ->
                         val set = retSetMap.computeIfAbsent(key) {
                             value.toMutableSet()
                         }
@@ -242,9 +243,18 @@ class EsMultiApi(private val esMigrationBuilder: EsMigrationBuilder) {
                 }
                 retMap
             }
+            .type(TransactionType.READ)
+            .precedence(TransactionPrecedence.ALL)
+            .build()
+        transaction
+    }
 
-        )
-        return operation(Unit) ?: emptyMap()
+    fun getIndicesToAliases(): Map<String, List<String>> {
+        val handler = esMigrationBuilder.getTransactionHandler()
+        val context = esMigrationBuilder.toTransactionContext<Unit, Map<String, List<String>>>()
+        context.input = Unit
+        context.transaction = getIndicesToAliasesTransaction
+        return handler(context).getOrThrow()
     }
 
     fun getAliases(index: String): List<String> {
@@ -252,24 +262,31 @@ class EsMultiApi(private val esMigrationBuilder: EsMigrationBuilder) {
         return indicesToAliases[index] ?: emptyList()
     }
 
-    fun exists(index: String): Boolean {
-        val function = esMigrationBuilder.getAny()
-        val operation = function.Operation<String, Boolean>(
-            TransactionType.IO,
-            TransactionPrecedence.ALL,
-            tryFn1 = { es1, param ->
-                es1.exists(param)
-            },
-            tryFn2 = { es8, param ->
-                es8.exists(param)
-            },
-            combineFn = { delegatesToBooleans ->
-                delegatesToBooleans.all { (_, value) ->
-                    value ?: false
+    protected val existsTransaction: Transaction<Any, String, Boolean> by lazy {
+        val transaction = Transaction.Builder<Any, String, Boolean>()
+            .main { delegate, context ->
+                val index = context.input!!
+                when (delegate) {
+                    is EsApi -> { delegate.exists(index) }
+                    is Es8Api -> { delegate.exists(index) }
+                    else -> { false }
                 }
             }
-        )
-        return operation(index) ?: false
+            .combine { values -> values.any{it} }
+            .type(TransactionType.READ)
+            .precedence(TransactionPrecedence.ANY)
+            .build()
+        transaction
+    }
+
+    fun exists(index: String): Boolean {
+        val handler = esMigrationBuilder.getTransactionHandler()
+        val context = esMigrationBuilder.toTransactionContext<String, Boolean>()
+
+        context.input = index
+        context.transaction = existsTransaction
+
+        return handler(context).getOrThrow()
     }
 
 

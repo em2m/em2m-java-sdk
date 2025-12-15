@@ -2,6 +2,7 @@ package io.em2m.transactions
 
 private class DelegateTransaction<DELEGATE, INPUT: Any, OUTPUT>(
     private val runFn: (delegate:DELEGATE, context: TransactionContext<DELEGATE, INPUT, OUTPUT>) -> OUTPUT?,
+    private val conditionFn: ((delegate: DELEGATE, context: TransactionContext<DELEGATE, INPUT, OUTPUT>) -> Boolean) = { _, _ -> true },
     private val initialValueFn: ((TransactionContext<DELEGATE, INPUT, OUTPUT>) -> INPUT)? = null,
     private val onCreateFn: ((TransactionContext<*, *, *>) -> Unit)? = null,
     private val onFailureFn: ((TransactionContext<*, *, *>) -> Unit)? = null,
@@ -13,6 +14,18 @@ private class DelegateTransaction<DELEGATE, INPUT: Any, OUTPUT>(
     override var type: TransactionType = TransactionType.READ,
     override var precedence: TransactionPrecedence = TransactionPrecedence.ALL
 ) : Transaction<DELEGATE, INPUT, OUTPUT>() {
+
+    override fun run(delegate:DELEGATE, context: TransactionContext<DELEGATE, INPUT, OUTPUT>): OUTPUT? {
+        return runFn(delegate, context)
+    }
+
+    override fun condition(delegate: DELEGATE, context: TransactionContext<DELEGATE, INPUT, OUTPUT>): Boolean {
+        return runCatching { conditionFn(delegate, context) }.getOrDefault(true)
+    }
+
+    override fun initialValue(context: TransactionContext<DELEGATE, INPUT, OUTPUT>): INPUT? {
+        return initialValueFn?.invoke(context)
+    }
 
     override fun onCreate(context: TransactionContext<*, *, *>) {
         onCreateFn?.invoke(context)
@@ -39,14 +52,6 @@ private class DelegateTransaction<DELEGATE, INPUT: Any, OUTPUT>(
         return combineFn?.invoke(results)
     }
 
-    override fun run(delegate:DELEGATE, context: TransactionContext<DELEGATE, INPUT, OUTPUT>): OUTPUT? {
-        return runFn(delegate, context)
-    }
-
-    override fun initialValue(context: TransactionContext<DELEGATE, INPUT, OUTPUT>): INPUT? {
-        return initialValueFn?.invoke(context)
-    }
-
 }
 
 abstract class Transaction<DELEGATE, INPUT : Any, OUTPUT> : AbstractOnStateChangeListener() {
@@ -55,7 +60,7 @@ abstract class Transaction<DELEGATE, INPUT : Any, OUTPUT> : AbstractOnStateChang
     open var type:          TransactionType         = TransactionType.READ
     open var precedence:    TransactionPrecedence   = TransactionPrecedence.ALL
 
-    open fun condition(context: TransactionContext<DELEGATE, INPUT, OUTPUT>): Boolean = true
+    open fun condition(delegate: DELEGATE, context: TransactionContext<DELEGATE, INPUT, OUTPUT>): Boolean = true
 
     open fun onCreate(context: TransactionContext<*, *, *>) {}
 
@@ -93,6 +98,11 @@ abstract class Transaction<DELEGATE, INPUT : Any, OUTPUT> : AbstractOnStateChang
         private lateinit var runFn: ((delegate:DELEGATE, context: TransactionContext<DELEGATE, INPUT, OUTPUT>) -> OUTPUT?)
         fun main(fn: (delegate:DELEGATE, context: TransactionContext<DELEGATE, INPUT, OUTPUT>) -> OUTPUT?) = apply {
             this.runFn = fn
+        }
+
+        private var conditionFn: ((delegate: DELEGATE, context: TransactionContext<DELEGATE, INPUT, OUTPUT>) -> Boolean) = { _, _ -> true }
+        fun condition(fn: ((DELEGATE, TransactionContext<DELEGATE, INPUT, OUTPUT>) -> Boolean)) = apply {
+            this.conditionFn = fn
         }
 
         private var initialValueFn: ((TransactionContext<DELEGATE, INPUT, OUTPUT>) -> INPUT)? = null
@@ -144,6 +154,7 @@ abstract class Transaction<DELEGATE, INPUT : Any, OUTPUT> : AbstractOnStateChang
             }
             return DelegateTransaction(
                 runFn = this.runFn,
+                conditionFn = this.conditionFn,
                 initialValueFn = this.initialValueFn,
                 onCreateFn = this.onCreateFn,
                 onFailureFn = this.onFailureFn,
