@@ -11,9 +11,9 @@ class MultiCatchingFunctionTest {
     fun default() {
         data class Input(val value: String? = null)
 
-        val mcf = MultiCatchingFunction<Any>(this)
-        val operation = mcf.Operation<Input, String>(OperationType.READ,
-            OperationPrecedence.ALL, tryFn = { _, param: Input ->
+        val mcf = MultiFunction<Any>(this)
+        val operation = mcf.Operation<Input, String>(TransactionType.READ,
+            TransactionPrecedence.ALL, tryFn = { _, param: Input ->
                 param.value!!
             })
 
@@ -26,9 +26,9 @@ class MultiCatchingFunctionTest {
     fun `null`() {
         data class Input(val value: String? = null)
 
-        val mcf = MultiCatchingFunction<Any>(this)
-        val operation = mcf.Operation<Input, String>(OperationType.READ,
-            OperationPrecedence.ALL, tryFn = { _, param: Input ->
+        val mcf = MultiFunction<Any>(this)
+        val operation = mcf.Operation<Input, String>(TransactionType.READ,
+            TransactionPrecedence.ALL, tryFn = { _, param: Input ->
                 param.value!!
             })
 
@@ -43,9 +43,9 @@ class MultiCatchingFunctionTest {
 
         val delegate = Delegate(Input("hello world"))
 
-        val mcf = MultiCatchingFunction(delegate)
-        val operation = mcf.Operation(OperationType.UPDATE,
-            OperationPrecedence.ALL, tryFn = { elem, param: Input ->
+        val mcf = MultiFunction(delegate)
+        val operation = mcf.Operation(TransactionType.UPDATE,
+            TransactionPrecedence.ALL, tryFn = { elem, param: Input ->
                 elem.modifiable = param
                 null!! // throws npe
                 elem.modifiable.value

@@ -17,7 +17,7 @@
  */
 package io.em2m.search.bean
 
-import io.em2m.transactions.OperationType
+import io.em2m.transactions.TransactionType
 import io.em2m.search.core.daos.AbstractSyncDao
 import io.em2m.search.core.model.*
 import kotlin.reflect.KClass
@@ -159,15 +159,15 @@ class MapBackedSyncDao<T>(idMapper: IdMapper<T>, private val items: MutableMap<S
         }
     }
 
-    override fun getOperationPriority(operationType: OperationType): Int {
+    override fun getTransactionPriority(transactionType: TransactionType): Int {
         // if caching in a map, creates and deletes should be done last compared to actual values
-        return when (operationType) {
-            OperationType.CREATE -> OperationType.LOW_PRIORITY
-            OperationType.READ ->   OperationType.MEDIUM_PRIORITY
-            OperationType.SEARCH -> OperationType.MEDIUM_PRIORITY
-            OperationType.UPDATE -> OperationType.LOW_PRIORITY
-            OperationType.DELETE -> OperationType.LOW_PRIORITY
-            else -> super.getOperationPriority(operationType)
+        return when (transactionType) {
+            TransactionType.CREATE -> TransactionType.LOW_PRIORITY
+            TransactionType.READ ->   TransactionType.MEDIUM_PRIORITY
+            TransactionType.SEARCH -> TransactionType.MEDIUM_PRIORITY
+            TransactionType.UPDATE -> TransactionType.LOW_PRIORITY
+            TransactionType.DELETE -> TransactionType.LOW_PRIORITY
+            else -> super<AbstractSyncDao>.getTransactionPriority(transactionType)
         }
     }
 

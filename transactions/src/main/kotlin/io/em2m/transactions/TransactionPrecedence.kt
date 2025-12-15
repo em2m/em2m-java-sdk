@@ -1,5 +1,5 @@
 package io.em2m.transactions
 
-enum class OperationPrecedence {
+enum class TransactionPrecedence {
     ANY, ALL
 }

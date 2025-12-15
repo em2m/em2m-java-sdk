@@ -2,8 +2,8 @@ package io.em2m.search.migrate.models
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import io.em2m.transactions.MultiCatchingFunctions
-import io.em2m.transactions.OperationType
+import io.em2m.transactions.MultiFunctions
+import io.em2m.transactions.TransactionType
 import io.em2m.search.es.models.EsVersion
 import io.em2m.search.es.EsApi
 import io.em2m.utils.FallbackPair
@@ -19,11 +19,11 @@ data class EsMigrationItem(val primary: Class<*> = EsApi::class.java,
     fun <T, F> toCatchingFunction(primary: T,
                                   fallbacks: List<F>,
                                   objectMapper: ObjectMapper = jacksonObjectMapper(),
-                                  operatorComparator1: ((T, OperationType) -> Int)? = null,
-                                  operatorComparator2: ((F, OperationType) -> Int)? = null)
-    : MultiCatchingFunctions<T, F> {
+                                  operatorComparator1: ((T, TransactionType) -> Int)? = null,
+                                  operatorComparator2: ((F, TransactionType) -> Int)? = null)
+    : MultiFunctions<T, F> {
         if (fallbacks.size != this.fallbacks.size) throw IllegalArgumentException()
-        return MultiCatchingFunctions(
+        return MultiFunctions(
             delegates1 = listOf(primary),
             delegates2 = fallbacks,
             objectMapper= objectMapper,

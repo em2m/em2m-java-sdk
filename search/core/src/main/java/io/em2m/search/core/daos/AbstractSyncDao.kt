@@ -1,6 +1,5 @@
 package io.em2m.search.core.daos
 
-import io.em2m.transactions.OperationType
 import io.em2m.search.core.model.*
 
 abstract class AbstractSyncDao<T>(open val idMapper: IdMapper<T>) : SyncDao<T> {
@@ -38,9 +37,5 @@ abstract class AbstractSyncDao<T>(open val idMapper: IdMapper<T>) : SyncDao<T> {
     override fun upsert(id: String, entity: T): T? = save(id, entity)
 
     override fun upsertBatch(entities: List<T>): List<T> = saveBatch(entities)
-
-    open fun getOperationPriority(operationType: OperationType): Int {
-        return OperationType.MEDIUM_PRIORITY
-    }
 
 }

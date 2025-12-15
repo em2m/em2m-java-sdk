@@ -15,8 +15,8 @@ class MultiCatchingFunctionsTest {
         val d1 = Delegate1("d1.initial")
         val d2 = Delegate2("d2.initial")
 
-        val mcfs = MultiCatchingFunctions<Delegate1, Delegate2>(delegates1 = listOf(d1), delegates2 = listOf(d2))
-        val op = mcfs.Operation<Unit, String>(OperationType.READ, OperationPrecedence.ANY,
+        val mcfs = MultiFunctions<Delegate1, Delegate2>(delegates1 = listOf(d1), delegates2 = listOf(d2))
+        val op = mcfs.Operation<Unit, String>(TransactionType.READ, TransactionPrecedence.ANY,
             tryFn1 = {delegate1, _ ->
                 delegate1.modifiable
             },
@@ -36,8 +36,8 @@ class MultiCatchingFunctionsTest {
         val d1 = Delegate1("combined.initial")
         val d2 = Delegate2("combined.initial")
 
-        val mcfs = MultiCatchingFunctions<Delegate1, Delegate2>(delegates1 = listOf(d1), delegates2 = listOf(d2))
-        val op = mcfs.Operation<String?, String>(OperationType.READ, OperationPrecedence.ALL,
+        val mcfs = MultiFunctions<Delegate1, Delegate2>(delegates1 = listOf(d1), delegates2 = listOf(d2))
+        val op = mcfs.Operation<String?, String>(TransactionType.READ, TransactionPrecedence.ALL,
             tryFn1 = { _, input ->
                 input!!
             },
@@ -55,8 +55,8 @@ class MultiCatchingFunctionsTest {
         val d1 = Delegate1("combined.initial")
         val d2 = Delegate2("combined.initial")
 
-        val mcfs = MultiCatchingFunctions(delegates1 = listOf(d1), delegates2 = listOf(d2))
-        val op = mcfs.Operation<String?, String>(OperationType.UPDATE, OperationPrecedence.ANY,
+        val mcfs = MultiFunctions(delegates1 = listOf(d1), delegates2 = listOf(d2))
+        val op = mcfs.Operation<String?, String>(TransactionType.UPDATE, TransactionPrecedence.ANY,
             tryFn1 = {delegate1, input ->
                 delegate1.modifiable = input
                 input!! // throws NPE

@@ -4,8 +4,8 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ObjectNode
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.em2m.transactions.OnFailure
-import io.em2m.transactions.OperationPrecedence
-import io.em2m.transactions.OperationType
+import io.em2m.transactions.TransactionPrecedence
+import io.em2m.transactions.TransactionType
 import io.em2m.search.es.EsAliasAction
 import io.em2m.search.es.EsAliasRequest
 import io.em2m.search.es2.models.Es2Settings
@@ -21,8 +21,8 @@ class EsMultiApi(private val esMigrationBuilder: EsMigrationBuilder) {
     fun createIndex(index: String): Boolean {
         val function = esMigrationBuilder[index]
         val createIndexOperation = function.Operation<String, Boolean>(
-            OperationType.CREATE,
-            OperationPrecedence.ALL,
+            TransactionType.CREATE,
+            TransactionPrecedence.ALL,
             condition = { es1, es8, input ->
                 val indexExists = es1.exists(input) || es8.exists(input)
                 val allowed = es8.hasIndexPrivilege(input, CREATE_INDEX_PRIVILEGE)
@@ -61,8 +61,8 @@ class EsMultiApi(private val esMigrationBuilder: EsMigrationBuilder) {
 
         val function = esMigrationBuilder[index]
         val createIndexOperation = function.Operation<CreateIndexScope, Boolean>(
-            OperationType.CREATE,
-            OperationPrecedence.ALL,
+            TransactionType.CREATE,
+            TransactionPrecedence.ALL,
             condition = { es1, es8, (index) ->
                 val allowed = es8.hasIndexPrivilege(index, CREATE_INDEX_PRIVILEGE)
 
@@ -113,8 +113,8 @@ class EsMultiApi(private val esMigrationBuilder: EsMigrationBuilder) {
     fun deleteIndex(index: String): Boolean {
         val function = esMigrationBuilder[index]
         val deleteIndexOperation = function.Operation<String, Boolean>(
-            OperationType.DELETE,
-            OperationPrecedence.ALL,
+            TransactionType.DELETE,
+            TransactionPrecedence.ALL,
             condition = { es1, es8, input ->
                 val allowed = es8.hasIndexPrivilege(input, DELETE_INDEX_PRIVILEGE)
                 if (!allowed) {
@@ -151,8 +151,8 @@ class EsMultiApi(private val esMigrationBuilder: EsMigrationBuilder) {
     fun getMetadata(): ObjectNode? {
         val function = esMigrationBuilder.getAny()
         val operation = function.Operation<Unit, ObjectNode>(
-            OperationType.READ,
-            OperationPrecedence.ANY,
+            TransactionType.READ,
+            TransactionPrecedence.ANY,
             tryFn1 = { es1, _ ->
                 es1.getMetadata()
             },
@@ -167,8 +167,8 @@ class EsMultiApi(private val esMigrationBuilder: EsMigrationBuilder) {
         val indices: Set<String> = request.actions.flatMap { listOfNotNull(it.add?.index, it.remove?.index ) }.toSet()
         val function = esMigrationBuilder.getAny()
         val operation = function.Operation<EsAliasRequest, Boolean>(
-            OperationType.IO,
-            OperationPrecedence.ALL,
+            TransactionType.IO,
+            TransactionPrecedence.ALL,
             condition = {es1, es8, _ ->
                 val indicesExist = indices.all {  es1.exists(it) && es8.exists(it) }
                 if (!indicesExist) {
@@ -217,8 +217,8 @@ class EsMultiApi(private val esMigrationBuilder: EsMigrationBuilder) {
     fun getIndicesToAliases(): Map<String, List<String>> {
         val function = esMigrationBuilder.getAny()
         val operation = function.Operation<Unit, Map<String, List<String>>>(
-            OperationType.READ,
-            OperationPrecedence.ALL,
+            TransactionType.READ,
+            TransactionPrecedence.ALL,
             tryFn1 = { es1, _ ->
                 es1.getIndicesToAliases()
             },
@@ -255,8 +255,8 @@ class EsMultiApi(private val esMigrationBuilder: EsMigrationBuilder) {
     fun exists(index: String): Boolean {
         val function = esMigrationBuilder.getAny()
         val operation = function.Operation<String, Boolean>(
-            OperationType.IO,
-            OperationPrecedence.ALL,
+            TransactionType.IO,
+            TransactionPrecedence.ALL,
             tryFn1 = { es1, param ->
                 es1.exists(param)
             },

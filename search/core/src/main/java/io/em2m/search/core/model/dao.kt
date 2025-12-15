@@ -3,6 +3,7 @@ package io.em2m.search.core.model
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ObjectNode
+import io.em2m.transactions.TransactionType
 import io.em2m.utils.Fallback
 import io.em2m.utils.MultiException
 import io.em2m.utils.getOrFallback
@@ -42,6 +43,10 @@ interface SyncDao<T> : Searchable<T>, Closeable {
     fun upsert(id: String, entity: T): T?
 
     fun upsertBatch(entities: List<T>): List<T>
+
+    fun getTransactionPriority(transactionType: TransactionType): Int {
+        return 0
+    }
 
 }
 

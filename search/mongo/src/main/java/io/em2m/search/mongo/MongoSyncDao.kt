@@ -25,7 +25,7 @@ import com.mongodb.client.model.Collation
 import com.mongodb.client.model.Filters
 import com.mongodb.client.model.ReplaceOneModel
 import com.mongodb.client.model.UpdateOptions
-import io.em2m.transactions.OperationType
+import io.em2m.transactions.TransactionType
 import io.em2m.search.core.daos.AbstractSyncDao
 import io.em2m.search.core.model.*
 import io.em2m.search.core.parser.SchemaMapper
@@ -245,14 +245,14 @@ class MongoSyncDao<T>(
             }.iterator()
     }
 
-    override fun getOperationPriority(operationType: OperationType): Int {
-        return when (operationType) {
-            OperationType.CREATE -> OperationType.HIGH_PRIORITY
-            OperationType.READ ->   OperationType.HIGH_PRIORITY
-            OperationType.SEARCH -> OperationType.LOW_PRIORITY
-            OperationType.UPDATE -> OperationType.HIGH_PRIORITY
-            OperationType.DELETE -> OperationType.HIGH_PRIORITY
-            else -> super.getOperationPriority(operationType)
+    override fun getTransactionPriority(transactionType: TransactionType): Int {
+        return when (transactionType) {
+            TransactionType.CREATE -> TransactionType.HIGH_PRIORITY
+            TransactionType.READ ->   TransactionType.HIGH_PRIORITY
+            TransactionType.SEARCH -> TransactionType.LOW_PRIORITY
+            TransactionType.UPDATE -> TransactionType.HIGH_PRIORITY
+            TransactionType.DELETE -> TransactionType.HIGH_PRIORITY
+            else -> super<AbstractSyncDao>.getTransactionPriority(transactionType)
         }
     }
 

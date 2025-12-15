@@ -3,7 +3,7 @@ package io.em2m.search.es
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.em2m.geo.geojson.GeoJsonModule
-import io.em2m.search.core.daos.MultiCatchingStreamableSyncDao
+import io.em2m.search.core.daos.StreamableTransactionDao
 import io.em2m.search.core.model.DocMapper
 import io.em2m.search.core.model.IdMapper
 import io.em2m.search.es2.dao.Es2SyncDao
@@ -12,7 +12,7 @@ import io.em2m.search.es8.dao.Es8SyncDao
 
 // I didn't want to break any existing code mappings for the EsSyncDao
 @Deprecated("Used for migration purposes, replace with the latest EsSyncDao equivalent.")
-class EsSyncDao<T> : MultiCatchingStreamableSyncDao<T, EsSyncDaoUnionType<T>> {
+class EsSyncDao<T : Any> : StreamableTransactionDao<T, EsSyncDaoUnionType<T>> {
 
     @Deprecated("Use EsSyncDao.Builder<T>() or EsMigrationBuilder.EsSyncDao().", ReplaceWith("EsMigrationBuilder().EsSyncDao(index, type, tClass, idMapper, docMapper)", "io.em2m.search.migrate.models.EsMigrationBuilder"))
     constructor(
@@ -35,7 +35,7 @@ class EsSyncDao<T> : MultiCatchingStreamableSyncDao<T, EsSyncDaoUnionType<T>> {
         super(delegates= delegates)
 
     init {
-        val index = this.primary.index
+        val index = this.delegates.first().index
         if (this.delegates.any { delegate -> delegate.index != index }) {
             throw IllegalArgumentException("Currently all index values need to be the same. " +
                 "If you want to write to multiple daos, please do so manually.")
@@ -43,12 +43,12 @@ class EsSyncDao<T> : MultiCatchingStreamableSyncDao<T, EsSyncDaoUnionType<T>> {
     }
 
     fun withFallbacks(vararg delegates: EsSyncDaoUnionType<T>): EsSyncDao<T> {
-        val newDelegates = mutableSetOf<EsSyncDaoUnionType<T>>(this.primary)
+        val newDelegates = mutableSetOf<EsSyncDaoUnionType<T>>(this.delegates.first())
         newDelegates.addAll(delegates)
         return EsSyncDao(delegates=newDelegates.toTypedArray())
     }
 
-    class Builder<T> {
+    class Builder<T: Any> {
 
         private var primary: Any? = null
 

@@ -1,10 +1,12 @@
 package io.em2m.transactions
 
+import io.em2m.transactions.listeners.OnFailureListener
 import io.em2m.utils.retry
 
 class OnFailure<ELEM, IN, OUT> (private val undoAction: UndoOnFailureAction<ELEM, IN, OUT>? = null,
-                           val undoStrategy: UndoStrategy = UndoStrategy.DEFAULT,
-                           private val retryAction: RetryOnFailure<ELEM, IN>? = null){
+                                val undoStrategy: UndoStrategy = UndoStrategy.DEFAULT,
+                                private val retryAction: RetryOnFailure<ELEM, IN>? = null,
+                                private val listeners: List<OnFailureListener> = emptyList()){
 
     fun undo(elem: ELEM,
              param: IN,

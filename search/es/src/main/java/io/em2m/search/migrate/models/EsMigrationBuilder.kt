@@ -3,7 +3,7 @@ package io.em2m.search.migrate.models
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.em2m.geo.geojson.GeoJsonModule
-import io.em2m.transactions.MultiCatchingFunctions
+import io.em2m.transactions.MultiFunctions
 import io.em2m.search.core.model.DocMapper
 import io.em2m.search.core.model.IdMapper
 import io.em2m.search.es.EsApi
@@ -27,12 +27,12 @@ class EsMigrationBuilder(val esMigrationMapping: EsMigrationProvider,
         getOrThrow(EsApi::getIndicesToAliases, Es8Api::getIndicesToAliases)
     }
 
-    operator fun get(index: String): MultiCatchingFunctions<EsApi, Es8Api> {
+    operator fun get(index: String): MultiFunctions<EsApi, Es8Api> {
         val migrationItem: EsMigrationItem = this.esMigrationMapping[index] ?: EsMigrationItem.DEFAULT
         return migrationItem.toCatchingFunction(primary, fallbacks = fallbacks)
     }
 
-    fun getAny(): MultiCatchingFunctions<EsApi, Es8Api> {
+    fun getAny(): MultiFunctions<EsApi, Es8Api> {
         val migrationItem = EsMigrationItem(primary= this.primary.javaClass, fallbacks = this.fallbacks.map { it.javaClass })
         return migrationItem.toCatchingFunction(primary, fallbacks= fallbacks)
     }

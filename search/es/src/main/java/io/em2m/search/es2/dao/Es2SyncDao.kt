@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.em2m.geo.geojson.GeoJsonModule
-import io.em2m.transactions.OperationType
+import io.em2m.transactions.TransactionType
 import io.em2m.search.core.model.*
 import io.em2m.search.es.EsApi
 import io.em2m.search.es.EsSyncDaoUnionType
@@ -224,15 +224,15 @@ class Es2SyncDao<T>(
         }
     }
 
-    override fun getOperationPriority(operationType: OperationType): Int {
-        return when (operationType) {
-            OperationType.CREATE -> OperationType.MEDIUM_PRIORITY
-            OperationType.READ ->   OperationType.MEDIUM_PRIORITY
+    override fun getTransactionPriority(transactionType: TransactionType): Int {
+        return when (transactionType) {
+            TransactionType.CREATE -> TransactionType.MEDIUM_PRIORITY
+            TransactionType.READ ->   TransactionType.MEDIUM_PRIORITY
             // You know, for search
-            OperationType.SEARCH -> OperationType.HIGH_PRIORITY
-            OperationType.UPDATE -> OperationType.MEDIUM_PRIORITY
-            OperationType.DELETE -> OperationType.MEDIUM_PRIORITY
-            else -> super.getOperationPriority(operationType)
+            TransactionType.SEARCH -> TransactionType.HIGH_PRIORITY
+            TransactionType.UPDATE -> TransactionType.MEDIUM_PRIORITY
+            TransactionType.DELETE -> TransactionType.MEDIUM_PRIORITY
+            else -> super.getTransactionPriority(transactionType)
         }
     }
 
