@@ -159,11 +159,18 @@ class JacksonRequestTransformer(
         private fun sanitizeText(input: String): String {
             if (input.isBlank()) return ""
 
-            val withoutScripts = SCRIPT_TAG_REGEX.replace(input, "")
+            val trimmed = input.trim()
+            if (!looksLikeHtml(trimmed)) return trimmed
+
+            val withoutScripts = SCRIPT_TAG_REGEX.replace(trimmed, "")
             if (withoutScripts.isBlank()) return ""
 
             val cleaned = Jsoup.clean(withoutScripts, "", safelist, outputSettings)
             return cleaned.trim()
+        }
+
+        private fun looksLikeHtml(input: String): Boolean {
+            return input.indexOf('<') >= 0 || input.indexOf('>') >= 0
         }
 
         private fun createSafelist(): Safelist {
