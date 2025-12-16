@@ -1,11 +1,10 @@
 package io.em2m.transactions
 
-open class TransactionHandler {
+open class TransactionHandler : AbstractTransactionListener() {
 
     private val transactionMap: MutableMap<Class<*>, MutableSet<Transaction<*, *, *>>> = mutableMapOf()
-    private val listeners = mutableSetOf<OnStateChangeListener>()
 
-    fun forClass(clazz: Class<*>, permissive: Boolean = true): Set<Transaction<*,*,*>> {
+    private fun forClass(clazz: Class<*>, permissive: Boolean = true): Set<Transaction<*,*,*>> {
         val ret = transactionMap.getOrDefault(clazz, emptySet()).toMutableSet()
 
         if (permissive) {
@@ -37,37 +36,20 @@ open class TransactionHandler {
         transactionMap.putIfAbsent(clazz, mutableSetOf())?.add(transaction)
     }
 
-    fun onStateChange(allowedStates: Collection<TransactionState> = TransactionState.entries, fn: (TransactionContext<*, *, *>) -> Unit) {
-        listeners.add(DelegateOnStateChangeListener(allowedStates = allowedStates.toTypedArray(), fn=fn))
+    open fun getTransactionPriority(delegate: Any?, context: TransactionContext<*, *, *>): Int {
+        return TransactionType.MEDIUM_PRIORITY
     }
-
-    fun onCreate(fn: (TransactionContext<*, *, *> ) -> Unit) = this.onStateChange(listOf(TransactionState.CREATED), fn)
-
-    fun onInitialized(fn: (TransactionContext<*, *, *> ) -> Unit) = this.onStateChange(listOf(TransactionState.INITIALIZED), fn)
-
-    fun onFailure(fn: (TransactionContext<*, *, *> ) -> Unit) = this.onStateChange(listOf(TransactionState.FAILURE), fn)
-
-    fun onSuccess(fn: (TransactionContext<*, *, *> ) -> Unit) = this.onStateChange(listOf(TransactionState.SUCCESS), fn)
 
     fun updateState(context: TransactionContext<*, *, *>, transaction: Transaction<*, *, *>, state: TransactionState) {
         transaction.state = state
 
         context.safeTry { transaction.onStateChange(context) }
-        listeners.filter { it.matches(state) }
-            .forEach { context.safeTry { it.onStateChange(context) } }
-    }
-
-    open fun getTransactionPriority(delegate: Any?, context: TransactionContext<*, *, *>): Int {
-        return TransactionType.MEDIUM_PRIORITY
+        this.onStateChange(context)
     }
 
     @Throws(TransactionException::class)
-    operator fun <DELEGATE, INPUT : Any, OUTPUT> invoke(_context: TransactionContext<DELEGATE, INPUT, OUTPUT>): Result<OUTPUT> {
-        val internalTransactions = if (_context.validTransaction) {
-            setOf(_context.transaction)
-        } else {
-            emptySet()
-        }
+    operator fun <DELEGATE, INPUT : Any, OUTPUT> invoke(_context: TransactionContext<DELEGATE, INPUT, OUTPUT>, input: INPUT? = null): Result<OUTPUT> {
+        val internalTransactions = setOf(_context.transaction)
         val transactionsForDelegate = forClass(_context.clazz).mapNotNull { transaction ->
             transaction as? Transaction<DELEGATE, INPUT, OUTPUT>
         }.union(internalTransactions)
@@ -88,12 +70,21 @@ open class TransactionHandler {
             if (context.condition != true) {
                 return Result.failure(TransactionException("Condition failed", context))
             }
+
+            // input
+            if (input != null) {
+                _context.input = input
+            }
+            if (!context.validInput) {
+                return Result.failure(TransactionException("Invalid input: ${context.input}", context))
+            }
+
+
             // initial
             context.initial = context.tryOrThrow { transaction.initialValue(context) }
 
             updateState(context, transaction, TransactionState.RUNNING)
             context.output = context.tryOrNull {
-                // TODO: Add sorting
                 val sorted = context.delegates.sortedBy { delegate ->
                     getTransactionPriority(delegate, context)
                 }

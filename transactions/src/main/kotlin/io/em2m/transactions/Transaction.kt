@@ -8,8 +8,9 @@ private class DelegateTransaction<DELEGATE, INPUT: Any, OUTPUT>(
     private val onFailureFn: ((TransactionContext<*, *, *>) -> Unit)? = null,
     private val onSuccessFn: ((TransactionContext<*, *, *>) -> Unit)? = null,
     private val onCompleteFn: ((TransactionContext<*, *, *>) -> Unit)? = null,
-    private val onStateChaneFn: ((TransactionContext<*, *, *>) -> Unit)? = null,
+    private val onStateChangeFn: ((TransactionContext<*, *, *>) -> Unit)? = null,
     private val combineFn: ((List<OUTPUT>) -> OUTPUT?)? = null,
+    override var name: String,
     override var state: TransactionState = TransactionState.CREATED,
     override var type: TransactionType = TransactionType.READ,
     override var precedence: TransactionPrecedence = TransactionPrecedence.ALL
@@ -45,17 +46,21 @@ private class DelegateTransaction<DELEGATE, INPUT: Any, OUTPUT>(
 
     override fun onStateChange(context: TransactionContext<*, *, *>) {
         super.onStateChange(context)
-        this.onStateChaneFn?.invoke(context)
+        this.onStateChangeFn?.invoke(context)
     }
 
     override fun combine(results: List<OUTPUT>): OUTPUT? {
-        return combineFn?.invoke(results)
+        if (combineFn == null) {
+            return super.combine(results)
+        }
+        return combineFn.invoke(results)
     }
 
 }
 
-abstract class Transaction<DELEGATE, INPUT : Any, OUTPUT> : AbstractOnStateChangeListener() {
+abstract class Transaction<DELEGATE, INPUT : Any, OUTPUT> : AbstractTransactionListener() {
 
+    open var name:          String                  = this.javaClass.simpleName
     open var state:         TransactionState        = TransactionState.CREATED
     open var type:          TransactionType         = TransactionType.READ
     open var precedence:    TransactionPrecedence   = TransactionPrecedence.ALL
@@ -65,6 +70,9 @@ abstract class Transaction<DELEGATE, INPUT : Any, OUTPUT> : AbstractOnStateChang
     open fun onCreate(context: TransactionContext<*, *, *>) {}
 
     open fun combine(results: List<OUTPUT>): OUTPUT? {
+        if (precedence == TransactionPrecedence.ALL) {
+            System.err.println("Combine function isn't set, defaulting to ANY behavior.")
+        }
         return results.firstOrNull()
     }
 
@@ -87,6 +95,13 @@ abstract class Transaction<DELEGATE, INPUT : Any, OUTPUT> : AbstractOnStateChang
     open fun initialValue(context: TransactionContext<DELEGATE, INPUT, OUTPUT>): INPUT? = null
 
     abstract fun run(delegate: DELEGATE, context: TransactionContext<DELEGATE, INPUT, OUTPUT>): OUTPUT?
+
+    fun toContext(delegates: List<DELEGATE>): TransactionContext<DELEGATE, INPUT, OUTPUT> {
+        return TransactionContext(
+            delegates = delegates,
+            transaction = this
+        )
+    }
 
     class Builder<DELEGATE, INPUT : Any, OUTPUT> {
 
@@ -130,15 +145,18 @@ abstract class Transaction<DELEGATE, INPUT : Any, OUTPUT> : AbstractOnStateChang
             this.onCompleteFn = fn
         }
 
-        private var onStateChaneFn: ((TransactionContext<*, *, *>) -> Unit)? = null
+        private var onStateChangeFn: ((TransactionContext<*, *, *>) -> Unit)? = null
         fun onStateChange(fn: (TransactionContext<*, *, *>) -> Unit) = apply  {
-            this.onStateChaneFn = fn
+            this.onStateChangeFn = fn
         }
 
         private var combineFn: ((List<OUTPUT>) -> OUTPUT?)? = null
         fun combine(fn: (List<OUTPUT>) -> OUTPUT?) = apply {
             this.combineFn = fn
         }
+
+        private var name: String = clazz.simpleName
+        fun name(name: String) = apply { this.name = name }
 
         private var state: TransactionState = TransactionState.CREATED
 
@@ -160,8 +178,9 @@ abstract class Transaction<DELEGATE, INPUT : Any, OUTPUT> : AbstractOnStateChang
                 onFailureFn = this.onFailureFn,
                 onSuccessFn = this.onSuccessFn,
                 onCompleteFn = this.onCompleteFn,
-                onStateChaneFn = this.onStateChaneFn,
+                onStateChangeFn = this.onStateChangeFn,
                 combineFn = this.combineFn,
+                name= this.name,
                 type = this.type,
                 precedence = this.precedence,
                 state = this.state

@@ -7,18 +7,18 @@ data class TransactionContext<DELEGATE, INPUT : Any, OUTPUT>(
     var inputClass: Class<INPUT>? = null,
     var outputClass: Class<OUTPUT>? = null,
     var allowNullInput: Boolean = false,
-    var allowNullOutput: Boolean = false
+    var allowNullOutput: Boolean = false,
+    var transaction: Transaction<DELEGATE, INPUT, OUTPUT>,
+    val scope: Map<String, Any?> = mutableMapOf(),
+    val debug: Boolean = false
 ) {
 
     var condition: Boolean? = null
     var initial: INPUT? = null
 
-    lateinit var transaction: Transaction<DELEGATE, INPUT, OUTPUT>
-
-    val validTransaction: Boolean
-        get() {
-            return this::transaction.isInitialized
-        }
+    operator fun invoke(input: INPUT): TransactionContext<DELEGATE, INPUT, OUTPUT> = apply {
+        this.input = input
+    }
 
     var input: INPUT? = null
         set(value) {
@@ -49,7 +49,7 @@ data class TransactionContext<DELEGATE, INPUT : Any, OUTPUT>(
         }
 
     val success: Boolean
-        get() = errors.isEmpty() && validOutput
+        get() = errors.isEmpty() && validInput && validOutput
 
 
     fun <T> safeTry(block: () -> T) {

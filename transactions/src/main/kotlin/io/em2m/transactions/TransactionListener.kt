@@ -1,6 +1,6 @@
 package io.em2m.transactions
 
-fun interface OnStateChangeListener {
+fun interface TransactionListener {
 
     fun matches(state: TransactionState): Boolean = true
 

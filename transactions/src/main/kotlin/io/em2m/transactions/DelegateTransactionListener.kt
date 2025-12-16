@@ -1,6 +1,6 @@
 package io.em2m.transactions
 
-class DelegateOnStateChangeListener: AbstractOnStateChangeListener {
+class DelegateTransactionListener: AbstractTransactionListener {
 
     private val fn: (TransactionContext<*, *, *>) -> Unit
 

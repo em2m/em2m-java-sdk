@@ -4,10 +4,10 @@ import io.em2m.utils.MultiException
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
-class LoggerOnStateChangeListener(
+class LoggerTransactionListener(
     matches: List<TransactionState> = TransactionState.entries,
-    val logger: Logger = LoggerFactory.getLogger(LoggerOnStateChangeListener::class.java))
-    : AbstractOnStateChangeListener(matches) {
+    val logger: Logger = LoggerFactory.getLogger(LoggerTransactionListener::class.java))
+    : AbstractTransactionListener(matches) {
 
     override fun onStateChange(context: TransactionContext<*, *, *>) {
         when(context.transaction.state) {
@@ -16,7 +16,9 @@ class LoggerOnStateChangeListener(
                 logger.error("Transaction failed.", exception)
             }
             else -> {
-                logger.debug("Transaction state updated to {}", context.transaction.state)
+                if (context.debug) {
+                    logger.debug("Transaction state updated to {}", context.transaction.state)
+                }
             }
         }
     }

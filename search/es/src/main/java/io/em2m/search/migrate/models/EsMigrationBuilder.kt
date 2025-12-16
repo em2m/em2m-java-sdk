@@ -9,6 +9,8 @@ import io.em2m.search.es.EsApi
 import io.em2m.search.es.EsSyncDao
 import io.em2m.search.es.EsSyncDaoUnionType
 import io.em2m.search.es8.Es8Api
+import io.em2m.transactions.AbstractTransactionListener
+import io.em2m.transactions.Transaction
 import io.em2m.transactions.TransactionContext
 import io.em2m.transactions.TransactionHandler
 import io.em2m.utils.FallbackPair
@@ -16,22 +18,21 @@ import java.lang.reflect.Proxy
 
 // couldn't test this here since we don't have guice
 class EsMigrationBuilder(val esMigrationMapping: EsMigrationProvider,
-                         primary: EsApi,
-                         val fallback: Es8Api? = null) : FallbackPair<EsApi, Es8Api>(primary, listOfNotNull(fallback)) {
+                         val delegates: List<Any>) : AbstractTransactionListener() {
 
-    private val indicesToAliases: Map<String, List<String>> by lazy {
-        getOrThrow(EsApi::getIndicesToAliases, Es8Api::getIndicesToAliases)
+    private val indicesToAliases by lazy {
+        val esMultiApi = EsMultiApi(this)
+        esMultiApi.getIndicesToAliases()
     }
 
-    fun <INPUT: Any, OUTPUT> toTransactionContext(): TransactionContext<Any, INPUT, OUTPUT> {
-        return TransactionContext(delegates = listOfNotNull(this.primary, fallback))
+    fun <INPUT: Any, OUTPUT> toTransactionContext(transaction: Transaction<Any, INPUT, OUTPUT>): TransactionContext<Any, INPUT, OUTPUT> {
+        return TransactionContext(delegates = delegates, transaction = transaction)
     }
 
     private fun getDelegateFromClass(clazz: Class<*>): Any? {
-        val allDelegates: List<Any> = mutableListOf<Any>(this.primary).apply { fallback?.let { add(fallback) } }
-        val api: Any? = allDelegates.firstOrNull { delegate ->
+        val api: Any? = delegates.firstOrNull { delegate ->
             if (delegate is Proxy) {
-                val proxy = allDelegates.first() as? Proxy
+                val proxy = delegates.first() as? Proxy
                 val interfaces = proxy?.javaClass?.interfaces ?: arrayOf()
                 if (clazz in interfaces) {
                     return@firstOrNull true
@@ -42,11 +43,11 @@ class EsMigrationBuilder(val esMigrationMapping: EsMigrationProvider,
         return api
     }
 
-    fun <INPUT: Any, OUTPUT> toTransactionContext(index: String): TransactionContext<Any, INPUT, OUTPUT> {
+    fun <INPUT: Any, OUTPUT> toTransactionContext(index: String, transaction: Transaction<Any, INPUT, OUTPUT>): TransactionContext<Any, INPUT, OUTPUT> {
         val migrationItem: EsMigrationItem = this.esMigrationMapping[index] ?: EsMigrationItem.DEFAULT
         val classes = mutableListOf(migrationItem.primary).union(migrationItem.fallbacks)
         val delegates = classes.mapNotNull(::getDelegateFromClass)
-        return TransactionContext(delegates = delegates)
+        return TransactionContext(delegates = delegates, transaction = transaction)
     }
 
     fun getTransactionHandler(): TransactionHandler {

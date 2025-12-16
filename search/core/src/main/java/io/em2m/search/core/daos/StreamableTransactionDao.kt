@@ -32,8 +32,10 @@ open class StreamableTransactionDao<T: Any, DAO>(vararg delegates: DAO?)
         sorts: List<DocSort>,
         params: Map<String, Any>
     ): Iterator<List<Any?>> {
-        val context = TransactionContext<DAO, StreamRowsRequest, Iterator<List<Any?>>>(delegates= this.delegates as List<DAO>)
-        context.transaction = streamRowsTransaction
+        val context = TransactionContext<DAO, StreamRowsRequest, Iterator<List<Any?>>>(
+            delegates= this.delegates as List<DAO>,
+            transaction = streamRowsTransaction
+        )
         return handler(context) as? Iterator<List<Any?>> ?: emptyList<List<Any>>().iterator()
     }
 
@@ -53,8 +55,10 @@ open class StreamableTransactionDao<T: Any, DAO>(vararg delegates: DAO?)
         sorts: List<DocSort>,
         params: Map<String, Any>
     ): Iterator<T> {
-        val context = TransactionContext<DAO, StreamItemsRequest, Iterator<T>>(delegates= this.delegates as List<DAO>)
-        context.transaction = streamItemsTransaction
+        val context = TransactionContext<DAO, StreamItemsRequest, Iterator<T>>(
+            delegates= this.delegates as List<DAO>,
+            transaction = streamItemsTransaction
+        )
         return handler(context) as? Iterator<T> ?: emptyList<T>().iterator()
     }
 }

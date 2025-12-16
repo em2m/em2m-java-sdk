@@ -14,12 +14,13 @@ import io.em2m.search.es8.models.auth.DELETE_INDEX_PRIVILEGE
 import io.em2m.search.es8.models.auth.MANAGE_INDEX_PRIVILEGE
 import io.em2m.search.migrate.toLegacy
 import io.em2m.search.migrate.toModern
+import io.em2m.transactions.AbstractTransactionListener
 import io.em2m.transactions.Transaction
 import io.em2m.transactions.TransactionPrecedence
 import io.em2m.transactions.TransactionType
 
 open class EsMultiApi(private val esMigrationBuilder: EsMigrationBuilder,
-                      private val mapper: ObjectMapper = jacksonObjectMapper()) {
+                      private val mapper: ObjectMapper = jacksonObjectMapper()): AbstractTransactionListener() {
 
     protected open val createIndexTransaction: Transaction<Any, String, Boolean> by lazy {
         val transaction = Transaction.Builder<Any, String, Boolean>()
@@ -44,18 +45,17 @@ open class EsMultiApi(private val esMigrationBuilder: EsMigrationBuilder,
             }
             .type(TransactionType.CREATE)
             .precedence(TransactionPrecedence.ALL)
+            .onStateChange(this::onStateChange)
             .build()
         transaction
     }
 
     fun createIndex(index: String): Boolean {
-        val context = esMigrationBuilder.toTransactionContext<String, Boolean>(index)
         val handler = esMigrationBuilder.getTransactionHandler()
+        val context = esMigrationBuilder.toTransactionContext(index, createIndexTransaction)
 
-        context.input = index
-        context.transaction = createIndexTransaction
-
-        return handler(context).getOrThrow()
+        val input = index
+        return handler(context, input).getOrThrow()
     }
 
     protected val createIndexWithSettingsTransaction by lazy {
@@ -79,18 +79,17 @@ open class EsMultiApi(private val esMigrationBuilder: EsMigrationBuilder,
             }
             .type(TransactionType.CREATE)
             .precedence(TransactionPrecedence.ALL)
+            .onStateChange(this::onStateChange)
             .build()
         transaction
     }
 
     fun createIndex(index: String, settings: EsSettings): Boolean {
-        val context = esMigrationBuilder.toTransactionContext<Pair<String, EsSettings>, Boolean>(index)
         val handler = esMigrationBuilder.getTransactionHandler()
+        val context = esMigrationBuilder.toTransactionContext(index, createIndexWithSettingsTransaction)
 
-        context.input = index to settings
-        context.transaction = createIndexWithSettingsTransaction
-
-        return handler(context).getOrThrow()
+        val input = index to settings
+        return handler(context, input).getOrThrow()
     }
 
     fun createIndex(index: String, settings: ObjectNode): Boolean {
@@ -129,19 +128,18 @@ open class EsMultiApi(private val esMigrationBuilder: EsMigrationBuilder,
             }
             .type(TransactionType.DELETE)
             .precedence(TransactionPrecedence.ALL)
+            .onStateChange(this::onStateChange)
             .build()
         transaction
     }
 
     @Deprecated("Deleting an index is dangerous, please only do this when the data exists somewhere else.")
     fun deleteIndex(index: String): Boolean {
-        val context = esMigrationBuilder.toTransactionContext<String, Boolean>(index)
         val handler = esMigrationBuilder.getTransactionHandler()
+        val context = esMigrationBuilder.toTransactionContext(index, deleteIndexTransaction)
 
-        context.input = index
-        context.transaction = deleteIndexTransaction
-
-        return handler(context).getOrThrow()
+        val input = index
+        return handler(context, input).getOrThrow()
     }
 
     protected open val getMetadataTransaction: Transaction<Any, Unit, ObjectNode?> by lazy {
@@ -155,17 +153,17 @@ open class EsMultiApi(private val esMigrationBuilder: EsMigrationBuilder,
             }
             .type(TransactionType.READ)
             .precedence(TransactionPrecedence.ANY)
+            .onStateChange(this::onStateChange)
             .build()
         transaction
     }
 
     fun getMetadata(): ObjectNode? {
         val handler = esMigrationBuilder.getTransactionHandler()
-        val context = esMigrationBuilder.toTransactionContext<Unit, ObjectNode?>()
-        context.input = Unit
-        context.transaction = getMetadataTransaction
+        val context = esMigrationBuilder.toTransactionContext(getMetadataTransaction)
 
-        return handler(context).getOrNull()
+        val input = Unit
+        return handler(context, input).getOrNull()
     }
 
     protected open val putAliasesTransaction by lazy {
@@ -203,16 +201,17 @@ open class EsMultiApi(private val esMigrationBuilder: EsMigrationBuilder,
                 }
                 true
             }
+            .onStateChange(this::onStateChange)
             .build()
         transaction
     }
 
     fun putAliases(request: EsAliasRequest): Boolean {
         val handler = esMigrationBuilder.getTransactionHandler()
-        val context = esMigrationBuilder.toTransactionContext<EsAliasRequest, Boolean>()
-        context.input = request
-        context.transaction = putAliasesTransaction
-        return handler(context).getOrDefault(false)
+        val context = esMigrationBuilder.toTransactionContext(putAliasesTransaction)
+
+        val input = request
+        return handler(context, input).getOrDefault(false)
     }
 
     protected val getIndicesToAliasesTransaction: Transaction<Any, Unit, Map<String, List<String>>> by lazy {
@@ -245,16 +244,17 @@ open class EsMultiApi(private val esMigrationBuilder: EsMigrationBuilder,
             }
             .type(TransactionType.READ)
             .precedence(TransactionPrecedence.ALL)
+            .onStateChange(this::onStateChange)
             .build()
         transaction
     }
 
     fun getIndicesToAliases(): Map<String, List<String>> {
         val handler = esMigrationBuilder.getTransactionHandler()
-        val context = esMigrationBuilder.toTransactionContext<Unit, Map<String, List<String>>>()
-        context.input = Unit
-        context.transaction = getIndicesToAliasesTransaction
-        return handler(context).getOrThrow()
+        val context = esMigrationBuilder.toTransactionContext(getIndicesToAliasesTransaction)
+
+        val input = Unit
+        return handler(context, input).getOrThrow()
     }
 
     fun getAliases(index: String): List<String> {
@@ -275,18 +275,17 @@ open class EsMultiApi(private val esMigrationBuilder: EsMigrationBuilder,
             .combine { values -> values.any{it} }
             .type(TransactionType.READ)
             .precedence(TransactionPrecedence.ANY)
+            .onStateChange(this::onStateChange)
             .build()
         transaction
     }
 
     fun exists(index: String): Boolean {
         val handler = esMigrationBuilder.getTransactionHandler()
-        val context = esMigrationBuilder.toTransactionContext<String, Boolean>()
+        val context = esMigrationBuilder.toTransactionContext(existsTransaction)
 
-        context.input = index
-        context.transaction = existsTransaction
-
-        return handler(context).getOrThrow()
+        val input = index
+        return handler(context, input).getOrThrow()
     }
 
 
