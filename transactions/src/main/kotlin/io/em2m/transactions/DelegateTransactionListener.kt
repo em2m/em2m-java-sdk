@@ -1,13 +1,9 @@
 package io.em2m.transactions
 
-class DelegateTransactionListener: AbstractTransactionListener {
+class DelegateTransactionListener(allowedStates: Collection<TransactionState> = TransactionState.entries, fn: TransactionListener): TransactionListener by fn {
 
-    private val fn: (TransactionContext<*, *, *>) -> Unit
+    private val allowedStates = allowedStates.toSet()
 
-    constructor(vararg allowedStates: TransactionState, fn: (TransactionContext<*, *, *>) -> Unit): super(allowedStates.toList()) {
-        this.fn = fn
-    }
-
-    override fun onStateChange(context: TransactionContext<*, *, *>) = fn(context)
+    override fun matches(state: TransactionState): Boolean = state in allowedStates
 
 }

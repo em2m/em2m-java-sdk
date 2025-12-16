@@ -16,16 +16,20 @@ open class AbstractTransactionListener(states: Collection<TransactionState> = Tr
             .forEach { context.safeTry { it.onStateChange(context) } }
     }
 
-    fun onStateChange(allowedStates: Collection<TransactionState> = TransactionState.entries, fn: (TransactionContext<*, *, *>) -> Unit) {
-        listeners.add(DelegateTransactionListener(allowedStates = allowedStates.toTypedArray(), fn=fn))
+    fun addListener(listener: TransactionListener) = apply { this.listeners.add(listener) }
+
+    fun removeListener(listener: TransactionListener) = apply { this.listeners.remove(listener) }
+
+    fun onStateChange(allowedStates: Collection<TransactionState> = TransactionState.entries, fn: TransactionListener) {
+        listeners.add(DelegateTransactionListener(allowedStates = allowedStates, fn=fn))
     }
 
-    fun onCreate(fn: (TransactionContext<*, *, *> ) -> Unit) = this.onStateChange(listOf(TransactionState.CREATED), fn)
+    fun onCreate(fn: TransactionListener) = this.onStateChange(listOf(TransactionState.CREATED), fn)
 
-    fun onInitialized(fn: (TransactionContext<*, *, *> ) -> Unit) = this.onStateChange(listOf(TransactionState.INITIALIZED), fn)
+    fun onInitialized(fn: TransactionListener) = this.onStateChange(listOf(TransactionState.INITIALIZED), fn)
 
-    fun onFailure(fn: (TransactionContext<*, *, *> ) -> Unit) = this.onStateChange(listOf(TransactionState.FAILURE), fn)
+    fun onFailure(fn: TransactionListener) = this.onStateChange(listOf(TransactionState.FAILURE), fn)
 
-    fun onSuccess(fn: (TransactionContext<*, *, *> ) -> Unit) = this.onStateChange(listOf(TransactionState.SUCCESS), fn)
+    fun onSuccess(fn: TransactionListener) = this.onStateChange(listOf(TransactionState.SUCCESS), fn)
 
 }
