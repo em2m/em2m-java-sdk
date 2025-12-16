@@ -4,10 +4,23 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import kotlin.test.Test
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
+import kotlin.test.assertEquals
 
 class HtmlSanitizerNoCssTest {
 
     private val sanitizer = JacksonRequestTransformer.HtmlSanitizer(jacksonObjectMapper())
+    private val mapper = jacksonObjectMapper()
+    private val samples = listOf(
+        "AT&T",
+        "q=AT&T&lang=en",
+        "em2m:vehicle:device-profile:arrow-AT&T",
+        "a+b=c",
+        "name=value;expires=Wed, 21 Oct 2015 07:28:00 GMT",
+        "email@example.com",
+        "C# & F#",
+        "100% legit",
+        "path/with?query=yes&x=1%20y=2"
+    )
 
     @Test
     fun `basic allowed tags are preserved`() {
@@ -17,6 +30,27 @@ class HtmlSanitizerNoCssTest {
         assertTrue(output.contains("<p"), "p tag should be present")
         assertTrue(output.contains("style=\"color: red\""), "style attribute should be preserved")
         assertTrue(output.contains("<b>World</b>"), "b tag should be preserved")
+    }
+
+    @Test
+    fun plain_text_is_not_html_escaped() {
+        samples.forEach { s ->
+            val out = sanitizer.sanitizePayload(s)
+            assertEquals(s, out, "Plain text should remain unchanged: $s")
+        }
+    }
+
+    @Test
+    fun json_values_are_not_html_escaped() {
+        val payload = samples.mapIndexed { i, s -> "v$i" to s }.toMap()
+        val rawJson = mapper.writeValueAsString(payload)
+
+        val sanitizedJson = sanitizer.sanitizePayload(rawJson)
+        val node = mapper.readTree(sanitizedJson)
+
+        samples.forEachIndexed { i, s ->
+            assertEquals(s, node.get("v$i").asText(), "JSON value should remain unchanged for v$i")
+        }
     }
 
     @Test
