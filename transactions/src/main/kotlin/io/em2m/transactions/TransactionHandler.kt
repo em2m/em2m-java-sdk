@@ -1,6 +1,6 @@
 package io.em2m.transactions
 
-open class TransactionHandler : AbstractTransactionListener() {
+open class TransactionHandler(val config: Map<Class<*>, TransactionConfig> = mutableMapOf()) : AbstractTransactionListener() {
 
     private val transactionMap: MutableMap<Class<*>, MutableSet<Transaction<*, *, *>>> = mutableMapOf()
 

@@ -1,29 +1,31 @@
 package io.em2m.search.migrate.models
 
-import io.em2m.search.es.EsApi
 import io.em2m.search.es.models.EsVersion
-import io.em2m.transactions.TransactionHandler
-import io.em2m.utils.FallbackPair
+import io.em2m.transactions.TransactionConfig
+import io.em2m.transactions.TransactionErrorStrategy
 
-data class EsMigrationItem(val primary: Class<*> = EsApi::class.java,
-                           val fallbacks: List<Class<*>> = emptyList()) {
+class EsMigrationItem(val config: Map<Class<*>, EsMigrationConfig>) {
 
-    fun <T, F> toFallback(primary: T, fallbacks: List<F>): FallbackPair<T, F> {
-        if (fallbacks.size != this.fallbacks.size) throw IllegalArgumentException()
-        return FallbackPair(primary, fallbacks)
+    fun classesForStrategy(strategy: EsMigrationStrategy): List<Class<*>> {
+        return config.filter { (_, configItem) ->
+            configItem.strategy == strategy
+        }.map { it.key }
     }
 
-    fun <T, F> toTransactionHandler()
-    : TransactionHandler {
-        if (fallbacks.size != this.fallbacks.size) throw IllegalArgumentException()
-        return TransactionHandler()
+    fun toTransactionConfig(): Map<Class<*>, TransactionConfig> {
+        return config.mapValues { (_, esConfig) -> esConfig.toTransactionConfig() }
     }
+
+    operator fun component1(): List<Class<*>> = classesForStrategy(EsMigrationStrategy.PRIMARY)
+
+    operator fun component2(): List<Class<*>> = classesForStrategy(EsMigrationStrategy.PERMISSIVE)
 
     companion object {
 
         val DEFAULT = EsMigrationItem(
-            primary = EsVersion.DEFAULT.getApi(),
-            fallbacks = emptyList()
+            config = mutableMapOf(
+                EsVersion.DEFAULT.getApi() to EsMigrationConfig.DEFAULT
+            )
         )
 
     }
@@ -36,9 +38,50 @@ fun interface EsMigrationProvider {
 
 }
 
+enum class EsMigrationStrategy {
+    PRIMARY, PERMISSIVE
+}
+
+data class EsMigrationConfig(val strategy: EsMigrationStrategy) {
+
+    fun toTransactionConfig(): TransactionConfig {
+        val errorStrategy = when (strategy) {
+            EsMigrationStrategy.PRIMARY -> TransactionErrorStrategy.ALWAYS
+            EsMigrationStrategy.PERMISSIVE -> TransactionErrorStrategy.NEVER
+        }
+        return TransactionConfig(errorStrategy)
+    }
+
+    companion object {
+        val DEFAULT = EsMigrationConfig(EsMigrationStrategy.PRIMARY)
+    }
+}
+
 // per-index mappings of when specific data should be cut over
-data class EsMigrationMappingItem(val primary: EsVersion = EsVersion.DEFAULT,
-                                  val fallbacks: List<EsVersion> = emptyList())
+class EsMigrationMappingItem(var config: Map<EsVersion, EsMigrationConfig> = mutableMapOf()) {
+
+    fun isPrimary(version: EsVersion): Boolean = getStrategy(version) == EsMigrationStrategy.PRIMARY
+
+    fun getStrategy(version: EsVersion): EsMigrationStrategy = run {
+        val esConfig = config[version]
+        esConfig?.strategy ?: EsMigrationStrategy.PERMISSIVE
+    }
+
+    fun versionsForStrategy(strategy: EsMigrationStrategy): List<EsVersion> {
+        return config.filter { (_, configItem) ->
+            configItem.strategy == strategy
+        }.map { it.key }
+    }
+
+    operator fun component1(): List<EsVersion> {
+        return versionsForStrategy(EsMigrationStrategy.PRIMARY)
+    }
+
+    operator fun component2(): List<EsVersion> {
+        return versionsForStrategy(EsMigrationStrategy.PERMISSIVE)
+    }
+
+}
 
 data class EsMigrationMappingObject(
     val indices: Map<String, EsMigrationMappingItem>,
@@ -46,10 +89,8 @@ data class EsMigrationMappingObject(
 
     override operator fun get(term: String): EsMigrationItem? {
         val mappingItem = indices[term] ?: aliases[term] ?: return null
-        val (primaryVersion, fallbackVersions) = mappingItem
-        val primaryClass = primaryVersion.getApi()
-        val fallbackClasses = fallbackVersions.map(EsVersion::getApi)
-        return EsMigrationItem(primaryClass, fallbackClasses)
+        val classesConfig = mappingItem.config.mapKeys { (version, _) -> version.getApi() }
+        return EsMigrationItem(classesConfig)
     }
 
 }

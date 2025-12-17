@@ -10,6 +10,7 @@ data class TransactionContext<DELEGATE, INPUT : Any, OUTPUT>(
     var allowNullOutput: Boolean = false,
     var transaction: Transaction<DELEGATE, INPUT, OUTPUT>,
     val scope: Map<String, Any?> = mutableMapOf(),
+    val config: Map<Class<*>, TransactionConfig> = mutableMapOf(),
     val debug: Boolean = false
 ) {
 

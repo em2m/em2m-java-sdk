@@ -8,23 +8,24 @@ import io.em2m.search.core.model.StreamRowsRequest
 import io.em2m.search.core.model.StreamableDao
 import io.em2m.search.core.model.SyncDao
 import io.em2m.transactions.Transaction
+import io.em2m.transactions.TransactionConfig
 import io.em2m.transactions.TransactionContext
 import io.em2m.transactions.TransactionPrecedence
 import io.em2m.transactions.TransactionType
 
-open class StreamableTransactionDao<T: Any, DAO>(vararg delegates: DAO?)
-    : TransactionDao<T, DAO>(delegates = delegates.filterNotNull().toList()), StreamableDao<T> where DAO : SyncDao<T>, DAO: StreamableDao<T> {
+open class StreamableTransactionDao<T: Any, DAO>(vararg delegates: DAO?, config: Map<Class<*>, TransactionConfig> = mutableMapOf())
+    : TransactionDao<T, DAO>(delegates = delegates.filterNotNull().toList(), config= config), StreamableDao<T> where DAO : SyncDao<T>, DAO: StreamableDao<T> {
 
-        protected open val streamRowsTransaction: Transaction<DAO, StreamRowsRequest, Iterator<List<Any?>>> by lazy {
-            val transaction = Transaction.Builder<DAO, StreamRowsRequest, Iterator<List<Any?>>>()
-                .main { delegate, context ->
-                    delegate.streamRows(context.input!!)
-                }
-                .type(TransactionType.SEARCH)
-                .precedence(TransactionPrecedence.ANY)
-                .build()
-            transaction
-        }
+    protected open val streamRowsTransaction: Transaction<DAO, StreamRowsRequest, Iterator<List<Any?>>> by lazy {
+        val transaction = Transaction.Builder<DAO, StreamRowsRequest, Iterator<List<Any?>>>()
+            .main { delegate, context ->
+                delegate.streamRows(context.input!!)
+            }
+            .type(TransactionType.SEARCH)
+            .precedence(TransactionPrecedence.ANY)
+            .build()
+        transaction
+    }
 
     override fun streamRows(
         fields: List<Field>,

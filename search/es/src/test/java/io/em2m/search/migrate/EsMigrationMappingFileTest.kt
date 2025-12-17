@@ -3,6 +3,7 @@ package io.em2m.search.migrate
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.em2m.search.es.models.EsVersion
 import io.em2m.search.es2.operations.es2LoadSchema
+import io.em2m.search.migrate.models.EsMigrationConfig
 import io.em2m.search.migrate.models.EsMigrationMappingItem
 import io.em2m.search.migrate.models.EsMigrationMappingObject
 import org.junit.jupiter.api.Test
@@ -45,19 +46,17 @@ class EsMigrationMappingFileTest {
         val aliasMigrationMap = mutableMapOf<String, EsMigrationMappingItem>()
         val indexMigrationMap = mutableMapOf<String, EsMigrationMappingItem>()
         indexNames.forEach { es2Index ->
-            val aliases = indicesToAliases[es2Index] ?: emptyList<String>()
+            val aliases = indicesToAliases[es2Index] ?: emptyList()
             val hasAlias = aliases.isNotEmpty()
             if (hasAlias) {
                 aliases.forEach { alias ->
                     aliasMigrationMap[alias] = EsMigrationMappingItem(
-                        primary = EsVersion.DEFAULT,
-                        fallbacks = listOf()
+                        mapOf(EsVersion.DEFAULT to EsMigrationConfig.DEFAULT)
                     )
                 }
             } else {
                 indexMigrationMap[es2Index] = EsMigrationMappingItem(
-                    primary = EsVersion.DEFAULT,
-                    fallbacks = listOf()
+                    mapOf(EsVersion.DEFAULT to EsMigrationConfig.DEFAULT)
                 )
             }
         }

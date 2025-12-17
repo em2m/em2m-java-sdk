@@ -73,6 +73,7 @@ data class EsVersion(val number: String) {
         val ES8 = EsVersion("8")
 
         val DEFAULT: EsVersion = ES2
+        val VALUES = listOf(ES2, ES8)
 
         // extensions
         operator fun String.compareTo(other: EsVersion): Int = other.compareTo(this)

@@ -6,10 +6,10 @@ import io.em2m.search.core.model.SearchResult
 import io.em2m.search.core.model.SyncDao
 import io.em2m.transactions.*
 
-open class TransactionDao<T : Any, DAO>(val delegates: List<DAO>)
+open class TransactionDao<T : Any, DAO>(val delegates: List<DAO>, val config: Map<Class<*>, TransactionConfig> = mutableMapOf())
     : AbstractTransactionListener(), SyncDao<T> where DAO : SyncDao<T> {
 
-    protected val handler = object : TransactionHandler() {
+    protected val handler = object : TransactionHandler(config) {
         override fun getTransactionPriority(delegate: Any?, context: TransactionContext<*, *, *>): Int {
             if (delegate is SyncDao<*>) {
                 return delegate.getTransactionPriority(context.transaction.type)

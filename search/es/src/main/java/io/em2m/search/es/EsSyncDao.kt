@@ -9,6 +9,10 @@ import io.em2m.search.core.model.IdMapper
 import io.em2m.search.es2.dao.Es2SyncDao
 import io.em2m.search.es8.Es8Api
 import io.em2m.search.es8.dao.Es8SyncDao
+import io.em2m.search.migrate.models.EsMigrationConfig
+import io.em2m.search.migrate.models.EsMigrationItem
+import io.em2m.transactions.TransactionConfig
+import io.em2m.utils.firstIsClass
 
 // I didn't want to break any existing code mappings for the EsSyncDao
 @Deprecated("Used for migration purposes, replace with the latest EsSyncDao equivalent.")
@@ -50,12 +54,11 @@ class EsSyncDao<T : Any> : StreamableTransactionDao<T, EsSyncDaoUnionType<T>> {
 
     class Builder<T: Any> {
 
-        private var primary: Any? = null
+        private var delegates: Collection<Any> = mutableListOf()
+        fun delegates(delegates: Collection<Any>) = this.apply { this.delegates = delegates }
 
-        @Deprecated("For internal use.")
-        fun primary(api: Any?): Builder<T> = this.apply { this.primary = api }
-        fun primary(esApi: EsApi): Builder<T> = this.primary(esApi as Any)
-        fun primary(es8Api: Es8Api): Builder<T> = this.primary(es8Api as Any)
+        private var migrationItem: EsMigrationItem = EsMigrationItem.DEFAULT
+        fun migrationItem(migrationItem: EsMigrationItem?) = this.apply { this.migrationItem = migrationItem ?: EsMigrationItem.DEFAULT }
 
         private var index: String? = null
         fun index(index: String): Builder<T> = this.apply { this.index = index }
@@ -77,35 +80,33 @@ class EsSyncDao<T : Any> : StreamableTransactionDao<T, EsSyncDaoUnionType<T>> {
         private var objectMapper: ObjectMapper = jacksonObjectMapper().registerModule(GeoJsonModule())
         fun objectMapper(objectMapper: ObjectMapper): Builder<T> = this.apply { this.objectMapper = objectMapper }
 
-        private var fallbacks: MutableSet<EsSyncDaoUnionType<T>> = mutableSetOf()
-        fun fallback(fallback: EsSyncDaoUnionType<T>): Builder<T> = this.apply { this.fallbacks.add(fallback) }
-        fun fallbacks(vararg fallbacks: EsSyncDaoUnionType<T>): Builder<T> = this.apply { this.fallbacks.addAll(elements = fallbacks) }
-
         private val required: List<Any?>
-            get() = listOf(primary, index, tClass, idMapper, docMapper, objectMapper)
+            get() = listOf(delegates, index, tClass, idMapper, docMapper, objectMapper)
 
         fun build(): EsSyncDao<T> {
             if (required.any{it == null}) {
                 throw IllegalArgumentException("One or more required fields were null.")
             }
             val delegates = mutableSetOf<EsSyncDaoUnionType<T>>()
-            when (this.primary) {
-                 is EsApi -> {
-                     if (type == null) {
-                         throw IllegalArgumentException("Type was null when creating deprecated Es2SyncDao.")
-                     }
-                     val esApi = this.primary as EsApi
-                     val es2SyncDao = Es2SyncDao(esApi, index!!, type!!, tClass!!, idMapper!!, docMapper, objectMapper)
-                     delegates.add(es2SyncDao)
-                 }
-                 is Es8Api -> {
-                     val es8Api = this.primary as Es8Api
-                     val es8SyncDao = Es8SyncDao(es8Api, index!!, tClass!!, idMapper!!, docMapper, objectMapper)
-                     delegates.add(es8SyncDao)
-                 }
-                 else -> TODO("Unimplemented API (Future version?)")
+            migrationItem.config.mapNotNullTo(delegates) { (clazz, _) ->
+                val api = this.delegates.firstIsClass(clazz)
+                when (clazz) {
+                    EsApi::class.java -> {
+                        if (type == null) {
+                            throw IllegalArgumentException("Type was null when creating deprecated Es2SyncDao.")
+                        }
+                        val esApi = api as EsApi
+                        val es2SyncDao = Es2SyncDao(esApi, index!!, type!!, tClass!!, idMapper!!, docMapper, objectMapper)
+                        es2SyncDao
+                    }
+                    Es8Api::class.java -> {
+                        val es8Api = api as Es8Api
+                        val es8SyncDao = Es8SyncDao(es8Api, index!!, tClass!!, idMapper!!, docMapper, objectMapper)
+                        es8SyncDao
+                    }
+                    else -> TODO("Unimplemented API (Future version?)")
+                }
             }
-            delegates.addAll(fallbacks)
             if (delegates.isEmpty()) {
                 throw IllegalStateException("Delegates are empty.")
             }

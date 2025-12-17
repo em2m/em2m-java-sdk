@@ -65,16 +65,20 @@ abstract class Transaction<DELEGATE, INPUT : Any, OUTPUT> : AbstractTransactionL
     open var type:          TransactionType         = TransactionType.READ
     open var precedence:    TransactionPrecedence   = TransactionPrecedence.ALL
 
+    init {
+        onStateChange(listOf(TransactionState.CREATED), this::onCreate)
+        onStateChange(listOf(TransactionState.INITIALIZED), this::onInit)
+        onStateChange(listOf(TransactionState.FAILURE), this::onFailure)
+        onStateChange(listOf(TransactionState.COMPLETED), this::onComplete)
+        onStateChange(listOf(TransactionState.SUCCESS), this::onSuccess)
+        onStateChange(listOf(TransactionState.FAILURE), this::onFailure)
+    }
+
     open fun condition(delegate: DELEGATE, context: TransactionContext<DELEGATE, INPUT, OUTPUT>): Boolean = true
 
-    open fun onCreate(context: TransactionContext<*, *, *>) {}
+    open fun onInit(context: TransactionContext<*, *, *>) {}
 
-    open fun combine(results: List<OUTPUT>): OUTPUT? {
-        if (precedence == TransactionPrecedence.ALL) {
-            System.err.println("Combine function isn't set, defaulting to ANY behavior.")
-        }
-        return results.firstOrNull()
-    }
+    open fun onCreate(context: TransactionContext<*, *, *>) {}
 
     abstract fun onFailure(context: TransactionContext<*, *, *>)
 
@@ -82,19 +86,16 @@ abstract class Transaction<DELEGATE, INPUT : Any, OUTPUT> : AbstractTransactionL
 
     open fun onComplete(context: TransactionContext<*, *, *>) {}
 
-    override fun onStateChange(context: TransactionContext<*, *, *>) {
-        when(context.transaction.state) {
-            TransactionState.CREATED -> this.onCreate(context)
-            TransactionState.FAILURE -> this.onFailure(context)
-            TransactionState.SUCCESS -> this.onSuccess(context)
-            TransactionState.COMPLETED -> this.onComplete(context)
-            else -> {}
-        }
-    }
-
     open fun initialValue(context: TransactionContext<DELEGATE, INPUT, OUTPUT>): INPUT? = null
 
     abstract fun run(delegate: DELEGATE, context: TransactionContext<DELEGATE, INPUT, OUTPUT>): OUTPUT?
+
+    open fun combine(results: List<OUTPUT>): OUTPUT? {
+        if (precedence == TransactionPrecedence.ALL) {
+            System.err.println("Combine function isn't set, defaulting to ANY behavior.")
+        }
+        return results.firstOrNull()
+    }
 
     fun toContext(delegates: List<DELEGATE>): TransactionContext<DELEGATE, INPUT, OUTPUT> {
         return TransactionContext(

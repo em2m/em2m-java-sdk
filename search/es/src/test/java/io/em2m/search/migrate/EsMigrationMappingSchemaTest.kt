@@ -12,6 +12,7 @@ import io.em2m.geo.geojson.GeoJsonModule
 import io.em2m.search.es.TextPlainEncoder
 import io.em2m.search.es.models.EsVersion
 import io.em2m.search.es2.Es2Api
+import io.em2m.search.migrate.models.EsMigrationConfig
 import io.em2m.search.migrate.models.EsMigrationMappingItem
 import io.em2m.search.migrate.models.EsMigrationMappingObject
 import org.junit.jupiter.api.Test
@@ -70,14 +71,12 @@ class EsMigrationMappingSchemaTest {
             if (hasAlias) {
                 aliases.forEach { alias ->
                     aliasMigrationMap[alias] = EsMigrationMappingItem (
-                        primary = EsVersion.DEFAULT,
-                        fallbacks = listOf()
+                        mapOf(EsVersion.DEFAULT to EsMigrationConfig.DEFAULT)
                     )
                 }
             } else {
                 indexMigrationMap[es2Index] = EsMigrationMappingItem (
-                    primary = EsVersion.DEFAULT,
-                    fallbacks = listOf()
+                    mapOf(EsVersion.DEFAULT to EsMigrationConfig.DEFAULT)
                 )
             }
         }
