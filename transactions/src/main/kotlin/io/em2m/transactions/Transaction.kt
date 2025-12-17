@@ -13,8 +13,7 @@ private class DelegateTransaction<DELEGATE, INPUT: Any, OUTPUT>(
     override var name: String,
     override var state: TransactionState = TransactionState.CREATED,
     override var type: TransactionType = TransactionType.READ,
-    override var precedence: TransactionPrecedence = TransactionPrecedence.ALL
-) : Transaction<DELEGATE, INPUT, OUTPUT>() {
+    override var precedence: TransactionPrecedence = TransactionPrecedence.ANY) : Transaction<DELEGATE, INPUT, OUTPUT>() {
 
     override fun run(delegate:DELEGATE, context: TransactionContext<DELEGATE, INPUT, OUTPUT>): OUTPUT? {
         return runFn(delegate, context)
@@ -63,7 +62,7 @@ abstract class Transaction<DELEGATE, INPUT : Any, OUTPUT> : AbstractTransactionL
     open var name:          String                  = this.javaClass.simpleName
     open var state:         TransactionState        = TransactionState.CREATED
     open var type:          TransactionType         = TransactionType.READ
-    open var precedence:    TransactionPrecedence   = TransactionPrecedence.ALL
+    open var precedence:    TransactionPrecedence   = TransactionPrecedence.ANY
 
     init {
         onStateChange(listOf(TransactionState.CREATED), this::onCreate)
@@ -164,7 +163,7 @@ abstract class Transaction<DELEGATE, INPUT : Any, OUTPUT> : AbstractTransactionL
         private var type: TransactionType = TransactionType.READ
         fun type(type: TransactionType) = apply { this.type = type}
 
-        private var precedence: TransactionPrecedence = TransactionPrecedence.ALL
+        private var precedence: TransactionPrecedence = TransactionPrecedence.ANY
         fun precedence(precedence: TransactionPrecedence) = apply { this.precedence = precedence }
 
         fun build(): Transaction<DELEGATE, INPUT, OUTPUT> {

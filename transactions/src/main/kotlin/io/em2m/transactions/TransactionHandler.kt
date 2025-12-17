@@ -48,7 +48,7 @@ open class TransactionHandler(val config: Map<Class<*>, TransactionConfig> = mut
     }
 
     @Throws(TransactionException::class)
-    operator fun <DELEGATE, INPUT : Any, OUTPUT> invoke(_context: TransactionContext<DELEGATE, INPUT, OUTPUT>, input: INPUT? = null): Result<OUTPUT> {
+    operator fun <DELEGATE, INPUT : Any, OUTPUT> invoke(_context: TransactionContext<DELEGATE, INPUT, OUTPUT>, input: INPUT? = null): Result<OUTPUT?> {
         val internalTransactions = setOf(_context.transaction)
         val transactionsForDelegate = forClass(_context.clazz).mapNotNull { transaction ->
             transaction as? Transaction<DELEGATE, INPUT, OUTPUT>
@@ -59,6 +59,7 @@ open class TransactionHandler(val config: Map<Class<*>, TransactionConfig> = mut
         }
 
         // TODO: add multi-threaded transactions
+        val totalResults = mutableListOf<OUTPUT>()
         contextsToTransactions.forEach { (context, transaction) ->
             updateState(context, transaction, TransactionState.CREATED)
             updateState(context, transaction, TransactionState.INITIALIZED)
@@ -68,17 +69,15 @@ open class TransactionHandler(val config: Map<Class<*>, TransactionConfig> = mut
                 context.delegates.all { delegate -> transaction.condition(delegate, context) }
             }
             if (context.condition != true) {
-                return Result.failure(TransactionException("Condition failed", context))
+                val exception = TransactionException("Condition failed", context)
+                context.errors.add(exception)
+                return Result.failure(exception)
             }
 
             // input
             if (input != null) {
-                _context.input = input
+                context.input = input
             }
-            if (!context.validInput) {
-                return Result.failure(TransactionException("Invalid input: ${context.input}", context))
-            }
-
 
             // initial
             context.initial = context.tryOrThrow { transaction.initialValue(context) }
@@ -104,8 +103,15 @@ open class TransactionHandler(val config: Map<Class<*>, TransactionConfig> = mut
             // finally
             updateState(context, transaction, TransactionState.COMPLETED)
         }
+        contextsToTransactions.forEach { (context, transaction) ->
+            try {
+                _context.output = transaction.combine(totalResults)
+            } catch (ex: Exception) {
+                System.err.println("TransactionHandler exception: ${ex.message}")
+            }
+        }
 
-        return Result.success(_context.output!!)
+        return Result.success(_context.output)
 
     }
 
