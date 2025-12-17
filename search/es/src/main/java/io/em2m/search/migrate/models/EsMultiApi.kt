@@ -55,7 +55,7 @@ open class EsMultiApi(private val esMigrationBuilder: EsMigrationBuilder,
         val context = esMigrationBuilder.toTransactionContext(index, createIndexTransaction)
 
         val input = index
-        return handler(context, input).getOrThrow()
+        return handler(context, input).getOrThrow() ?: false
     }
 
     protected val createIndexWithSettingsTransaction by lazy {
@@ -89,7 +89,7 @@ open class EsMultiApi(private val esMigrationBuilder: EsMigrationBuilder,
         val context = esMigrationBuilder.toTransactionContext(index, createIndexWithSettingsTransaction)
 
         val input = index to settings
-        return handler(context, input).getOrThrow()
+        return handler(context, input).getOrThrow() ?: false
     }
 
     fun createIndex(index: String, settings: ObjectNode): Boolean {
@@ -139,7 +139,7 @@ open class EsMultiApi(private val esMigrationBuilder: EsMigrationBuilder,
         val context = esMigrationBuilder.toTransactionContext(index, deleteIndexTransaction)
 
         val input = index
-        return handler(context, input).getOrThrow()
+        return handler(context, input).getOrThrow() ?: false
     }
 
     protected open val getMetadataTransaction: Transaction<Any, Unit, ObjectNode?> by lazy {
@@ -211,7 +211,7 @@ open class EsMultiApi(private val esMigrationBuilder: EsMigrationBuilder,
         val context = esMigrationBuilder.toTransactionContext(putAliasesTransaction)
 
         val input = request
-        return handler(context, input).getOrDefault(false)
+        return handler(context, input).getOrNull() ?: false
     }
 
     protected val getIndicesToAliasesTransaction: Transaction<Any, Unit, Map<String, List<String>>> by lazy {
@@ -254,7 +254,7 @@ open class EsMultiApi(private val esMigrationBuilder: EsMigrationBuilder,
         val context = esMigrationBuilder.toTransactionContext(getIndicesToAliasesTransaction)
 
         val input = Unit
-        return handler(context, input).getOrThrow()
+        return handler(context, input).getOrThrow() ?: emptyMap()
     }
 
     fun getAliases(index: String): List<String> {
@@ -285,7 +285,7 @@ open class EsMultiApi(private val esMigrationBuilder: EsMigrationBuilder,
         val context = esMigrationBuilder.toTransactionContext(existsTransaction)
 
         val input = index
-        return handler(context, input).getOrThrow()
+        return handler(context, input).getOrThrow() ?: false
     }
 
 

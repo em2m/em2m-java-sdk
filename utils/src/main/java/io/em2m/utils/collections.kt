@@ -8,14 +8,15 @@ fun <T: Any> Collection<T>.firstIsClass(clazz: Class<*>): T? {
 
 fun <T: Any> Collection<T>.filterIsClass(clazz: Class<*>): List<T> {
     if (this.isEmpty()) return emptyList()
-    return this.filter { delegate ->
-        if (delegate is Proxy) {
-            val proxy = this.first() as? Proxy
-            val interfaces = proxy?.javaClass?.interfaces ?: arrayOf()
-            if (clazz in interfaces) {
-                return@filter true
-            }
+    return this.filter { delegate -> delegate.isClassOrProxy(clazz) }
+}
+
+private fun Any.isClassOrProxy(clazz: Class<*>): Boolean {
+    if (this is Proxy) {
+        val interfaces = this.javaClass.interfaces ?: arrayOf()
+        if (clazz in interfaces) {
+            return true
         }
-        (delegate as Any).javaClass == clazz
     }
+    return this.javaClass == clazz
 }

@@ -50,7 +50,7 @@ open class TransactionDao<T : Any, DAO>(val delegates: List<DAO>, val config: Ma
     override fun deleteById(id: String): Boolean {
         val context = deleteByIdTransaction.toContext(delegates)
         val input = id to null
-        return handler(context, input).getOrDefault(false)
+        return handler(context, input).getOrNull() ?: false
     }
 
     protected open val existsTransaction: Transaction<SyncDao<T>, String, Boolean> by lazy {
@@ -66,7 +66,7 @@ open class TransactionDao<T : Any, DAO>(val delegates: List<DAO>, val config: Ma
     override fun exists(id: String): Boolean {
         val context = existsTransaction.toContext(delegates)
         val input = id
-        return handler(context, input).getOrDefault(false)
+        return handler(context, input).getOrNull() ?: false
     }
 
     protected open val searchTransaction: Transaction<SyncDao<T>, SearchRequest, SearchResult<T>> by lazy {
@@ -85,7 +85,7 @@ open class TransactionDao<T : Any, DAO>(val delegates: List<DAO>, val config: Ma
     override fun search(request: SearchRequest): SearchResult<T> {
         val context = searchTransaction.toContext(delegates)
         val input = request
-        return handler(context, input).getOrThrow()
+        return handler(context, input).getOrThrow()!!
     }
 
     protected open val countTransaction: Transaction<SyncDao<T>, Query, Long> by lazy {
@@ -101,7 +101,7 @@ open class TransactionDao<T : Any, DAO>(val delegates: List<DAO>, val config: Ma
     override fun count(query: Query): Long {
         val context = countTransaction.toContext(delegates)
         val input = query
-        return handler(context, input).getOrDefault(-1L)
+        return handler(context, input).getOrNull() ?: 1L
     }
 
     protected open val findByIdTransaction: Transaction<SyncDao<T>, String, T?> by lazy {
@@ -183,7 +183,7 @@ open class TransactionDao<T : Any, DAO>(val delegates: List<DAO>, val config: Ma
     override fun saveBatch(entities: List<T>): List<T> {
         val context = saveBatchTransaction.toContext(delegates)
         val input = entities
-        return handler(context, input).getOrThrow()
+        return handler(context, input).getOrThrow() ?: entities
     }
 
     protected open val upsertTransaction: Transaction<SyncDao<T>, Pair<String, T?>, T?> by lazy {
@@ -233,7 +233,7 @@ open class TransactionDao<T : Any, DAO>(val delegates: List<DAO>, val config: Ma
     override fun upsertBatch(entities: List<T>): List<T> {
         val context = upsertBatchTransaction.toContext(delegates)
         val input = entities
-        return handler(context, input).getOrThrow()
+        return handler(context, input).getOrThrow() ?: entities
     }
 
     protected open val closeTransaction: Transaction<SyncDao<T>, Nothing, Unit?> by lazy {
