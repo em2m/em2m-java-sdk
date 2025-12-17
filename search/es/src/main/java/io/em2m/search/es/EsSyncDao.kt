@@ -3,15 +3,13 @@ package io.em2m.search.es
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.em2m.geo.geojson.GeoJsonModule
-import io.em2m.search.core.daos.StreamableTransactionDao
 import io.em2m.search.core.model.DocMapper
 import io.em2m.search.core.model.IdMapper
 import io.em2m.search.es2.dao.Es2SyncDao
 import io.em2m.search.es8.Es8Api
 import io.em2m.search.es8.dao.Es8SyncDao
-import io.em2m.search.migrate.models.EsMigrationConfig
 import io.em2m.search.migrate.models.EsMigrationItem
-import io.em2m.transactions.TransactionConfig
+import io.em2m.search.transactions.daos.StreamableTransactionDao
 import io.em2m.utils.firstIsClass
 
 // I didn't want to break any existing code mappings for the EsSyncDao

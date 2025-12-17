@@ -9,9 +9,7 @@ import io.em2m.search.es.EsApi
 import io.em2m.search.es2.models.Es2Settings
 import io.em2m.search.es8.Es8Api
 import io.em2m.search.es8.models.Es8Settings
-import io.em2m.search.es8.models.auth.CREATE_INDEX_PRIVILEGE
-import io.em2m.search.es8.models.auth.DELETE_INDEX_PRIVILEGE
-import io.em2m.search.es8.models.auth.MANAGE_INDEX_PRIVILEGE
+import io.em2m.search.es8.models.auth.*
 import io.em2m.search.migrate.toLegacy
 import io.em2m.search.migrate.toModern
 import io.em2m.transactions.AbstractTransactionListener

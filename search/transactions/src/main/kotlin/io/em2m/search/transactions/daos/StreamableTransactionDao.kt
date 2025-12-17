@@ -1,4 +1,4 @@
-package io.em2m.search.core.daos
+package io.em2m.search.transactions.daos
 
 import io.em2m.search.core.model.DocSort
 import io.em2m.search.core.model.Field

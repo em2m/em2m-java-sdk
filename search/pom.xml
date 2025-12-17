@@ -36,6 +36,7 @@
         <module>core</module>
         <module>mongo</module>
         <module>bean</module>
+        <module>transactions</module>
         <module>es</module>
     </modules>
 

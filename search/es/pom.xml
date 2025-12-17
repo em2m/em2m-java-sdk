@@ -33,12 +33,17 @@
     <artifactId>em2m-java-sdk-search-es</artifactId>
     <name>em2m-java-sdk-search-es</name>
 
-
     <dependencies>
 
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>em2m-java-sdk-search-core</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>em2m-java-sdk-search-transactions</artifactId>
             <version>${project.version}</version>
         </dependency>
 
