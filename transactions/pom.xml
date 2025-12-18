@@ -92,8 +92,7 @@
         <dependency>
             <groupId>io.em2m.sdk</groupId>
             <artifactId>em2m-java-sdk-utils</artifactId>
-            <version>3.0.0-SNAPSHOT</version>
-            <scope>compile</scope>
+            <version>${project.version}</version>
         </dependency>
     </dependencies>
 

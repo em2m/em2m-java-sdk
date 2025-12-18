@@ -6,23 +6,24 @@ import io.em2m.search.core.model.SearchRequest
 import io.em2m.search.core.model.SearchResult
 import io.em2m.search.core.model.SyncDao
 import io.em2m.transactions.*
+import io.em2m.utils.OperationType
 
 open class TransactionDao<T : Any, DAO>(val delegates: List<DAO>, val config: Map<Class<*>, TransactionConfig> = mutableMapOf())
     : AbstractTransactionListener(), SyncDao<T> where DAO : SyncDao<T> {
 
     protected val handler = object : TransactionHandler(config) {
-        override fun getTransactionPriority(delegate: Any?, context: TransactionContext<*, *, *>): Int {
+        override fun getPriority(delegate: Any?, context: TransactionContext<*, *, *>): Int {
             if (delegate is SyncDao<*>) {
-                return delegate.getTransactionPriority(context.transaction.type)
+                return delegate.getPriority(context.transaction.type)
             }
-            return super.getTransactionPriority(delegate, context)
+            return super.getPriority(delegate, context)
         }
     }
 
     protected open val createTransaction: Transaction<SyncDao<T>, T, T?> by lazy {
         val transaction = Transaction.Builder<SyncDao<T>, T, T?>()
             .main { delegate, context -> delegate.create(context.input!!) }
-            .type(TransactionType.CREATE)
+            .type(OperationType.CREATE)
             .precedence(TransactionPrecedence.ALL)
             .onStateChange(this::onStateChange)
             .build()
@@ -41,7 +42,7 @@ open class TransactionDao<T : Any, DAO>(val delegates: List<DAO>, val config: Ma
                 id to findById(id)
             }
             .main { delegate, context -> delegate.deleteById(context.input!!.first) }
-            .type(TransactionType.DELETE)
+            .type(OperationType.DELETE)
             .precedence(TransactionPrecedence.ALL)
             .onStateChange(this::onStateChange)
             .build()
@@ -57,7 +58,7 @@ open class TransactionDao<T : Any, DAO>(val delegates: List<DAO>, val config: Ma
     protected open val existsTransaction: Transaction<SyncDao<T>, String, Boolean> by lazy {
         val transaction = Transaction.Builder<SyncDao<T>, String, Boolean>()
             .main { delegate, context -> delegate.exists(context.input!!) }
-            .type(TransactionType.READ)
+            .type(OperationType.READ)
             .precedence(TransactionPrecedence.ANY)
             .onStateChange(this::onStateChange)
             .build()
@@ -75,7 +76,7 @@ open class TransactionDao<T : Any, DAO>(val delegates: List<DAO>, val config: Ma
             .main { delegate, context ->
                 delegate.search(context.input!!)
             }
-            .type(TransactionType.SEARCH)
+            .type(OperationType.SEARCH)
             .precedence(TransactionPrecedence.ANY)
             .combine { SearchResult.combineSearchResults(it) }
             .onStateChange(this::onStateChange)
@@ -92,7 +93,7 @@ open class TransactionDao<T : Any, DAO>(val delegates: List<DAO>, val config: Ma
     protected open val countTransaction: Transaction<SyncDao<T>, Query, Long> by lazy {
         val transaction = Transaction.Builder<SyncDao<T>, Query, Long>()
             .main { delegate, context -> delegate.count(context.input!!) }
-            .type(TransactionType.SEARCH)
+            .type(OperationType.SEARCH)
             .precedence(TransactionPrecedence.ANY)
             .onStateChange(this::onStateChange)
             .build()
@@ -108,7 +109,7 @@ open class TransactionDao<T : Any, DAO>(val delegates: List<DAO>, val config: Ma
     protected open val findByIdTransaction: Transaction<SyncDao<T>, String, T?> by lazy {
         val transaction = Transaction.Builder<SyncDao<T>, String, T?>()
             .main { delegate, context -> delegate.findById(context.input!!) }
-            .type(TransactionType.READ)
+            .type(OperationType.READ)
             .precedence(TransactionPrecedence.ANY)
             .onStateChange(this::onStateChange)
             .build()
@@ -124,7 +125,7 @@ open class TransactionDao<T : Any, DAO>(val delegates: List<DAO>, val config: Ma
     protected open val findOneTransaction: Transaction<SyncDao<T>, Query, T?> by lazy {
         val transaction = Transaction.Builder<SyncDao<T>, Query, T?>()
             .main { delegate, context -> delegate.findOne(context.input!!) }
-            .type(TransactionType.READ)
+            .type(OperationType.READ)
             .precedence(TransactionPrecedence.ANY)
             .onStateChange(this::onStateChange)
             .build()
@@ -147,7 +148,7 @@ open class TransactionDao<T : Any, DAO>(val delegates: List<DAO>, val config: Ma
                 val (id, entity) = context.input!!
                 delegate.save(id, entity!!)
             }
-            .type(TransactionType.UPDATE)
+            .type(OperationType.UPDATE)
             .precedence(TransactionPrecedence.ALL)
             .onStateChange(this::onStateChange)
             .build()
@@ -174,7 +175,7 @@ open class TransactionDao<T : Any, DAO>(val delegates: List<DAO>, val config: Ma
             .main { delegate, context ->
                 delegate.saveBatch(context.input!!)
             }
-            .type(TransactionType.UPDATE)
+            .type(OperationType.UPDATE)
             .precedence(TransactionPrecedence.ALL)
             .onStateChange(this::onStateChange)
             .build()
@@ -197,7 +198,7 @@ open class TransactionDao<T : Any, DAO>(val delegates: List<DAO>, val config: Ma
                 val (id, entity) = context.input!!
                 delegate.upsert(id, entity!!)
             }
-            .type(TransactionType.UPDATE)
+            .type(OperationType.UPDATE)
             .precedence(TransactionPrecedence.ALL)
             .onStateChange(this::onStateChange)
             .build()
@@ -224,7 +225,7 @@ open class TransactionDao<T : Any, DAO>(val delegates: List<DAO>, val config: Ma
             .main { delegate, context ->
                 delegate.upsertBatch(context.input!!)
             }
-            .type(TransactionType.UPDATE)
+            .type(OperationType.UPDATE)
             .precedence(TransactionPrecedence.ALL)
             .onStateChange(this::onStateChange)
             .build()
@@ -242,7 +243,7 @@ open class TransactionDao<T : Any, DAO>(val delegates: List<DAO>, val config: Ma
             .main { delegate, _ ->
                 delegate.close()
             }
-            .type(TransactionType.IO)
+            .type(OperationType.IO)
             .precedence(TransactionPrecedence.ALL)
             .onStateChange(this::onStateChange)
             .build()

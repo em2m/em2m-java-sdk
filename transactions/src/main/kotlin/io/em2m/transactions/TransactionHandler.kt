@@ -1,5 +1,7 @@
 package io.em2m.transactions
 
+import io.em2m.utils.OperationType
+
 open class TransactionHandler(val config: Map<Class<*>, TransactionConfig> = mutableMapOf()) : AbstractTransactionListener() {
 
     private val transactionMap: MutableMap<Class<*>, MutableSet<Transaction<*, *, *>>> = mutableMapOf()
@@ -36,8 +38,8 @@ open class TransactionHandler(val config: Map<Class<*>, TransactionConfig> = mut
         transactionMap.putIfAbsent(clazz, mutableSetOf())?.add(transaction)
     }
 
-    open fun getTransactionPriority(delegate: Any?, context: TransactionContext<*, *, *>): Int {
-        return TransactionType.MEDIUM_PRIORITY
+    open fun getPriority(delegate: Any?, context: TransactionContext<*, *, *>): Int {
+        return OperationType.MEDIUM_PRIORITY
     }
 
     fun updateState(context: TransactionContext<*, *, *>, transaction: Transaction<*, *, *>, state: TransactionState) {
@@ -85,7 +87,7 @@ open class TransactionHandler(val config: Map<Class<*>, TransactionConfig> = mut
             updateState(context, transaction, TransactionState.RUNNING)
             context.output = context.tryOrNull {
                 val sorted = context.delegates.sortedBy { delegate ->
-                    getTransactionPriority(delegate, context)
+                    getPriority(delegate, context)
                 }
                 val results = sorted.map { delegate ->
                     transaction.run(delegate, context) as OUTPUT
@@ -103,7 +105,7 @@ open class TransactionHandler(val config: Map<Class<*>, TransactionConfig> = mut
             // finally
             updateState(context, transaction, TransactionState.COMPLETED)
         }
-        contextsToTransactions.forEach { (context, transaction) ->
+        contextsToTransactions.values.forEach { transaction ->
             try {
                 _context.output = transaction.combine(totalResults)
             } catch (ex: Exception) {

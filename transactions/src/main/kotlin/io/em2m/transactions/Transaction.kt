@@ -1,5 +1,7 @@
 package io.em2m.transactions
 
+import io.em2m.utils.OperationType
+
 private class DelegateTransaction<DELEGATE, INPUT: Any, OUTPUT>(
     private val runFn: (delegate:DELEGATE, context: TransactionContext<DELEGATE, INPUT, OUTPUT>) -> OUTPUT?,
     private val conditionFn: ((delegate: DELEGATE, context: TransactionContext<DELEGATE, INPUT, OUTPUT>) -> Boolean) = { _, _ -> true },
@@ -12,7 +14,7 @@ private class DelegateTransaction<DELEGATE, INPUT: Any, OUTPUT>(
     private val combineFn: ((List<OUTPUT>) -> OUTPUT?)? = null,
     override var name: String,
     override var state: TransactionState = TransactionState.CREATED,
-    override var type: TransactionType = TransactionType.READ,
+    override var type: OperationType = OperationType.READ,
     override var precedence: TransactionPrecedence = TransactionPrecedence.ANY) : Transaction<DELEGATE, INPUT, OUTPUT>() {
 
     override fun run(delegate:DELEGATE, context: TransactionContext<DELEGATE, INPUT, OUTPUT>): OUTPUT? {
@@ -61,7 +63,7 @@ abstract class Transaction<DELEGATE, INPUT : Any, OUTPUT> : AbstractTransactionL
 
     open var name:          String                  = this.javaClass.simpleName
     open var state:         TransactionState        = TransactionState.CREATED
-    open var type:          TransactionType         = TransactionType.READ
+    open var type:          OperationType           = OperationType.READ
     open var precedence:    TransactionPrecedence   = TransactionPrecedence.ANY
 
     init {
@@ -160,8 +162,8 @@ abstract class Transaction<DELEGATE, INPUT : Any, OUTPUT> : AbstractTransactionL
 
         private var state: TransactionState = TransactionState.CREATED
 
-        private var type: TransactionType = TransactionType.READ
-        fun type(type: TransactionType) = apply { this.type = type}
+        private var type: OperationType = OperationType.READ
+        fun type(type: OperationType) = apply { this.type = type}
 
         private var precedence: TransactionPrecedence = TransactionPrecedence.ANY
         fun precedence(precedence: TransactionPrecedence) = apply { this.precedence = precedence }

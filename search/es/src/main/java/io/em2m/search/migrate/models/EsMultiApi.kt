@@ -15,7 +15,7 @@ import io.em2m.search.migrate.toModern
 import io.em2m.transactions.AbstractTransactionListener
 import io.em2m.transactions.Transaction
 import io.em2m.transactions.TransactionPrecedence
-import io.em2m.transactions.TransactionType
+import io.em2m.utils.OperationType
 
 open class EsMultiApi(private val esMigrationBuilder: EsMigrationBuilder,
                       private val mapper: ObjectMapper = jacksonObjectMapper()): AbstractTransactionListener() {
@@ -41,7 +41,7 @@ open class EsMultiApi(private val esMigrationBuilder: EsMigrationBuilder,
                 }
                 true
             }
-            .type(TransactionType.CREATE)
+            .type(OperationType.CREATE)
             .precedence(TransactionPrecedence.ALL)
             .onStateChange(this::onStateChange)
             .build()
@@ -75,7 +75,7 @@ open class EsMultiApi(private val esMigrationBuilder: EsMigrationBuilder,
                 }
                 true
             }
-            .type(TransactionType.CREATE)
+            .type(OperationType.CREATE)
             .precedence(TransactionPrecedence.ALL)
             .onStateChange(this::onStateChange)
             .build()
@@ -124,7 +124,7 @@ open class EsMultiApi(private val esMigrationBuilder: EsMigrationBuilder,
                 }
                 true
             }
-            .type(TransactionType.DELETE)
+            .type(OperationType.DELETE)
             .precedence(TransactionPrecedence.ALL)
             .onStateChange(this::onStateChange)
             .build()
@@ -149,7 +149,7 @@ open class EsMultiApi(private val esMigrationBuilder: EsMigrationBuilder,
                     else -> null
                 }
             }
-            .type(TransactionType.READ)
+            .type(OperationType.READ)
             .precedence(TransactionPrecedence.ANY)
             .onStateChange(this::onStateChange)
             .build()
@@ -240,7 +240,7 @@ open class EsMultiApi(private val esMigrationBuilder: EsMigrationBuilder,
                 }
                 retMap
             }
-            .type(TransactionType.READ)
+            .type(OperationType.READ)
             .precedence(TransactionPrecedence.ALL)
             .onStateChange(this::onStateChange)
             .build()
@@ -271,7 +271,7 @@ open class EsMultiApi(private val esMigrationBuilder: EsMigrationBuilder,
                 }
             }
             .combine { values -> values.any{it} }
-            .type(TransactionType.READ)
+            .type(OperationType.READ)
             .precedence(TransactionPrecedence.ANY)
             .onStateChange(this::onStateChange)
             .build()

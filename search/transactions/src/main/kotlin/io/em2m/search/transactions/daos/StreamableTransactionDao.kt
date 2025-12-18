@@ -11,7 +11,7 @@ import io.em2m.transactions.Transaction
 import io.em2m.transactions.TransactionConfig
 import io.em2m.transactions.TransactionContext
 import io.em2m.transactions.TransactionPrecedence
-import io.em2m.transactions.TransactionType
+import io.em2m.utils.OperationType
 
 open class StreamableTransactionDao<T: Any, DAO>(vararg delegates: DAO?, config: Map<Class<*>, TransactionConfig> = mutableMapOf())
     : TransactionDao<T, DAO>(delegates = delegates.filterNotNull().toList(), config= config), StreamableDao<T> where DAO : SyncDao<T>, DAO: StreamableDao<T> {
@@ -21,7 +21,7 @@ open class StreamableTransactionDao<T: Any, DAO>(vararg delegates: DAO?, config:
             .main { delegate, context ->
                 delegate.streamRows(context.input!!)
             }
-            .type(TransactionType.SEARCH)
+            .type(OperationType.SEARCH)
             .precedence(TransactionPrecedence.ANY)
             .build()
         transaction
@@ -45,7 +45,7 @@ open class StreamableTransactionDao<T: Any, DAO>(vararg delegates: DAO?, config:
             .main { delegate, context ->
                 delegate.streamItems(context.input!!)
             }
-            .type(TransactionType.SEARCH)
+            .type(OperationType.SEARCH)
             .precedence(TransactionPrecedence.ANY)
             .build()
         transaction
