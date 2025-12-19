@@ -20,6 +20,7 @@ package io.em2m.search.bean
 import io.em2m.search.core.daos.AbstractSyncDao
 import io.em2m.search.core.model.*
 import io.em2m.utils.OperationType
+import java.lang.Exception
 import kotlin.reflect.KClass
 
 class MapBackedSyncDao<T>(idMapper: IdMapper<T>, private val items: MutableMap<String, T> = HashMap()) : AbstractSyncDao<T>(idMapper), StreamableDao<T> {
@@ -34,6 +35,20 @@ class MapBackedSyncDao<T>(idMapper: IdMapper<T>, private val items: MutableMap<S
         } else {
             throw NotFoundException()
         }
+    }
+
+    fun deleteByQuery(query: Query): Boolean {
+        val predicate: (Any) -> Boolean = Functions.toPredicate(query?.simplify() ?: MatchAllQuery())
+        val removeKeys = items.entries
+            .filter { (_, value) -> value is Any && predicate(value) }
+            .map(Map.Entry<String, T>::key)
+        return removeKeys.map {
+            try {
+                deleteById(it)
+            } catch (_ : Exception) {
+                false
+            }
+        }.all { it }
     }
 
     override fun search(request: SearchRequest): SearchResult<T> {

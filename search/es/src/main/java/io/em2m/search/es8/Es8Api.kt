@@ -13,6 +13,7 @@ import io.em2m.search.es.EsAliasAction
 import io.em2m.search.es.EsAliasDefinition
 import io.em2m.search.es.EsAliasRequest
 import io.em2m.search.es.EsExistsQuery
+import io.em2m.search.es.EsQuery
 import io.em2m.search.es.EsSearchRequest
 import io.em2m.search.es8.models.index.Es8Mapping
 import io.em2m.search.es8.models.index.Es8MappingProperty
@@ -170,6 +171,9 @@ interface Es8Api {
     @Deprecated("Please use caution when deleting indices or dropping tables.")
     @RequestLine("DELETE /{index}", decodeSlash = false)
     fun deleteIndex(@Param("index") index: String)
+
+    @RequestLine("POST /{index}/_delete_by_query")
+    fun deleteByQuery(@Param("index") index: String, query: EsQuery)
 
     fun canDeleteIndex(index: String): Boolean = this.hasIndexPrivilege(index, DELETE_INDEX_PRIVILEGE)
 

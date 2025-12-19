@@ -8,17 +8,26 @@ import io.em2m.search.core.model.SyncDao
 import io.em2m.transactions.*
 import io.em2m.utils.OperationType
 
-open class TransactionDao<T : Any, DAO>(val delegates: List<DAO>, val config: Map<Class<*>, TransactionConfig> = mutableMapOf())
+open class TransactionDao<T : Any, DAO>(val delegates: List<DAO>,
+                                        val config: Map<Class<*>, TransactionConfig> = mutableMapOf(),
+                                        handler: TransactionHandler? = null)
     : AbstractTransactionListener(), SyncDao<T> where DAO : SyncDao<T> {
 
-    protected val handler = object : TransactionHandler(config) {
+    private var sortedWithFn: ((delegate: Any?, context: TransactionContext<*, *, *>) -> Int)? = null
+    fun sortedWith(fn: ((delegate: Any?, context: TransactionContext<*, *, *>) -> Int)?) {
+        this.handler = this.handler.sortedWith(fn)
+    }
+
+    var handler: TransactionHandler = (handler ?: object : TransactionHandler(config) {
         override fun getPriority(delegate: Any?, context: TransactionContext<*, *, *>): Int {
             if (delegate is SyncDao<*>) {
                 return delegate.getPriority(context.transaction.type)
             }
             return super.getPriority(delegate, context)
         }
-    }
+    }).sortedWith(sortedWithFn)
+
+    fun handler(handler: TransactionHandler) = apply { this.handler = handler }
 
     protected open val createTransaction: Transaction<SyncDao<T>, T, T?> by lazy {
         val transaction = Transaction.Builder<SyncDao<T>, T, T?>()
@@ -61,6 +70,7 @@ open class TransactionDao<T : Any, DAO>(val delegates: List<DAO>, val config: Ma
             .type(OperationType.READ)
             .precedence(TransactionPrecedence.ANY)
             .onStateChange(this::onStateChange)
+            .combine { values -> values.firstOrNull() ?: false }
             .build()
         transaction
     }
@@ -68,6 +78,36 @@ open class TransactionDao<T : Any, DAO>(val delegates: List<DAO>, val config: Ma
     override fun exists(id: String): Boolean {
         val context = existsTransaction.toContext(delegates)
         val input = id
+        return handler(context, input).getOrNull() ?: false
+    }
+
+    protected open val existsValueTransaction: Transaction<SyncDao<T>, T, Boolean> by lazy {
+        val transaction = Transaction.Builder<SyncDao<T>, T, Boolean>()
+            .main { delegate, context ->
+                if (delegate is AbstractSyncDao<T>) {
+                    delegate.contains(context.input!!)
+                } else {
+                    val firstAbstractDao: AbstractSyncDao<T>? = context.delegates.firstNotNullOfOrNull { it as? AbstractSyncDao<T> }
+                    val idMapper = firstAbstractDao?.idMapper
+                    if (idMapper != null) {
+                        val id = idMapper(context.input!!)
+                        delegate.exists(id)
+                    } else {
+                        false
+                    }
+                }
+            }
+            .type(OperationType.READ)
+            .precedence(TransactionPrecedence.ANY)
+            .onStateChange(this::onStateChange)
+            .combine { values -> values.firstOrNull { it } ?: false }
+            .build()
+        transaction
+    }
+
+    operator fun contains(value: T): Boolean {
+        val context = existsValueTransaction.toContext(delegates)
+        val input = value
         return handler(context, input).getOrNull() ?: false
     }
 

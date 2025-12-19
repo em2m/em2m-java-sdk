@@ -2,13 +2,15 @@ package io.em2m.transactions
 
 import io.em2m.utils.OperationType
 
-open class TransactionHandler(val config: Map<Class<*>, TransactionConfig> = mutableMapOf()) : AbstractTransactionListener() {
+open class TransactionHandler(val config: Map<Class<*>, TransactionConfig> = mutableMapOf(),
+                              private var sortedWith: ((delegate: Any?, context: TransactionContext<*, *, *>) -> Int)? = null) : AbstractTransactionListener() {
 
     private val transactionMap: MutableMap<Class<*>, MutableSet<Transaction<*, *, *>>> = mutableMapOf()
 
     private fun forClass(clazz: Class<*>, permissive: Boolean = true): Set<Transaction<*,*,*>> {
         val ret = transactionMap.getOrDefault(clazz, emptySet()).toMutableSet()
 
+        // allow parent class
         if (permissive) {
             transactionMap.forEach { (key: Class<*>, transactions: MutableSet<Transaction<*,*,*>>) ->
                 if (key == clazz) return@forEach
@@ -38,8 +40,16 @@ open class TransactionHandler(val config: Map<Class<*>, TransactionConfig> = mut
         transactionMap.putIfAbsent(clazz, mutableSetOf())?.add(transaction)
     }
 
+    fun sortedWith(fn: ((delegate: Any?, context: TransactionContext<*, *, *>) -> Int)?) = apply {
+        this.sortedWith = fn
+    }
+
     open fun getPriority(delegate: Any?, context: TransactionContext<*, *, *>): Int {
-        return OperationType.MEDIUM_PRIORITY
+        return sortedWith?.invoke(delegate, context) ?: OperationType.MEDIUM_PRIORITY
+    }
+
+    private fun getTransactionPriority(delegate: Any?, context: TransactionContext<*,*,*>): Int {
+        return sortedWith?.invoke(delegate, context) ?: this.getPriority(delegate, context)
     }
 
     fun updateState(context: TransactionContext<*, *, *>, transaction: Transaction<*, *, *>, state: TransactionState) {
@@ -87,13 +97,14 @@ open class TransactionHandler(val config: Map<Class<*>, TransactionConfig> = mut
             updateState(context, transaction, TransactionState.RUNNING)
             context.output = context.tryOrNull {
                 val sorted = context.delegates.sortedBy { delegate ->
-                    getPriority(delegate, context)
+                    getTransactionPriority(delegate, context)
                 }
                 val results = sorted.map { delegate ->
                     transaction.run(delegate, context) as OUTPUT
                 }
                 context.transaction.combine(results)
             }
+            context.output?.let { totalResults.add(it) }
 
             if (context.success) {
                 updateState(context, transaction, TransactionState.SUCCESS)
@@ -105,13 +116,22 @@ open class TransactionHandler(val config: Map<Class<*>, TransactionConfig> = mut
             // finally
             updateState(context, transaction, TransactionState.COMPLETED)
         }
-        contextsToTransactions.values.forEach { transaction ->
+        if (totalResults.size > 1) {
+            contextsToTransactions.values.forEach { transaction ->
+                try {
+                    _context.output = transaction.combine(totalResults)
+                } catch (ex: Exception) {
+                    System.err.println("TransactionHandler exception: ${ex.message}")
+                }
+            }
+        } else {
             try {
-                _context.output = transaction.combine(totalResults)
+                _context.output = totalResults.firstOrNull()
             } catch (ex: Exception) {
                 System.err.println("TransactionHandler exception: ${ex.message}")
             }
         }
+
 
         return Result.success(_context.output)
 
