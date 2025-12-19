@@ -73,12 +73,6 @@ interface Es2Api {
     @RequestLine("GET /_aliases")
     fun getAliases(): ObjectNode
 
-    fun getAliasesMap(): Map<String, List<String>> {
-        return getAliases().fields().asSequence().associate { (index, fields) ->
-            index to fields.get("aliases").fieldNames().asSequence().toList()
-        }
-    }
-
     @RequestLine("GET /_cat/indices?format=json", decodeSlash = false)
     fun getIndices(): List<Es2Index>
 

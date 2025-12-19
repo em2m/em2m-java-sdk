@@ -11,7 +11,7 @@ private class DelegateTransaction<DELEGATE, INPUT: Any, OUTPUT>(
     private val onSuccessFn: ((TransactionContext<*, *, *>) -> Unit)? = null,
     private val onCompleteFn: ((TransactionContext<*, *, *>) -> Unit)? = null,
     private val onStateChangeFn: ((TransactionContext<*, *, *>) -> Unit)? = null,
-    private val combineFn: ((List<OUTPUT>) -> OUTPUT?)? = null,
+    private val combineFn: ((List<OUTPUT?>) -> OUTPUT?)? = null,
     override var name: String,
     override var state: TransactionState = TransactionState.CREATED,
     override var type: OperationType = OperationType.READ,
@@ -50,7 +50,7 @@ private class DelegateTransaction<DELEGATE, INPUT: Any, OUTPUT>(
         this.onStateChangeFn?.invoke(context)
     }
 
-    override fun combine(results: List<OUTPUT>): OUTPUT? {
+    override fun combine(results: List<OUTPUT?>): OUTPUT? {
         if (combineFn == null) {
             return super.combine(results)
         }
@@ -91,17 +91,18 @@ abstract class Transaction<DELEGATE, INPUT : Any, OUTPUT> : AbstractTransactionL
 
     abstract fun run(delegate: DELEGATE, context: TransactionContext<DELEGATE, INPUT, OUTPUT>): OUTPUT?
 
-    open fun combine(results: List<OUTPUT>): OUTPUT? {
+    open fun combine(results: List<OUTPUT?>): OUTPUT? {
         if (precedence == TransactionPrecedence.ALL) {
             System.err.println("Combine function isn't set, defaulting to ANY behavior.")
         }
         return results.firstOrNull()
     }
 
-    fun toContext(delegates: List<DELEGATE>): TransactionContext<DELEGATE, INPUT, OUTPUT> {
+    fun toContext(delegates: List<DELEGATE>, config: TransactionConfig = TransactionConfig.DEFAULT): TransactionContext<DELEGATE, INPUT, OUTPUT> {
         return TransactionContext(
             delegates = delegates,
-            transaction = this
+            transaction = this,
+            config = config
         )
     }
 
@@ -152,8 +153,8 @@ abstract class Transaction<DELEGATE, INPUT : Any, OUTPUT> : AbstractTransactionL
             this.onStateChangeFn = fn
         }
 
-        private var combineFn: ((List<OUTPUT>) -> OUTPUT?)? = null
-        fun combine(fn: (List<OUTPUT>) -> OUTPUT?) = apply {
+        private var combineFn: ((List<OUTPUT?>) -> OUTPUT?)? = null
+        fun combine(fn: (List<OUTPUT?>) -> OUTPUT?) = apply {
             this.combineFn = fn
         }
 

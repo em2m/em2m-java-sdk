@@ -18,7 +18,7 @@ class EsMigrationItem(val config: Map<Class<*>, EsMigrationConfig>) {
 
     operator fun component1(): List<Class<*>> = classesForStrategy(EsMigrationStrategy.PRIMARY)
 
-    operator fun component2(): List<Class<*>> = classesForStrategy(EsMigrationStrategy.PERMISSIVE)
+    operator fun component2(): List<Class<*>> = classesForStrategy(EsMigrationStrategy.FALLBACK)
 
     companion object {
 
@@ -39,17 +39,21 @@ fun interface EsMigrationProvider {
 }
 
 enum class EsMigrationStrategy {
-    PRIMARY, PERMISSIVE
+    PRIMARY, FALLBACK;
+
+    companion object {
+        val DEFAULT = FALLBACK
+    }
 }
 
-data class EsMigrationConfig(val strategy: EsMigrationStrategy) {
+data class EsMigrationConfig(val strategy: EsMigrationStrategy, val properties: Map<String, Any?> = mutableMapOf()) {
 
     fun toTransactionConfig(): TransactionConfig {
         val errorStrategy = when (strategy) {
             EsMigrationStrategy.PRIMARY -> TransactionErrorStrategy.ALWAYS
-            EsMigrationStrategy.PERMISSIVE -> TransactionErrorStrategy.NEVER
+            EsMigrationStrategy.FALLBACK -> TransactionErrorStrategy.LOG
         }
-        return TransactionConfig(errorStrategy)
+        return TransactionConfig(errorStrategy, properties)
     }
 
     companion object {
@@ -64,7 +68,7 @@ class EsMigrationMappingItem(var config: Map<EsVersion, EsMigrationConfig> = mut
 
     fun getStrategy(version: EsVersion): EsMigrationStrategy = run {
         val esConfig = config[version]
-        esConfig?.strategy ?: EsMigrationStrategy.PERMISSIVE
+        esConfig?.strategy ?: EsMigrationStrategy.DEFAULT
     }
 
     fun versionsForStrategy(strategy: EsMigrationStrategy): List<EsVersion> {
@@ -78,7 +82,7 @@ class EsMigrationMappingItem(var config: Map<EsVersion, EsMigrationConfig> = mut
     }
 
     operator fun component2(): List<EsVersion> {
-        return versionsForStrategy(EsMigrationStrategy.PERMISSIVE)
+        return versionsForStrategy(EsMigrationStrategy.DEFAULT)
     }
 
 }

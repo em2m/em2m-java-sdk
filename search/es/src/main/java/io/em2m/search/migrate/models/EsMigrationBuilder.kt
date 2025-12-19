@@ -23,20 +23,17 @@ class EsMigrationBuilder(val esMigrationProvider: EsMigrationProvider,
     }
 
     fun <INPUT: Any, OUTPUT> toTransactionContext(transaction: Transaction<Any, INPUT, OUTPUT>): TransactionContext<Any, INPUT, OUTPUT> {
-        return TransactionContext(delegates = delegates, transaction = transaction)
-    }
-
-    fun <INPUT: Any, OUTPUT> toTransactionContext(index: String, transaction: Transaction<Any, INPUT, OUTPUT>): TransactionContext<Any, INPUT, OUTPUT> {
-        val migrationItem: EsMigrationItem = this.esMigrationProvider[index] ?: EsMigrationItem.DEFAULT
         val allowedClasses = EsVersion.VALUES.map(EsVersion::getApi)
         val allowedDelegates = allowedClasses.flatMap { clazz ->
             delegates.filterIsClass(clazz)
         }.toSet().toList()
-        return TransactionContext(delegates = allowedDelegates, transaction = transaction, config = migrationItem.toTransactionConfig())
+        return TransactionContext(delegates = allowedDelegates, transaction = transaction)
     }
 
-    fun getTransactionHandler(): TransactionHandler {
-        return TransactionHandler()
+    fun getTransactionHandler(index: String): TransactionHandler {
+        val migrationItem: EsMigrationItem = this.esMigrationProvider[index] ?: EsMigrationItem.DEFAULT
+        val config = migrationItem.toTransactionConfig()
+        return TransactionHandler(config=config)
     }
 
     fun <T: Any> EsSyncDao(index: String,

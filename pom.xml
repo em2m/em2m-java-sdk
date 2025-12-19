@@ -51,8 +51,9 @@
         <kotlin.code.style>official</kotlin.code.style>
         <kotlin.compiler.jvmTarget>11</kotlin.compiler.jvmTarget>
 
-        <jackson.version>2.20.0</jackson.version>
-        <jackson.annotations.version>2.20</jackson.annotations.version>
+
+        <jackson.version>2.15.0</jackson.version>
+        <jackson.annotations.version>2.15.0</jackson.annotations.version>
 
         <aws.version>1.12.129</aws.version>
         <jts.version>1.18.1</jts.version>

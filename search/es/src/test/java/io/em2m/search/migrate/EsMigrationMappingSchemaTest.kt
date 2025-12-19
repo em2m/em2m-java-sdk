@@ -12,6 +12,7 @@ import io.em2m.geo.geojson.GeoJsonModule
 import io.em2m.search.es.TextPlainEncoder
 import io.em2m.search.es.models.EsVersion
 import io.em2m.search.es2.Es2Api
+import io.em2m.search.es2.getAliasesMap
 import io.em2m.search.migrate.models.EsMigrationConfig
 import io.em2m.search.migrate.models.EsMigrationMappingItem
 import io.em2m.search.migrate.models.EsMigrationMappingObject

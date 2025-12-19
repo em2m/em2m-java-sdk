@@ -120,3 +120,6 @@ val ENGINEER_INDEX_PRIVILEGES = listOf(
     "view_index_metadata",
     "write"
 )
+
+val DEVOPS_INDEX_PRIVILEGES = listOf("all")
+val DEVOPS_CLUSTER_PRIVILEGES = listOf("all")

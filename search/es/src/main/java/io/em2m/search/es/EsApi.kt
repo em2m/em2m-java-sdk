@@ -14,6 +14,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode
 import feign.Headers
 import feign.Param
 import feign.RequestLine
+import io.em2m.search.es.EsAliasAction.Companion.getTargetIndices
 import io.em2m.search.es.models.EsVersion
 import io.em2m.utils.coerce
 import org.locationtech.jts.geom.Envelope
@@ -391,13 +392,31 @@ class EsBulkResult(val took: Long, val errors: Boolean, val items: Array<Item>) 
 }
 
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
-class EsAliasAction(var add: EsAliasDefinition? = null, var remove: EsAliasDefinition? = null)
+class EsAliasAction(var add: EsAliasDefinition? = null, var remove: EsAliasDefinition? = null) {
+
+    companion object {
+        fun EsAliasAction.getTargetIndices(): Collection<String> {
+            val ret = mutableSetOf<String>()
+            add?.index?.let { ret.add(it) }
+            remove?.index?.let { ret.add(it) }
+            return ret
+        }
+    }
+}
 
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 class EsAliasDefinition(val index: String, val alias: String)
 
 class EsAliasRequest {
     var actions: MutableList<EsAliasAction> = mutableListOf()
+
+    companion object {
+        fun EsAliasRequest.getTargetIndices(): Collection<String> {
+            val ret = mutableSetOf<String>()
+            actions.forEach { action ->  ret.addAll(action.getTargetIndices()) }
+            return ret
+        }
+    }
 }
 
 data class Es2Index(
@@ -490,22 +509,6 @@ interface EsApi {
 
     @RequestLine("GET /_aliases")
     fun getAliases(): ObjectNode
-
-    fun getIndicesToAliases(): Map<String, List<String>> {
-        val allAliases = getAliases()
-        return allAliases.fieldNames().asSequence()
-            .filterNot { it.startsWith(".") } // es-defined hidden aliases
-            .associateWith { indexName ->
-                allAliases.get(indexName).get("aliases").fieldNames()
-                    .asSequence()
-                    .toList()
-            }
-    }
-
-    fun getAliases(index: String): List<String> {
-        val indicesToAliases = getIndicesToAliases()
-        return indicesToAliases[index] ?: emptyList()
-    }
 
     /*
     @RequestLine("POST {path}")

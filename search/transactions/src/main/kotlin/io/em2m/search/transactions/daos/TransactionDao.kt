@@ -100,7 +100,7 @@ open class TransactionDao<T : Any, DAO>(val delegates: List<DAO>,
             .type(OperationType.READ)
             .precedence(TransactionPrecedence.ANY)
             .onStateChange(this::onStateChange)
-            .combine { values -> values.firstOrNull { it } ?: false }
+            .combine { values -> values.filterNotNull().firstOrNull { it } ?: false }
             .build()
         transaction
     }
@@ -118,7 +118,7 @@ open class TransactionDao<T : Any, DAO>(val delegates: List<DAO>,
             }
             .type(OperationType.SEARCH)
             .precedence(TransactionPrecedence.ANY)
-            .combine { SearchResult.combineSearchResults(it) }
+            .combine { val results = it.filterNotNull(); SearchResult.combineSearchResults(results) }
             .onStateChange(this::onStateChange)
             .build()
         transaction

@@ -8,7 +8,7 @@ data class TransactionContext<DELEGATE, INPUT : Any, OUTPUT>(
     var outputClass: Class<OUTPUT>? = null,
     var transaction: Transaction<DELEGATE, INPUT, OUTPUT>,
     val scope: Map<String, Any?> = mutableMapOf(),
-    val config: Map<Class<*>, TransactionConfig> = mutableMapOf(),
+    var config: TransactionConfig = TransactionConfig.DEFAULT,
     val debug: Boolean = false
 ) {
 

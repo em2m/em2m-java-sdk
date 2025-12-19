@@ -1,11 +1,30 @@
 package io.em2m.transactions
 
 import io.em2m.utils.OperationType
+import org.slf4j.LoggerFactory
 
 open class TransactionHandler(val config: Map<Class<*>, TransactionConfig> = mutableMapOf(),
                               private var sortedWith: ((delegate: Any?, context: TransactionContext<*, *, *>) -> Int)? = null) : AbstractTransactionListener() {
 
+    private val logger = LoggerFactory.getLogger(javaClass)
+
     private val transactionMap: MutableMap<Class<*>, MutableSet<Transaction<*, *, *>>> = mutableMapOf()
+
+    fun getConfigForClass(clazz: Class<*>, permissive: Boolean = true): TransactionConfig? {
+        val ret = mutableSetOf(config[clazz])
+
+        if (permissive) {
+            config.forEach { (key: Class<*>, config: TransactionConfig) ->
+                if (key == clazz) return@forEach
+
+                if (key.isAssignableFrom(clazz)) {
+                    ret.add(config)
+                }
+            }
+        }
+
+        return ret.filterNotNull().firstOrNull()
+    }
 
     private fun forClass(clazz: Class<*>, permissive: Boolean = true): Set<Transaction<*,*,*>> {
         val ret = transactionMap.getOrDefault(clazz, emptySet()).toMutableSet()
@@ -67,7 +86,8 @@ open class TransactionHandler(val config: Map<Class<*>, TransactionConfig> = mut
         }.union(internalTransactions)
 
         val contextsToTransactions = transactionsForDelegate.associateBy { transaction ->
-            _context.copy().apply { this.transaction = transaction }
+            val config = getConfigForClass(_context.clazz) ?: TransactionConfig.DEFAULT
+            _context.copy().apply { this.transaction = transaction; this.config = config}
         }
 
         // TODO: add multi-threaded transactions
@@ -99,8 +119,23 @@ open class TransactionHandler(val config: Map<Class<*>, TransactionConfig> = mut
                 val sorted = context.delegates.sortedBy { delegate ->
                     getTransactionPriority(delegate, context)
                 }
-                val results = sorted.map { delegate ->
-                    transaction.run(delegate, context) as OUTPUT
+                val results: List<OUTPUT?> = sorted.map { delegate ->
+                    val clazz = (delegate as Any).javaClass
+                    val config = getConfigForClass(clazz, permissive = false) ?: context.config
+                    try {
+                        transaction.run(delegate, context) as OUTPUT
+                    } catch (ex : Exception) {
+                        when (config.errorStrategy) {
+                            TransactionErrorStrategy.ALWAYS -> { throw ex }
+                            TransactionErrorStrategy.LOG -> {
+                                logger.error("Transaction error!", ex)
+                                null
+                            }
+                            else -> {
+                                null
+                            }
+                        }
+                    }
                 }
                 context.transaction.combine(results)
             }

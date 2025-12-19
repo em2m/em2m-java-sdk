@@ -12,6 +12,7 @@ import feign.jackson.JacksonEncoder
 import feign.slf4j.Slf4jLogger
 import io.em2m.geo.geojson.GeoJsonModule
 import io.em2m.search.es.*
+import io.em2m.search.es8.*
 import io.em2m.search.es2.Es2Api
 import io.em2m.search.es2.models.Es2MappingProperty
 import io.em2m.search.es2.operations.exportSchema
