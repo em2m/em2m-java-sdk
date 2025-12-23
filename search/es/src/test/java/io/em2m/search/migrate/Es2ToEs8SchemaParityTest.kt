@@ -14,7 +14,7 @@ class Es2ToEs8SchemaParityTest {
 
     // <editor-fold desc="strings">
     @Test
-    fun `analyzed string`() {
+    fun `string analyzed`() {
         val input = """
             {
                 "index" : "Es2ToEs8SchemaParityTest.index",
@@ -34,7 +34,7 @@ class Es2ToEs8SchemaParityTest {
     }
 
     @Test
-    fun `not_analyzed string`() {
+    fun `string not_analyzed`() {
         val input = """
             {
                 "index" : "Es2ToEs8SchemaParityTest.index",

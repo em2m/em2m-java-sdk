@@ -26,6 +26,14 @@ open class TransactionHandler(val config: Map<Class<*>, TransactionConfig> = mut
         return ret.filterNotNull().firstOrNull()
     }
 
+    private fun getConfigForObj(obj: Any, permissive: Boolean = true): TransactionConfig? {
+        return if (obj is Class<*>) {
+            getConfigForClass(obj, permissive= permissive)
+        } else {
+            getConfigForClass(obj.javaClass, permissive= permissive)
+        }
+    }
+
     private fun forClass(clazz: Class<*>, permissive: Boolean = true): Set<Transaction<*,*,*>> {
         val ret = transactionMap.getOrDefault(clazz, emptySet()).toMutableSet()
 
