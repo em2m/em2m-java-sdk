@@ -28,7 +28,12 @@ class Es2Deserializer : JsonDeserializer<Es2MappingProperty>() {
             innerProperties[fieldName] = p.codec.treeToValue(obj, Es2MappingProperty::class.java)
         }
 
-        val mappingProperty = Es2MappingProperty(type=type, index=index, properties=innerProperties, format=format)
+        val fallback = Es2MappingProperty(type=type, index=index, properties=innerProperties, format=format)
+
+        val mappingProperty: Es2MappingProperty = when (type) {
+            "geo_point" -> Es2GeoPointDeserializer().fromJsonNode(root)
+            else -> fallback
+        } ?: fallback
         innerProperties.values.forEach { mapping ->
             mapping.parent = mappingProperty
         }

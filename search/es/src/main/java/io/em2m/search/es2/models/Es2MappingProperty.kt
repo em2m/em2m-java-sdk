@@ -1,6 +1,7 @@
 package io.em2m.search.es2.models
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
@@ -11,12 +12,12 @@ import java.io.File
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonDeserialize(using = Es2Deserializer::class)
 @Deprecated("Use Es8MappingProperty")
-data class Es2MappingProperty(val type: String? = null,
-                              val index: String? = null,
-                              val properties: Map<String, Es2MappingProperty>? = null,
-                              var parent: Es2MappingProperty? = null,
-                              var format: String? = null,
-                              var dynamic: Boolean? = null) {
+open class Es2MappingProperty(val type: String? = null,
+                              open val index: String? = null,
+                              open val properties: Map<String, Es2MappingProperty>? = null,
+                              open var parent: Es2MappingProperty? = null,
+                              open var format: String? = null,
+                              open var dynamic: Boolean? = null) {
 
     val children = properties?.values
 

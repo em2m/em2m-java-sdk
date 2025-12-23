@@ -3,11 +3,15 @@ package io.em2m.search.migrate
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.em2m.search.ES_ACCEPTED_TYPES
+import io.em2m.search.es.isEsLeafType
+import io.em2m.search.es.isEsTypeNumeric
+import io.em2m.search.es2.models.Es2GeoPointProperty
 import io.em2m.search.es2.models.Es2Mapping
 import io.em2m.search.es2.models.Es2MappingProperty
 import io.em2m.search.es8.models.Es8Dynamic
 import io.em2m.search.es8.models.index.Es8Mapping
 import io.em2m.search.es8.models.index.Es8MappingProperty
+import io.em2m.search.es8.models.index.properties.Es8GeoPointProperty
 import io.em2m.utils.coerce
 
 fun migrateEs2ToEs8(es2Property: Es2MappingProperty): Es8MappingProperty {
@@ -16,6 +20,18 @@ fun migrateEs2ToEs8(es2Property: Es2MappingProperty): Es8MappingProperty {
 
 private fun migrateEs2ToEs8(es2Property: Es2MappingProperty, _depth: Int = 0): Es8MappingProperty {
     val type: String? = when (es2Property.type?.trim()) {
+        "geo_point" -> {
+            return if (es2Property is Es2GeoPointProperty) {
+                Es8GeoPointProperty(
+                    latLon = es2Property.latLon,
+                    geohash = es2Property.geohash,
+                    geohashPrefix = es2Property.geohashPrefix,
+                    geohashPrecision = es2Property.geohashPrecision
+                    )
+            } else {
+                Es8GeoPointProperty()
+            }
+        }
         "string" -> {
             if (es2Property.index == "not_analyzed") {
                 "keyword"
@@ -32,6 +48,8 @@ private fun migrateEs2ToEs8(es2Property: Es2MappingProperty, _depth: Int = 0): E
         }
         else -> {
             if (es2Property.type in ES_ACCEPTED_TYPES && _depth > 1) {
+                es2Property.type
+            } else if (isEsLeafType(es2Property.type)){
                 es2Property.type
             } else {
                 null

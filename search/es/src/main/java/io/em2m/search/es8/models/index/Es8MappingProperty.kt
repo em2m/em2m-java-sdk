@@ -8,7 +8,7 @@ import io.em2m.simplex.evalPath
 import io.em2m.utils.Coerce
 
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
-data class Es8MappingProperty(var type: String? = null,
+open class Es8MappingProperty(var type: String? = null,
                               var properties: MutableMap<String, Es8MappingProperty>? = null,
                               var parent: Es8MappingProperty? = null,
                               var format: String? = null,

@@ -22,10 +22,6 @@ fun getBoxedEs8Type(cls: Class<*>): String = when (cls) {
    else -> "object"
 }
 
-private fun isEs8TypeNumeric(es8Type: String): Boolean {
-    return es8Type in listOf("long", "integer", "short", "byte", "double", "float", "half_float", "scaled_float", "unsigned_long")
-}
-
 private fun canEs8TypeBeDouble(es8Type: String): Boolean {
     return es8Type in listOf("integer", "short", "byte", "float", "double")
 }
