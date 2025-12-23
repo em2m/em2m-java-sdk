@@ -460,13 +460,6 @@ interface EsApi {
     @RequestLine(value = "HEAD /{index}/", decodeSlash = false)
     fun indexExists(@Param("index") index: String)
 
-    fun exists(index: String): Boolean = try {
-        indexExists(index)
-        true
-    } catch (_: Exception) {
-        false
-    }
-
     @RequestLine(value = "GET /{index}/_mapping", decodeSlash = false)
     fun getMappings(@Param("index") index: String): ObjectNode
 
@@ -536,6 +529,15 @@ interface EsApi {
 
     @RequestLine("GET /_stats", decodeSlash = false)
     fun getStats(): EsStats
+
+    companion object {
+        fun EsApi.exists(index: String): Boolean = try {
+            indexExists(index)
+            true
+        } catch (_: Exception) {
+            false
+        }
+    }
 
 }
 

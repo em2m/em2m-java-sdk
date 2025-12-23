@@ -7,6 +7,7 @@ import io.em2m.search.es.EsAliasAction
 import io.em2m.search.es.EsAliasRequest
 import io.em2m.search.es.EsAliasRequest.Companion.getTargetIndices
 import io.em2m.search.es.EsApi
+import io.em2m.search.es.EsApi.Companion.exists
 import io.em2m.search.es.getIndicesToAliases
 import io.em2m.search.es2.models.Es2Settings
 import io.em2m.search.es8.*

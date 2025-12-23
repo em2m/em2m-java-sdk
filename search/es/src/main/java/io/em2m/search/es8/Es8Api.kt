@@ -62,7 +62,7 @@ interface Es8Api {
     @RequestLine(value = "PUT /{index}/_doc/{id}", decodeSlash = false)
     fun put(@Param("index") index: String, @Param("id") id: String, document: Any)
 
-    @RequestLine(value = "GET /{index}/{id}", decodeSlash = false)
+    @RequestLine(value = "GET /{index}/_doc/{id}", decodeSlash = false)
     fun get(@Param("index") index: String, @Param("id") id: String): Es8Hit
 
     @Deprecated("Prefer the elasticsearch BulkRequest model over raw strings.")

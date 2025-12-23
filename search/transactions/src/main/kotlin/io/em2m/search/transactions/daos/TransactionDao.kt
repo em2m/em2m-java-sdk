@@ -182,6 +182,7 @@ open class TransactionDao<T : Any, DAO>(val delegates: List<DAO>,
         val transaction = Transaction.Builder<SyncDao<T>, Pair<String, T?>, T?>()
             .initialValue { context ->
                 val (id, _) = context.input!!
+                // TODO: find out why es8 is erroring on find
                 id to findById(id)
             }
             .main { delegate, context ->
