@@ -81,7 +81,11 @@ class EsMigrationMappingSchemaTest {
                 )
             }
         }
-        val mappingObject = EsMigrationMappingObject(indexMigrationMap, aliasMigrationMap)
+        val indicesList = indexMigrationMap.entries.map { it.key to it.value }
+        val aliasesList = aliasMigrationMap.entries.map { it.key to it.value }
+
+        val mappingObject = EsMigrationMappingObject(indicesList, aliasesList)
+
         val jsonString = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(mappingObject)
         outputFile.writeText(jsonString)
         Desktop.getDesktop().open(outputFile.parentFile)

@@ -88,11 +88,14 @@ class EsMigrationMappingItem(var config: Map<EsVersion, EsMigrationConfig> = mut
 }
 
 data class EsMigrationMappingObject(
-    val indices: Map<String, EsMigrationMappingItem>,
-    val aliases: Map<String, EsMigrationMappingItem> = mutableMapOf()): EsMigrationProvider {
+    val indices: List<Pair<String, EsMigrationMappingItem>>,
+    val aliases: List<Pair<String, EsMigrationMappingItem>> = mutableListOf()): EsMigrationProvider {
+
+    private val _indexMap = mutableMapOf(*indices.toTypedArray())
+    private val _aliasesMap = mutableMapOf(*aliases.toTypedArray())
 
     override operator fun get(term: String): EsMigrationItem? {
-        val mappingItem = indices[term] ?: aliases[term] ?: return null
+        val mappingItem = _indexMap[term] ?: _aliasesMap[term] ?: return null
         val classesConfig = mappingItem.config.mapKeys { (version, _) -> version.getApi() }
         return EsMigrationItem(classesConfig)
     }
