@@ -15,10 +15,14 @@ import io.em2m.geo.feature.FeatureCollectionHandler
 import io.em2m.geo.geojson.GeoJsonModule
 import io.em2m.geo.geojson.GeoJsonParser
 import io.em2m.search.core.model.FnIdMapper
+import io.em2m.simplex.evalPath
+import io.em2m.utils.coerce
+import io.em2m.utils.coerceNonNull
 import org.junit.Assert
 import org.junit.Before
 import java.io.File
 import java.io.FileInputStream
+import java.io.IOException
 
 abstract class FeatureTestBase : Assert() {
 
@@ -37,6 +41,8 @@ abstract class FeatureTestBase : Assert() {
         for (feature in earthquakes().features) {
             esClient.put("features", "doc", feature.id!!, feature)
         }
+        flush()
+        esClient.createIndex("creatures")
         flush()
     }
 
@@ -70,8 +76,51 @@ abstract class FeatureTestBase : Assert() {
             .logLevel(feign.Logger.Level.FULL)
             .target(EsApi::class.java, "http://localhost:9200")
 
+        val featureResourceDirectory = File(FeatureTestBase::class.java.getResource("FeatureTestBase")!!.path)
+        val es2Directory: File = File(featureResourceDirectory, "es2")
+        val es8Directory: File = File(featureResourceDirectory, "es8")
 
-        val es6 = esClient.getStatus().version.number.startsWith("6")
+        class EsAliasDirectory(val alias: String, val indexDirectory: List<File>)
+
+        // TODO: Move to high level
+        open class EsIndexDefinition(open val indexName: String, open val mapping: ObjectNode)
+
+        class EsIndexBundle(val alias: String, val esMappings: List<EsIndexDefinition>)
+
+        // TODO: Move to migration directories
+        class Es2IndexDefinition(override val indexName: String, override val mapping: ObjectNode, val types: List<String>) : EsIndexDefinition(indexName, mapping)
+
+        class Es2IndexBundle(val alias: String, val mappings: List<Es2IndexDefinition>)
+
+        fun loadEs2Indices(esDirectory: File, alias: String): Es2IndexBundle {
+            val fromIndexDirectories = File(esDirectory, alias).listFiles()?.filter { it.isDirectory } ?: emptyList()
+
+            val esMappings = fromIndexDirectories.map { file ->
+                val indexName = file.name
+                val mappingFile = File(file, "mapping.json")
+                val mapping = mapper.readTree(mappingFile) as ObjectNode
+                val types = mapping.get("mappings").fieldNames().asSequence().toList()
+                Es2IndexDefinition(indexName, mapping, types)
+            }
+
+            return Es2IndexBundle(alias, esMappings)
+        }
+
+        fun loadIndices(esDirectory: File, alias: String): EsIndexBundle {
+            val fromIndexDirectories = File(esDirectory, alias).listFiles()?.filter { it.isDirectory } ?: emptyList()
+
+            val esMappings = fromIndexDirectories.map { file ->
+                val indexName = file.name
+                val mappingFile = File(file, "mapping.json")
+                val mapping = mapper.readTree(mappingFile) as ObjectNode
+                EsIndexDefinition(indexName, mapping)
+            }
+
+            return EsIndexBundle(alias, esMappings)
+        }
+
+
+        val es6 = esClient.getStatus().version.major == 6
         private val mappingPath = if (es6) {
             "src/test/resources/mapping_es6.json"
         } else {

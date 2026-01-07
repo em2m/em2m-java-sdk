@@ -74,7 +74,7 @@ class ExampleText {
 
     class ReportService @Inject constructor(private val extensionService: ExtensionService) {
 
-        private val mapper = ObjectMapper(YAMLFactory()).registerModule(KotlinModule())
+        private val mapper = ObjectMapper(YAMLFactory()).registerModule(KotlinModule.Builder().build())
 
         fun findReports(ctx: Map<String, Any?> = emptyMap()): List<Report> {
             return extensionService

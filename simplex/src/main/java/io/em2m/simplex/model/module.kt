@@ -9,6 +9,9 @@ interface Module {
     val conditionResolver: ConditionResolver
 
     fun configure(simplex: Simplex)
+
+    fun install(other: Module)
+
 }
 
 abstract class BasicSimplexModule : Module {
@@ -26,6 +29,10 @@ abstract class BasicSimplexModule : Module {
         keyResolver.key(key, factory)
     }
 
+    fun key(pair: Pair<Key, KeyHandler>) {
+        this.key(pair.first, pair.second)
+    }
+
     fun keys(delegate: KeyResolver) {
         keyResolver.delegate(delegate)
     }
@@ -38,12 +45,20 @@ abstract class BasicSimplexModule : Module {
         pipeResolver.transform(key, factory)
     }
 
+    fun transform(pair: Pair<String, PipeTransform>) {
+        this.transform(pair.first, pair.second)
+    }
+
     fun transforms(delegate: PipeTransformResolver) {
         pipeResolver.delegate(delegate)
     }
 
     fun condition(key: String, handler: ConditionHandler) {
         conditionResolver.condition(key, handler)
+    }
+
+    fun condition(pair: Pair<String, ConditionHandler>) {
+        this.condition(pair.first, pair.second)
     }
 
     fun conditions(delegate: ConditionResolver) {
@@ -54,8 +69,19 @@ abstract class BasicSimplexModule : Module {
         execResolver.handler(key, factory)
     }
 
+    fun exec(pair: Pair<String, (String) -> ExecHandler>) {
+        this.exec(pair.first, pair.second)
+    }
+
     fun execs(delegate: ExecResolver) {
         execResolver.delegate(delegate)
+    }
+
+    override fun install(other: Module) {
+        this.keys(other.keyResolver)
+        this.transforms(other.pipeResolver)
+        this.conditions(other.conditionResolver)
+        this.execs(other.execResolver)
     }
 
 }

@@ -14,6 +14,8 @@ import com.fasterxml.jackson.databind.node.ObjectNode
 import feign.Headers
 import feign.Param
 import feign.RequestLine
+import io.em2m.search.es.EsAliasAction.Companion.getTargetIndices
+import io.em2m.search.es.models.EsVersion
 import io.em2m.utils.coerce
 import org.locationtech.jts.geom.Envelope
 import java.util.*
@@ -139,7 +141,7 @@ class EsGeoBoundingBoxQuery(field: String, bbox: Envelope) : EsQuery() {
             "bottom_right" to mapOf("lon" to bbox.maxX, "lat" to bbox.minY)))
 }
 
-class EsExistsQuery(field: String) : EsQuery() {
+open class EsExistsQuery(field: String) : EsQuery() {
     val exists = mapOf("field" to field)
 }
 
@@ -328,18 +330,29 @@ class EsAggResult(@JsonDeserialize(using = EsBucketListDeserializer::class) val 
     }
 }
 
-class EsShards(val total: Int, val successful: Int, val failed: Int)
+class EsShards(val total: Int, val successful: Int, val failed: Int) {
+    companion object
+}
 
-class EsHits(val total: Long, val max_score: Double, val hits: List<EsHit>)
+class EsHits(val total: Long, val max_score: Double, val hits: List<EsHit>) {
+    companion object
+}
 
-class EsVersion(val number: String)
+data class EsStatus(val version: EsVersion)
 
-class EsStatus(val version: EsVersion)
+// TODO: map all fields
+typealias EsStatMapping = Map<String, Any?>
+
+data class EsStats(val _shards: Map<String, Any?>, val _all: EsStatMapping, val indices: Map<String, EsStatMapping>) {
+
+    operator fun get(index: String): EsStatMapping? = indices[index]
+
+}
 
 class EsHit(
         @JsonProperty("_index") val index: String,
         @JsonProperty("_type") val type: String,
-        @JsonProperty("_id") val id: String,
+        @JsonProperty("_id") var id: String,
         @JsonProperty("_score") val score: Double,
         @JsonProperty("_source") val source: ObjectNode? = null,
         val fields: Map<String, List<JsonNode>>? = null) {
@@ -379,16 +392,51 @@ class EsBulkResult(val took: Long, val errors: Boolean, val items: Array<Item>) 
 }
 
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
-class EsAliasAction(var add: EsAliasDefinition? = null, var remove: EsAliasDefinition? = null)
+class EsAliasAction(var add: EsAliasDefinition? = null, var remove: EsAliasDefinition? = null) {
+
+    companion object {
+        fun EsAliasAction.getTargetIndices(): Collection<String> {
+            val ret = mutableSetOf<String>()
+            add?.index?.let { ret.add(it) }
+            remove?.index?.let { ret.add(it) }
+            return ret
+        }
+    }
+}
 
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 class EsAliasDefinition(val index: String, val alias: String)
 
 class EsAliasRequest {
     var actions: MutableList<EsAliasAction> = mutableListOf()
+
+    companion object {
+        fun EsAliasRequest.getTargetIndices(): Collection<String> {
+            val ret = mutableSetOf<String>()
+            actions.forEach { action ->  ret.addAll(action.getTargetIndices()) }
+            return ret
+        }
+    }
 }
 
+data class Es2Index(
+    val health: String,
+    val status: String,
+    val index: String,
+    val pri: Int,
+    val rep: Int,
+    @param:JsonProperty("docs.count")
+    val docsCount: Long,
+    @param:JsonProperty("docs.deleted")
+    val docsDeleted: Long,
+    @param:JsonProperty("store.size")
+    val storeSize: String,
+    @param:JsonProperty("pri.store.size")
+    val priStoreSize: String,
+)
+
 @Headers("Content-Type: application/json")
+@Deprecated("Migrate to Es8Api, this currently will only work for Es2Api")
 interface EsApi {
 
     @RequestLine(value = "POST /{index}/{type}/_search", decodeSlash = false)
@@ -420,6 +468,9 @@ interface EsApi {
 
     @RequestLine(value = "GET /{index}/_mapping/{type}", decodeSlash = false)
     fun getMapping(@Param("index") index: String, @Param("type") type: String): ObjectNode
+
+    @RequestLine(value = "GET /{index}/_mapping?format=json", decodeSlash = false)
+    fun getMapping(@Param("index") index: String): Map<String, Any?>
 
     @RequestLine(value = "PUT /{index}/_mapping/{type}", decodeSlash = false)
     fun putMapping(@Param("index") index: String, @Param("type") type: String, mapping: ObjectNode)
@@ -465,6 +516,29 @@ interface EsApi {
             """)
     }
     */
+
+    @RequestLine("GET /_cat/indices?format=json", decodeSlash = false)
+    fun getIndices(): List<Es2Index>
+
+
+    @RequestLine("GET /{index}/_settings?include_defaults=true", decodeSlash = false)
+    fun getSettings(@Param("index") index: String): Map<String, Any?>
+
+    @RequestLine("GET /{index}/_stats", decodeSlash = false)
+    fun getStats(@Param("index") index: String): EsStats
+
+    @RequestLine("GET /_stats", decodeSlash = false)
+    fun getStats(): EsStats
+
+    companion object {
+        fun EsApi.exists(index: String): Boolean = try {
+            indexExists(index)
+            true
+        } catch (_: Exception) {
+            false
+        }
+    }
+
 }
 
 class EsScrollIterator(private val client: EsApi, result: EsSearchResult, private val scroll: String = "1m") : Iterator<EsHit> {
