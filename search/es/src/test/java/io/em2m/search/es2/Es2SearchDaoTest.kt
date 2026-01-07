@@ -1,20 +1,26 @@
-package io.em2m.search.es
+package io.em2m.search.es2
 
 import io.em2m.geo.feature.Feature
-import io.em2m.search.core.model.*
-import io.em2m.search.core.model.Direction.Ascending
+import io.em2m.search.core.model.Direction
+import io.em2m.search.core.model.DocSort
+import io.em2m.search.core.model.Field
+import io.em2m.search.core.model.MatchAllQuery
+import io.em2m.search.core.model.SearchRequest
+import io.em2m.search.core.model.SyncDao
+import io.em2m.search.es.FeatureTestBase
+import io.em2m.search.es2.dao.Es2SyncDao
 import org.junit.Before
 import org.junit.Test
 import kotlin.properties.Delegates
 
-class EsSearchDaoTest : FeatureTestBase() {
+class Es2SearchDaoTest : FeatureTestBase() {
 
     private var searchDao: SyncDao<Feature> by Delegates.notNull()
 
     @Before
     override fun before() {
         super.before()
-        searchDao = EsSyncDao(esClient, index, type, Feature::class.java, idMapper)
+        searchDao = Es2SyncDao(esClient, index, type, Feature::class.java, idMapper)
     }
 
     @Test
@@ -94,7 +100,7 @@ class EsSearchDaoTest : FeatureTestBase() {
     @Test
     fun testScrollItems() {
         val request = SearchRequest(limit = 5, query = MatchAllQuery(), params = mapOf("scroll" to "1m"))
-        val esDao = searchDao as EsSyncDao
+        val esDao = searchDao as Es2SyncDao
         val result = esDao.search(request)
         val scrollResult = esDao.scrollItems(request, result).firstOrNull()
         assertTrue(scrollResult != null)
@@ -102,8 +108,13 @@ class EsSearchDaoTest : FeatureTestBase() {
 
     @Test
     fun testScrollRows() {
-        val request = SearchRequest(limit = 5, fields = listOf(Field(name = "id")), query = MatchAllQuery(), params = mapOf("scroll" to "1m"))
-        val esDao = searchDao as EsSyncDao
+        val request = SearchRequest(
+            limit = 5,
+            fields = listOf(Field(name = "id")),
+            query = MatchAllQuery(),
+            params = mapOf("scroll" to "1m")
+        )
+        val esDao = searchDao as Es2SyncDao
         val result = esDao.search(request)
         val scrollResult = esDao.scrollRows(request, result)
         assertNotNull(scrollResult.firstOrNull())
@@ -112,7 +123,8 @@ class EsSearchDaoTest : FeatureTestBase() {
 
     @Test
     fun testSort() {
-        val request = SearchRequest(0, 10, MatchAllQuery(), sorts = mutableListOf(DocSort("properties.mag", Ascending)))
+        val request =
+            SearchRequest(0, 10, MatchAllQuery(), sorts = mutableListOf(DocSort("properties.mag", Direction.Ascending)))
         val result = searchDao.search(request)
         val mag = result.items?.getOrNull(0)?.properties?.get("mag") as Double
         assertEquals(2.5, mag, 0.0001)
@@ -120,7 +132,12 @@ class EsSearchDaoTest : FeatureTestBase() {
 
     @Test
     fun testFields() {
-        val request = SearchRequest(offset = 0, limit = 20, fields = listOf(Field("id"), Field("properties.mag")), query = MatchAllQuery())
+        val request = SearchRequest(
+            offset = 0,
+            limit = 20,
+            fields = listOf(Field("id"), Field("properties.mag")),
+            query = MatchAllQuery()
+        )
         val result = searchDao.search(request)
         assertEquals(listOf(Field("id"), Field("properties.mag")), result.fields)
         assertEquals(20, result.rows?.size)
