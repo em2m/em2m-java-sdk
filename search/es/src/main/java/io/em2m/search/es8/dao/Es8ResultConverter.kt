@@ -1,0 +1,182 @@
+package io.em2m.search.es8.dao
+
+import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.node.ArrayNode
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import io.em2m.geo.geojson.GeoJsonModule
+import io.em2m.search.core.model.*
+import io.em2m.search.es.EsAggResult
+import io.em2m.search.es8.models.search.Es8Hit
+import io.em2m.search.es8.models.search.Es8Hits
+import io.em2m.search.es8.models.search.Es8SearchResult
+import io.em2m.utils.coerce
+import org.locationtech.jts.geom.Coordinate
+import org.locationtech.jts.geom.Envelope
+
+class Es8ResultConverter<T>(private val mapper: DocMapper<T>) {
+
+    fun convert(request: SearchRequest, result: Es8SearchResult): SearchResult<T> {
+        val hits = result.hits
+        val rows = if (request.fields.isNotEmpty()) convertRows(result.hits, request) else null
+        val items = if (request.fields.isEmpty()) convertItems(result.hits) else null
+        val totalItems = hits.total
+        val aggs = convertAggs(request.aggs, result.aggregations)
+
+        val headers = mapOf("took" to result.took, "scrollId" to result.scrollId).filter { it.value != null }
+
+        return SearchResult(aggs, items, rows, totalItems = totalItems, fields = request.fields, headers = headers)
+
+//        throw NotImplementedError()
+//
+//        @Throws(Exception::class)
+//        fun convert(): Results<T> {
+//            initialize()
+//            addItems()
+//            addAggregations()
+//            addHeaders()
+//            val fields: List<String>? = null
+//            val results = Results<T>(query, aggs, items, totalItems, null, headers, fields)
+//            return results
+//        }
+
+    }
+
+    private fun convertItems(hits: Es8Hits): List<T> {
+        val results = ArrayList<T>()
+        for (hit in hits.hits) {
+            val item = convertItem(hit)
+            if (item != null) {
+                results.add(item)
+            }
+        }
+        return results
+    }
+
+    fun convertItem(hit: Es8Hit): T? {
+        return try {
+            hit.source?.let { mapper.fromDoc(it) }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
+        }
+    }
+
+    private fun convertRows(hits: Es8Hits, request: SearchRequest): List<List<Any?>> {
+        return hits.hits.map { hit ->
+            request.fields.map { field ->
+                hit.source?.let {
+                    val node = getFieldFromSource(it, field)
+                    val result = node?.let { mapper.toObject(node) }
+                    result
+                }
+            }
+        }
+    }
+
+    private fun getFieldFromSource(source: JsonNode, field: Field): JsonNode? {
+        var node: JsonNode? = source
+        val fieldName = field.name
+        if (fieldName != null) {
+            for (path in fieldName.split('.')) {
+                if (node is ArrayNode) {
+                    node = node.firstOrNull()
+                }
+                node = node?.get(path)
+                if (node == null) break
+            }
+        }
+        return node
+    }
+
+    private fun convertAggs(aggs: List<Agg>, esAggResults: Map<String, EsAggResult>): Map<String, AggResult> {
+        return aggs.mapNotNull { agg ->
+            val key = agg.key
+            val esValue = esAggResults[agg.key]
+            if (esValue != null) {
+                val op: String = agg.op()
+                val field: String? = (agg as? Fielded)?.field
+                var buckets = esValue.buckets?.map {
+                    val subAggs = convertSubAggs(agg.aggs, it.other)
+                    val buckeyKey = it.keyAsString ?: it.key
+                    Bucket(buckeyKey, it.docCount?.toLong() ?: 0, from = it.from, to = it.to, aggs = subAggs)
+                }
+                if (buckets != null && agg is DateRangeAgg) {
+                    buckets = sortRangeBuckets(agg.ranges, buckets)
+                }
+                if (buckets != null && agg is RangeAgg) {
+                    buckets = sortRangeBuckets(agg.ranges, buckets)
+                }
+                var value: Any? = null
+                val docCount = esValue.docCount
+                if (buckets == null && docCount != null) {
+                    buckets = listOf(Bucket(key = key, count = docCount.toLong()))
+                }
+                // stats
+                if (buckets == null && esValue.count != null) {
+                    val count = esValue.count!!.toLong()
+                    val sum = esValue.sum ?: 0.0
+                    val min = esValue.min ?: 0.0
+                    val max = esValue.max ?: 0.0
+                    val avg = esValue.avg ?: 0.0
+                    val stats = Stats(count, sum, min, max, avg)
+                    buckets = listOf(Bucket(key = key, count = count, stats = stats))
+                }
+                if (esValue.other.containsKey("location")) {
+                    val location = esValue.other["location"] as Map<*, *>
+                    val lat = location["lat"] as Double
+                    val lon = location["lon"] as Double
+                    value = Coordinate(lon, lat)
+                }
+                if (buckets == null && esValue.other.containsKey("bounds")) {
+                    val bounds = esValue.other["bounds"] as Map<*, *>
+                    val topLeft = bounds["top_left"] as Map<*, *>
+                    val bottomRight = bounds["bottom_right"] as Map<*, *>
+                    val x1 = topLeft["lon"] as Double
+                    val x2 = bottomRight["lon"] as Double
+                    val y1 = topLeft["lat"] as Double
+                    val y2 = bottomRight["lat"] as Double
+                    value = Envelope(x1, x2, y1, y2)
+                }
+                if (buckets == null && agg is CardinalityAgg) {
+                    val count: Long = esValue.other["value"].coerce() ?: 0
+                    val stats = Stats(count, count.toDouble(), count.toDouble(), count.toDouble(), count.toDouble())
+                    buckets = listOf(Bucket(key = key, count = count, stats = stats))
+                }
+                if (buckets == null && value == null) {
+                    value = esValue.other
+                }
+                AggResult(key, buckets, value = value, op = op, field = field)
+            } else null
+        }.associateBy { it.key }
+    }
+
+    private fun sortRangeBuckets(ranges: List<Range>, buckets: List<Bucket>): List<Bucket> {
+        // sort keyed buckets first in their original, then preserve resulting order for non-keyed buckets
+        val order = ranges.mapIndexed { index, range -> range.key to index }.toMap()
+        return buckets.mapIndexed { index, bucket -> index to bucket }.sortedBy {
+            order[it.second.key] ?: (buckets.size + it.first)
+        }.map { it.second }
+    }
+
+    private fun convertSubAggs(aggs: List<Agg>, other: Map<String, Any?>): Map<String, AggResult> {
+        return try {
+            val esAggs: MutableMap<String, EsAggResult> = HashMap()
+            other.forEach { (key, value) ->
+                val aggResult = objectMapper.convertValue(value, EsAggResult::class.java)
+                if (aggResult != null) {
+                    esAggs[key] = aggResult
+                }
+            }
+            convertAggs(aggs, esAggs)
+        } catch (ex: Throwable) {
+            emptyMap()
+        }
+    }
+
+    companion object {
+        // TODO: Make this configurable
+        val objectMapper: ObjectMapper = jacksonObjectMapper().registerModule(GeoJsonModule())
+    }
+
+}
