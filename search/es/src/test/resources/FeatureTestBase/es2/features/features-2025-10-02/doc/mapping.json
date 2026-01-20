@@ -1,0 +1,38 @@
+{
+  "properties": {
+    "id": {
+      "type": "string",
+      "index": "not_analyzed"
+    },
+    "properties": {
+      "type": "object",
+      "properties": {
+        "time": {
+          "type": "date",
+          "store": "true"
+        }
+      }
+    },
+    "geometry": {
+      "properties": {
+        "type": {
+          "type": "string",
+          "index": "no",
+          "store": "false"
+        },
+        "coordinates": {
+          "type": "geo_point",
+          "lat_lon": true,
+          "geohash": true,
+          "geohash_prefix": true,
+          "geohash_precision": 10
+        }
+      }
+    },
+    "type": {
+      "type": "string",
+      "index": "no",
+      "store": "false"
+    }
+  }
+}

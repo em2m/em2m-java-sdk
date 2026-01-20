@@ -104,4 +104,9 @@ class EsApiTest : FeatureTestBase() {
         //assertEquals(5.2, result.aggregations["magStats"]?.max)
     }
 
+    @Test
+    fun testGetIndices() {
+
+    }
+
 }

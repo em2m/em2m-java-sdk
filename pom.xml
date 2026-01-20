@@ -26,7 +26,7 @@
     <artifactId>em2m-java-sdk-pom</artifactId>
     <packaging>pom</packaging>
     <name>em2m-java-sdk-pom</name>
-    <version>2.96.0-SNAPSHOT</version>
+    <version>3.0.0-SNAPSHOT</version>
 
     <modules>
         <module>utils</module>
@@ -34,6 +34,7 @@
         <module>ext</module>
         <module>geo</module>
         <module>actions</module>
+        <module>transactions</module>
         <module>simplex</module>
         <module>policy</module>
         <module>search</module>
@@ -41,20 +42,46 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <maven.compiler.source>1.8</maven.compiler.source>
-        <maven.compiler.target>1.8</maven.compiler.target>
+        <maven.compiler.source>11</maven.compiler.source>
+        <maven.compiler.target>11</maven.compiler.target>
         <maven-compiler-plugin.version>3.5.1</maven-compiler-plugin.version>
-        <kotlin.version>1.5.31</kotlin.version>
-        <kotlin.compiler.jvmTarget>1.8</kotlin.compiler.jvmTarget>
-        <jackson.version>2.12.7</jackson.version>
+
+        <kotlin.version>1.9.24</kotlin.version>
+        <kotlin.language.version>1.9</kotlin.language.version>
+        <kotlin.code.style>official</kotlin.code.style>
+        <kotlin.compiler.jvmTarget>11</kotlin.compiler.jvmTarget>
+
+
+        <jackson.version>2.15.0</jackson.version>
+        <jackson.annotations.version>2.15.0</jackson.annotations.version>
+
         <aws.version>1.12.129</aws.version>
         <jts.version>1.18.1</jts.version>
         <jetty.version>11.0.3</jetty.version>
         <feign.version>10.12</feign.version>
         <jakarta.version>5.0.0</jakarta.version>
+        <elasticsearch.version>8.19.4</elasticsearch.version>
+
     </properties>
 
     <dependencies>
+        <dependency>
+            <groupId>org.jetbrains.kotlin</groupId>
+            <artifactId>kotlin-test-junit5</artifactId>
+            <version>${kotlin.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>5.10.0</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.jetbrains.kotlin</groupId>
+            <artifactId>kotlin-stdlib</artifactId>
+            <version>${kotlin.version}</version>
+        </dependency>
 
         <dependency>
             <groupId>org.slf4j</groupId>
@@ -74,13 +101,6 @@
             <artifactId>kotlin-test-junit</artifactId>
             <version>${kotlin.version}</version>
             <scope>test</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>org.jetbrains.kotlin</groupId>
-            <artifactId>kotlin-stdlib</artifactId>
-            <version>${kotlin.version}</version>
-            <scope>provided</scope>
         </dependency>
 
         <dependency>
@@ -130,7 +150,7 @@
             <dependency>
                 <groupId>com.fasterxml.jackson.core</groupId>
                 <artifactId>jackson-annotations</artifactId>
-                <version>${jackson.version}</version>
+                <version>${jackson.annotations.version}</version>
             </dependency>
 
             <dependency>
@@ -204,6 +224,12 @@
                 <groupId>com.amazonaws</groupId>
                 <artifactId>aws-java-sdk-sns</artifactId>
                 <version>${aws.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.elasticsearch.client</groupId>
+                <artifactId>elasticsearch-rest-client</artifactId>
+                <version>${elasticsearch.version}}</version>
             </dependency>
 
         </dependencies>
@@ -283,6 +309,31 @@
                         </goals>
                     </execution>
                 </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.jetbrains.kotlin</groupId>
+                <artifactId>kotlin-maven-plugin</artifactId>
+                <version>${kotlin.version}</version>
+                <executions>
+                    <execution>
+                        <id>compile</id>
+                        <phase>compile</phase>
+                        <goals>
+                            <goal>compile</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>test-compile</id>
+                        <phase>test-compile</phase>
+                        <goals>
+                            <goal>test-compile</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <languageVersion>${kotlin.language.version}</languageVersion>
+                    <apiVersion>${kotlin.language.version}</apiVersion>
+                </configuration>
             </plugin>
 
         </plugins>

@@ -125,6 +125,10 @@ fun Any?.evalPath(path: String): Any? {
     return Simplex.simplex.getPath(path, this)
 }
 
+fun Any?.evalPaths(vararg paths: String): List<Any?> {
+    return paths.map(this::evalPath)
+}
+
 inline fun <reified T : Any> Any?.evalPath(path: String, fallback: T?): T? {
     return Simplex.simplex.getPath(path, this).coerce(fallback)
 }

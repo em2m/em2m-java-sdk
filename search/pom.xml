@@ -25,7 +25,7 @@
     <parent>
         <groupId>io.em2m.sdk</groupId>
         <artifactId>em2m-java-sdk-pom</artifactId>
-        <version>2.96.0-SNAPSHOT</version>
+        <version>3.0.0-SNAPSHOT</version>
     </parent>
 
     <packaging>pom</packaging>
@@ -36,6 +36,7 @@
         <module>core</module>
         <module>mongo</module>
         <module>bean</module>
+        <module>transactions</module>
         <module>es</module>
     </modules>
 

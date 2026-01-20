@@ -9,7 +9,10 @@ import io.em2m.utils.coerce
 import org.joda.time.DateTimeZone
 import java.util.*
 
-class RequestConverter(private val objectMapper: ObjectMapper = jacksonObjectMapper()) {
+typealias Es2RequestConverter = RequestConverter
+
+@Deprecated("Replace with Es8RequestConverter")
+open class RequestConverter(protected open val objectMapper: ObjectMapper = jacksonObjectMapper()) {
 
     fun convert(request: SearchRequest): EsSearchRequest {
 
@@ -179,15 +182,10 @@ class RequestConverter(private val objectMapper: ObjectMapper = jacksonObjectMap
                     }
                 }
                 is GeoHashAgg -> {
-                    val esAgg =
-                        result.agg(it.key, "geohash_grid", subAggs).put("field", it.field).minDocCount(it.minDocCount)
-                    val precision = it.precision
-                    val size = it.size
-                    if (precision != null) esAgg.put("precision", precision)
-                    if (size != null) esAgg.put("size", size)
+                    convertGeoHashAgg(result, it, subAggs)
                 }
                 is GeoCentroidAgg -> {
-                    result.agg(it.key, "geo_centroid", subAggs).put("field", it.field).minDocCount(it.minDocCount)
+                    convertGeoCentroidAgg(result, it, subAggs)
                 }
                 is GeoBoundsAgg -> {
                     result.agg(it.key, "geo_bounds", subAggs).put("field", it.field).minDocCount(it.minDocCount)
@@ -225,6 +223,22 @@ class RequestConverter(private val objectMapper: ObjectMapper = jacksonObjectMap
         return result
     }
 
+    protected open fun convertGeoHashAgg(result: EsAggs, agg: GeoHashAgg, subAggs: EsAggs? = null): EsAggs {
+        val esAgg =
+            result.agg(agg.key, "geohash_grid", subAggs).put("field", agg.field).minDocCount(agg.minDocCount)
+        val precision = agg.precision
+        val size = agg.size
+        if (precision != null) esAgg.put("precision", precision)
+        if (size != null) esAgg.put("size", size)
+        return result
+    }
+
+    protected open fun convertGeoCentroidAgg(result: EsAggs, agg: GeoCentroidAgg, subAggs: EsAggs? = null): EsAggs {
+        // pass
+        result.agg(agg.key, "geo_centroid", subAggs).put("field", agg.field).minDocCount(agg.minDocCount)
+        return result
+    }
+
     private fun convertFields(fields: List<Field>): List<String> {
         return fields.map { requireNotNull(it.name) { "Field name cannot be null" } }.sorted().distinct()
     }
@@ -233,11 +247,23 @@ class RequestConverter(private val objectMapper: ObjectMapper = jacksonObjectMap
         return sorts.map { sort -> mapOf(sort.field to if (sort.direction == Direction.Ascending) "asc" else "desc") }
     }
 
-    private fun ObjectNode.minDocCount(minDocCount: Int?): ObjectNode {
+    protected fun ObjectNode.minDocCount(minDocCount: Int?): ObjectNode {
         if (minDocCount != null) {
             this.put("min_doc_count", minDocCount)
         }
         return this
+    }
+
+    protected fun ObjectNode.precision(precision: Int?): ObjectNode = apply {
+        if (precision != null) {
+            this.put("precision", precision)
+        }
+    }
+
+    protected fun ObjectNode.field(field: String?): ObjectNode = apply {
+        if (field != null) {
+            this.put("field", field)
+        }
     }
 
 }
